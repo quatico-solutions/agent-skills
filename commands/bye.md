@@ -1,6 +1,6 @@
 # Session Wrap-up
 
-Wrap up this session safely: document accomplishments, persist open tasks, handle git commits, and summarize next steps.
+Wrap up this session safely: handle git commits, document accomplishments, and summarize everything the user needs to remember.
 
 ## Process
 
@@ -8,58 +8,12 @@ Wrap up this session safely: document accomplishments, persist open tasks, handl
 
 Review what was accomplished:
 - What files were created or modified?
-- What decisions were made?
+- What decisions were made and why?
 - What tasks were completed?
 - What's still pending?
+- What knowledge was gained that isn't captured in code?
 
-Determine if this was **meaningful work**:
-- Files created or modified
-- Research worth preserving
-- Decisions affecting future work
-- Tasks completed or progressed
-
-If trivial (just Q&A, quick lookups, no changes), ask whether to create a changelog.
-
-### Step 2: Update Documentation
-
-#### Changelog (if meaningful work)
-
-Create `changelogs/YYYY-MM-DD-topic-slug.md` using today's date:
-
-```markdown
-# [Topic]
-
-**Date:** YYYY-MM-DD
-**Source:** Claude Code
-
-## Summary
-[1-2 sentences on what was accomplished]
-
-## Key Accomplishments
-- [Item 1]
-- [Item 2]
-
-## Changes Made
-- Created: `path/to/file`
-- Modified: `path/to/file`
-
-## Next Steps
-- [Pending task 1]
-- [Pending task 2]
-
-## Repository State
-- Committed: [summary]
-- Branch: [branch name]
-```
-
-#### Project Status (if applicable)
-
-If work relates to a project in `projects/`, update its `status.md` with:
-- Current phase/status
-- Completed tasks from this session
-- New pending tasks
-
-### Step 3: Handle Git
+### Step 2: Handle Git
 
 Run `git status` and apply these rules:
 
@@ -80,23 +34,63 @@ Session wrap-up: [date]
 
 Push if on a branch with remote tracking.
 
-### Step 4: Summarize & Confirm
+### Step 3: Check for Changelog Convention
 
-Present to user:
+Look for existing changelogs:
+- `changelogs/` directory
+- `CHANGELOG.md` file
+- Similar patterns in the repo
 
-1. **Accomplished this session:**
-   - [List of completions]
+**If changelogs exist:** Follow the project's convention and create an entry.
 
-2. **Pending next steps:**
-   - [List of remaining tasks]
+**If no changelogs exist:** Do NOT create one. Skip to Step 4.
 
-3. **Files committed:**
-   - [List of committed files]
+### Step 4: Session Summary
 
-4. **Safe to clear context?**
-   - Confirm all important information is persisted
-   - Note any follow-up needed
+Create a comprehensive summary containing **everything not persisted in the repo**:
+
+```markdown
+# Session Summary — [Date]
+
+## What We Accomplished
+- [Completed task 1]
+- [Completed task 2]
+
+## Key Decisions & Rationale
+- [Decision]: [Why we chose this approach]
+- [Decision]: [Trade-offs considered]
+
+## Changes Committed
+- `path/to/file` — [what changed]
+- `path/to/file` — [what changed]
+
+## Open Questions / Unresolved
+- [Question or uncertainty]
+
+## Next Steps
+- [ ] [Pending task 1]
+- [ ] [Pending task 2]
+
+## Context for Future Sessions
+[Any important background, gotchas, or things to remember]
+```
+
+**Output rules:**
+- If summary ≤ 50 lines: Display directly in chat
+- If summary > 50 lines: Write to `/tmp/session-summary-[date].md` and tell the user the path
+
+### Step 5: Final Message
+
+Always end with:
+
+> **No changelog was created.** Copy this summary to your notes if you want to reference it later—it won't be saved anywhere in the repo.
+
+If written to temp file, add:
+
+> Summary saved to `[path]`. This file will be deleted on reboot.
 
 ---
+
+**Important:** The summary is the user's only record of this session's context. Make it thorough. Include decisions, reasoning, and anything they'd need to resume work later.
 
 **Important:** If unsure about any git changes (parallel work concern), always ask before committing.
