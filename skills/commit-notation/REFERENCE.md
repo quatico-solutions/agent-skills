@@ -1,6 +1,6 @@
 # Quatico Commit Notation Reference
 
-Based on [Arlo's Commit Notation v1](https://github.com/arlobelshee/ArlosCommitNotation) with extensions.
+Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/QuaticoCommitNotation) with Quatico extensions.
 
 ## The Four Risk Levels
 
@@ -36,7 +36,7 @@ Based on [Arlo's Commit Notation v1](https://github.com/arlobelshee/ArlosCommitN
 
 | Code | Known Approaches |
 |------|------------------|
-| `f` | None known |
+| `f` | Examples: Local/focused change validated in DEV (no env-specific behavior); Extensive E2E tests; Text-only changes (i18n) apparent from diff |
 | `F` | Change ≤8 LoC, fully unit tested, includes new/changed tests |
 | `F!!` | Includes unit tests for new behavior |
 | `F**` | No automatic tests, or unfinished implementation |
@@ -50,7 +50,7 @@ Based on [Arlo's Commit Notation v1](https://github.com/arlobelshee/ArlosCommitN
 
 | Code | Known Approaches |
 |------|------------------|
-| `b` | None known |
+| `b` | Examples: Local/focused change validated in DEV; E2E tests; Text-only changes; Extend/fix existing test |
 | `B` | Reviewed with customer rep, ≤8 LoC, original behavior captured in test, includes changed test |
 | `B!!` | Includes unit tests for new behavior |
 | `B**` | No automatic tests, or unfinished implementation |
