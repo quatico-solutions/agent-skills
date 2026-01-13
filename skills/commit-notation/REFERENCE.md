@@ -2,6 +2,7 @@
 
 > **Source of truth:** [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
 > This file mirrors that repo, optimized for Claude's context window.
+> **SYNC REQUIRED:** Changes here MUST also update the source README. Changes incomplete without sync.
 
 Based on Arlo's Commit Notation v1 with Quatico extensions.
 
@@ -47,7 +48,7 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 |------|------------------|
 | `f` | Examples: Local/focused change validated in DEV (no env-specific behavior); Extensive E2E tests; Text-only changes (i18n) apparent from diff |
 | `F` | Change ≤8 LoC, fully unit tested, includes new/changed tests |
-| `F!!` | Includes unit tests for new behavior |
+| `F!!` | Partially tested |
 | `F**` | No automatic tests, or unfinished implementation |
 
 ### Bugfix (B)
@@ -61,7 +62,7 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 |------|------------------|
 | `b` | Examples: Local/focused change validated in DEV; E2E tests; Text-only changes; Extend/fix existing test |
 | `B` | Reviewed with customer rep, ≤8 LoC, original behavior captured in test, includes changed test |
-| `B!!` | Includes unit tests for new behavior |
+| `B!!` | Partially tested |
 | `B**` | No automatic tests, or unfinished implementation |
 
 ### Refactoring (R)

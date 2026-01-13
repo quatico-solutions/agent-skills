@@ -6,6 +6,7 @@ description: Formats git commits using Quatico's notation (Arlo's v1 with extens
 # Commit Notation
 
 > **Source of truth:** [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
+> **SYNC REQUIRED:** Changes here MUST also update the source README. Changes incomplete without sync.
 
 Quatico uses Arlo's Commit Notation v1 with extensions (T, E, A, C, S).
 
