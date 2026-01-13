@@ -18,7 +18,7 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 - **Risky**: Developer aware of risks, attempted mitigation, but no formal verification.
 - **Broken**: Known to be broken, or unable to verify. May not compile. Used for WIP or savepoints.
 
-## Core Intentions
+## Intentions
 
 | Prefix | Name | Intention |
 |--------|------|-----------|
@@ -26,6 +26,12 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 | B | Bugfix | Repair one existing, undesirable program behavior |
 | R | Refactoring | Change implementation without changing program behavior |
 | D | Documentation | Change something which communicates and does not impact behavior |
+| T | Test-only | Alter tests without altering functionality |
+| E | Environment | Non-code development setup changes |
+| A | Automated | Tool-assisted changes (IDE, formatters, linters). Deterministic tools only, no AI/LLMs. |
+| C | Comment | Changes comments only (not JSDoc/JavaDoc) |
+| S | Spec | Changes spec or design documents |
+| * | Unknown | Multiple changes, just getting it checked in |
 
 ### Feature (F)
 
@@ -82,16 +88,25 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 | `D!!` | Alters an important process |
 | `D**` | Trying out a process change for info gathering |
 
-## Extension Intentions
+### Test-only (T)
 
-| Prefix | Name | Intention |
-|--------|------|-----------|
-| T | Test-only | Alter tests without altering functionality |
-| E | Environment | Non-code development setup changes |
-| A | Automated | Tool-assisted changes (IDE, formatters, linters). Deterministic tools only, no AI/LLMs. |
-| C | Comment | Changes comments only (not JSDoc/JavaDoc) |
-| S | Spec | Changes spec or design documents |
-| * | Unknown | Multiple changes, just getting it checked in |
+| Code | Known Approaches |
+|------|------------------|
+| `t` | Refactoring purely within test code |
+| `T` | New test for existing behavior, all tests pass |
+| `T!!` | New test without running full suite |
+| `T**` | Incomplete test, WIP |
+
+**Alternatives**: Use `F` or `B` depending on what the test validates. Use `R` for refactoring within test code.
+
+### Environment (E)
+
+| Code | Known Approaches |
+|------|------------------|
+| `e` | Config change with no compilation impact |
+| `E` | Tooling change, verified working |
+| `E!!` | CI/CD change, not fully tested |
+| `E**` | Experimenting with build config |
 
 ### Automated (A)
 
@@ -119,6 +134,34 @@ Tool-assisted changes where the method (automated tooling) is more significant t
 - `A: Extract interface IUserService` (IDE extract, tests pass)
 - `A!! Format all files with prettier` (bulk format, reviewed)
 - `A** Apply regex replace across 20 files` (not fully verified)
+
+### Comment (C)
+
+| Code | Known Approaches |
+|------|------------------|
+| `c` | Comment change, verified byte-identical compilation |
+| `C` | Comment change in source file |
+| `C!!` | Large comment overhaul |
+| `C**` | Draft comments, needs review |
+
+**Alternative**: Use `D`.
+
+### Spec (S)
+
+| Code | Known Approaches |
+|------|------------------|
+| `s` | Spec update matching implemented behavior |
+| `S` | Spec change, implementation follows |
+| `S!!` | Spec change, implementation pending |
+| `S**` | Draft spec for discussion |
+
+**Alternatives**: Use `D`, keep specs outside source control, or use test suite as spec.
+
+### Unknown (*)
+
+Multiple unrelated changes, just getting it checked in. Usually `***`.
+
+**Alternative**: Require each commit to have exactly one intention.
 
 ## Provable Refactorings
 
