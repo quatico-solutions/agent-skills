@@ -1,13 +1,13 @@
 # Quatico Commit Notation Reference
 
-Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/QuaticoCommitNotation) with extensions.
+Based on [Arlo's Commit Notation v1](https://github.com/arlobelshee/ArlosCommitNotation) with extensions.
 
 ## The Four Risk Levels
 
 | Risk Level | Code | Example | Meaning |
-| --- | --- | --- | --- |
-| **Known safe** | lowercase letter | `r - Extract method` | Addresses all known and unknown risks |
-| **Validated** | uppercase letter | `R - Extract method` | Addresses all known risks |
+|------------|------|---------|---------|
+| **Known safe** | lowercase letter | `r Extract method` | Addresses all known and unknown risks |
+| **Validated** | uppercase letter | `R: Extract method` | Addresses all known risks |
 | **Risky** | uppercase + `!!` | `R!! Extract method` | Some known risks remain unverified |
 | **(Probably) Broken** | uppercase + `**` | `R** Start extracting` | No risk attestation |
 
@@ -21,13 +21,13 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 ## Core Intentions
 
 | Prefix | Name | Intention |
-| --- | --- | --- |
+|--------|------|-----------|
 | F | Feature | Change or extend one aspect of program behavior |
 | B | Bugfix | Repair one existing, undesirable program behavior |
 | R | Refactoring | Change implementation without changing program behavior |
 | D | Documentation | Change something which communicates and does not impact behavior |
 
-### Feature (F/f)
+### Feature (F)
 
 **Known Risks**
 - May alter unrelated feature (spooky action at a distance)
@@ -35,13 +35,13 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 - May implement the change differently than intended
 
 | Code | Known Approaches |
-| --- | --- |
-| `f - ` | None known |
-| `F - ` | Change ≤8 LoC, fully unit tested, includes new/changed tests |
+|------|------------------|
+| `f` | None known |
+| `F` | Change ≤8 LoC, fully unit tested, includes new/changed tests |
 | `F!!` | Includes unit tests for new behavior |
 | `F**` | No automatic tests, or unfinished implementation |
 
-### Bugfix (B/b)
+### Bugfix (B)
 
 **Known Risks**
 - Customers may depend on the bug
@@ -49,13 +49,13 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 - May implement the fix differently than intended
 
 | Code | Known Approaches |
-| --- | --- |
-| `b - ` | None known |
-| `B - ` | Reviewed with customer rep, ≤8 LoC, original behavior captured in test, includes changed test |
+|------|------------------|
+| `b` | None known |
+| `B` | Reviewed with customer rep, ≤8 LoC, original behavior captured in test, includes changed test |
 | `B!!` | Includes unit tests for new behavior |
 | `B**` | No automatic tests, or unfinished implementation |
 
-### Refactoring (R/r)
+### Refactoring (R)
 
 **Known Risks**
 - May cause a bug
@@ -63,26 +63,37 @@ Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/Quatic
 - May force a test update
 
 | Code | Known Approaches |
-| --- | --- |
-| `r - ` | Provable refactoring OR test-supported procedural refactoring within test code |
-| `R - ` | Test-supported procedural refactoring |
+|------|------------------|
+| `r` | Provable refactoring OR test-supported procedural refactoring within test code |
+| `R` | Test-supported procedural refactoring |
 | `R!!` | Named refactoring, but edited code without full test coverage |
 | `R**` | Remodeled by editing code |
 
-### Documentation (D/d)
+### Documentation (D)
 
 **Known Risks**
 - May mislead future developers
 - May alter team processes unexpectedly
 
 | Code | Known Approaches |
-| --- | --- |
-| `d - ` | Dev-visible docs, not in source file, or verified byte-identical compilation |
-| `D - ` | Dev-impacting only, changes compilation or process |
+|------|------------------|
+| `d` | Dev-visible docs, not in source file, or verified byte-identical compilation |
+| `D` | Dev-impacting only, changes compilation or process |
 | `D!!` | Alters an important process |
 | `D**` | Trying out a process change for info gathering |
 
-## Automated Extension (A/a) - Quatico
+## Extension Intentions
+
+| Prefix | Name | Intention |
+|--------|------|-----------|
+| T | Test-only | Alter tests without altering functionality |
+| E | Environment | Non-code development setup changes |
+| A | Automated | Tool-assisted changes (IDE, formatters, AI) |
+| C | Comment | Changes comments only (not JSDoc/JavaDoc) |
+| S | Spec | Changes spec or design documents |
+| * | Unknown | Multiple changes, just getting it checked in |
+
+### Automated (A)
 
 Tool-assisted changes where the method (automated tooling) is more significant than the underlying intention.
 
@@ -98,30 +109,17 @@ Tool-assisted changes where the method (automated tooling) is more significant t
 - Bulk operations may be hard to review
 
 | Code | Known Approaches |
-| --- | --- |
-| `a - ` | Provable tool refactoring: IDE rename/extract with type verification |
-| `A - ` | Tool-assisted with test verification |
+|------|------------------|
+| `a` | Provable tool refactoring: IDE rename/extract with type verification |
+| `A` | Tool-assisted with test verification |
 | `A!!` | Tool-assisted without full test coverage, or bulk operations manually reviewed |
 | `A**` | Unverified bulk search/replace, AI suggestions without review |
 
 **Examples**
-- `a - Rename getUserData to fetchUserProfile` (IDE rename with TypeScript)
-- `A - Extract interface IUserService` (IDE extract, tests pass)
+- `a Rename getUserData to fetchUserProfile` (IDE rename with TypeScript)
+- `A: Extract interface IUserService` (IDE extract, tests pass)
 - `A!! Format all files with prettier` (bulk format, reviewed)
 - `A** Apply AI-suggested refactoring` (not fully verified)
-
-## Other Extension Intentions
-
-| Prefix | Name | Intention |
-| --- | --- | --- |
-| `M`/`m` | Merge | Merge branches |
-| `t` | Test-only | Alter tests without altering functionality |
-| `e` | Environment | Non-code development setup changes |
-| `c` | Comment | Changes comments only |
-| `p` | Process | Changes team process or working agreement |
-| `s` | Spec | Changes spec or design documents |
-| `n` | NOP | Empty commit (`--allow-empty`) |
-| `*` | Unknown | Multiple changes, just getting it checked in |
 
 ## Provable Refactorings
 
