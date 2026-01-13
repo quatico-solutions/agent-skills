@@ -37,9 +37,39 @@ Quatico uses Arlo's Commit Notation v1 with the "A" (Automated) extension.
 
 1. **Determine intention**: F, B, R, D, or A
 2. **Assess risk level**: How verified is this change?
-3. **Format**: `[risk][intention] Summary`
+3. **Find ticket number**: See below
+4. **Format**: `[risk][intention] TICKET-123 Summary`
 
 **Keep changes small**: Features/bugfixes should be ≤8 LoC for Validated level.
+
+## Ticket Numbers
+
+Include the ticket number after the risk/intention prefix.
+
+### Finding the Ticket Number
+
+1. **Check branch name**: Look for pattern like `XXX-123`
+   - `FOO-123-my-bugfix` → `FOO-123`
+   - `bugfix/FOO-123-description` → `FOO-123`
+   - `feature/BAR-456-new-feature` → `BAR-456`
+
+2. **Check recent commits**: If not in branch name, check commits not yet merged to `origin/develop`:
+   ```bash
+   git log origin/develop..HEAD --oneline
+   ```
+
+3. **Ask user**: If still not found, ask:
+   - Is this an infrastructure change (leave empty)?
+   - What's the ticket number?
+
+### When to Omit Ticket Numbers
+
+Small infrastructure changes may omit the ticket:
+- CI/CD pipeline fixes
+- Development environment setup
+- Release version bumps
+- Dependency updates
+- Code formatting/linting
 
 ## When to Use Each Intention
 
@@ -56,12 +86,12 @@ Quatico uses Arlo's Commit Notation v1 with the "A" (Automated) extension.
 ## Examples
 
 ```
-r - Extract method calculateTotal
-F - Add user authentication endpoint
-B!! Fix race condition in event handler
-a - Rename userId to userIdentifier
-A!! Run prettier on src/**/*.ts
-D - Update API documentation
+F - FOO-123 Add user authentication endpoint
+B!! BAR-456 Fix race condition in event handler
+r - FOO-123 Extract method calculateTotal
+a - FOO-123 Rename userId to userIdentifier
+A!! Run prettier on src/**/*.ts          (infra, no ticket)
+D - Update CI pipeline documentation     (infra, no ticket)
 ```
 
 See [REFERENCE.md](REFERENCE.md) for full notation details and risk level criteria.
