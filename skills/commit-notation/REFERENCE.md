@@ -1,6 +1,9 @@
 # Quatico Commit Notation Reference
 
-Based on [Arlo's Commit Notation v1](https://github.com/quatico-solutions/QuaticoCommitNotation) with Quatico extensions.
+> **Source of truth:** [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
+> This file mirrors that repo, optimized for Claude's context window.
+
+Based on Arlo's Commit Notation v1 with Quatico extensions.
 
 ## The Four Risk Levels
 
