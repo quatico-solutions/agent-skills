@@ -88,7 +88,7 @@ Based on [Arlo's Commit Notation v1](https://github.com/arlobelshee/ArlosCommitN
 |--------|------|-----------|
 | T | Test-only | Alter tests without altering functionality |
 | E | Environment | Non-code development setup changes |
-| A | Automated | Tool-assisted changes (IDE, formatters, AI) |
+| A | Automated | Tool-assisted changes (IDE, formatters, linters). Deterministic tools only, no AI/LLMs. |
 | C | Comment | Changes comments only (not JSDoc/JavaDoc) |
 | S | Spec | Changes spec or design documents |
 | * | Unknown | Multiple changes, just getting it checked in |
@@ -105,7 +105,6 @@ Tool-assisted changes where the method (automated tooling) is more significant t
 **Known Risks**
 - Tool may have bugs
 - Search & replace may match unintended patterns
-- AI suggestions may introduce subtle logic changes
 - Bulk operations may be hard to review
 
 | Code | Known Approaches |
@@ -113,13 +112,13 @@ Tool-assisted changes where the method (automated tooling) is more significant t
 | `a` | Provable tool refactoring: IDE rename/extract with type verification |
 | `A` | Tool-assisted with test verification |
 | `A!!` | Tool-assisted without full test coverage, or bulk operations manually reviewed |
-| `A**` | Unverified bulk search/replace, AI suggestions without review |
+| `A**` | Unverified bulk search/replace |
 
 **Examples**
 - `a Rename getUserData to fetchUserProfile` (IDE rename with TypeScript)
 - `A: Extract interface IUserService` (IDE extract, tests pass)
 - `A!! Format all files with prettier` (bulk format, reviewed)
-- `A** Apply AI-suggested refactoring` (not fully verified)
+- `A** Apply regex replace across 20 files` (not fully verified)
 
 ## Provable Refactorings
 
