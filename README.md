@@ -59,8 +59,14 @@ my-skill/
 
 ```yaml
 ---
-name: my-skill-name     # lowercase, hyphens, max 64 chars
-description: What it does and when to use it (max 1024 chars)
+name: my-skill-name     # lowercase, hyphens, max 64 chars, must match directory
+description: What it does and when to use it. Include trigger keywords. (max 1024 chars)
+# Optional fields per agentskills.io spec:
+compatibility: claude-code, cursor
+license: MIT
+metadata:
+  source: https://github.com/your-org/your-repo
+  version: "1.0"
 ---
 
 # My Skill Name
@@ -70,13 +76,16 @@ description: What it does and when to use it (max 1024 chars)
 See [REFERENCE.md](REFERENCE.md) for details.
 ```
 
+**Note:** Reference files over 100 lines should include a table of contents.
+
 ### Key Principles
 
 1. **Be concise** - Only add what Claude doesn't already know
 2. **Progressive disclosure** - Overview in SKILL.md, details in referenced files
 3. **Third person** - "Processes files" not "I help you process files"
 4. **One level deep** - Reference files directly from SKILL.md, avoid nesting
-5. **Test across models** - Haiku may need more guidance than Opus
+5. **Use checklists** - Multi-step workflows benefit from copy-paste checklists
+6. **Test across models** - Haiku may need more guidance than Opus
 
 ### Skill Composition
 
@@ -94,10 +103,24 @@ Claude loads both skills when context matches. No formal import system—just me
 
 ### Official Resources
 
-- [Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
-- [Skills Overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
-- [Claude Code Skills](https://code.claude.com/docs/en/skills)
-- [Anthropic Engineering Blog](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
+**Specification & Docs:**
+- [Agent Skills Specification](https://agentskills.io) - Open standard format
+- [Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) - Anthropic's authoring guide
+- [Claude Code Skills](https://code.claude.com/docs/en/skills) - Claude Code integration
+
+**Example Skills & Tools:**
+- [Anthropic Skills Repository](https://github.com/anthropics/skills) - Official example skills
+- [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator) - Scaffolding tool for new skills
+
+**Installing Official Skills (Claude Code):**
+```bash
+# Register marketplace
+/plugin marketplace add anthropics/skills
+
+# Install skill packs
+/plugin install document-skills@anthropic-agent-skills   # PDF, DOCX, PPTX, XLSX
+/plugin install example-skills@anthropic-agent-skills    # Creative, technical, enterprise
+```
 
 ## Hooks
 

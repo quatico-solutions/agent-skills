@@ -1,6 +1,11 @@
 ---
 name: commit-notation
-description: Formats git commits using Quatico's notation (Arlo's v1 with extensions). Use when writing commit messages, reviewing commits, discussing commit conventions, or when another skill references commit formatting.
+description: Format git commit messages using Quatico's notation (Arlo's v1 with extensions). Triggers on: writing commits, git log analysis, commit reviews, or workflow skill references. Keywords: git, commit, message, Arlo, risk level, intention, F, B, R, D.
+compatibility: claude-code, cursor
+license: MIT
+metadata:
+  source: https://github.com/quatico-solutions/QuaticoCommitNotation
+  version: "1.1"
 ---
 
 # Commit Notation
@@ -70,6 +75,17 @@ TICKET-123
 4. **Format**: `[prefix] Summary` with ticket on last line
 
 **Keep changes small**: Features/bugfixes should be ≤8 LoC for Validated level.
+
+### Quick Checklist
+
+Copy and track progress:
+
+- [ ] Intention identified (F/B/R/D/T/E/A/C/S/*)
+- [ ] Single intention per commit
+- [ ] Risk level assessed (lowercase/UPPER/!!/\*\*)
+- [ ] Active voice summary
+- [ ] Subject < 75 chars
+- [ ] Ticket on last line (if applicable)
 
 ## Ticket Numbers
 

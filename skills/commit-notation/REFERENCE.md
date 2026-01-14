@@ -6,6 +6,17 @@
 
 Based on Arlo's Commit Notation v1 with Quatico extensions.
 
+## Contents
+
+- [The Four Risk Levels](#the-four-risk-levels)
+- [Intentions](#intentions)
+  - [Feature (F)](#feature-f) | [Bugfix (B)](#bugfix-b) | [Refactoring (R)](#refactoring-r) | [Documentation (D)](#documentation-d)
+  - [Test-only (T)](#test-only-t) | [Environment (E)](#environment-e) | [Automated (A)](#automated-a)
+  - [Comment (C)](#comment-c) | [Spec (S)](#spec-s) | [Unknown (*)](#unknown-)
+- [Provable Refactorings](#provable-refactorings)
+- [Test-supported Procedural Refactorings](#test-supported-procedural-refactorings)
+- [Small Features and Bug Fixes](#small-features-and-bug-fixes)
+
 ## The Four Risk Levels
 
 | Risk Level | Code | Example | Meaning |
