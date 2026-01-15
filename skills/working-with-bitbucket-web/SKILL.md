@@ -8,7 +8,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Working with Bitbucket Web
@@ -30,13 +30,21 @@ metadata:
 
 Click directly on the description body text to enter edit mode (no separate "Edit" button).
 
-### Rich Text Editor (Not Markdown)
+### Rich Text Editor (Partial Markdown Support)
 
-The description editor is **WYSIWYG**, not raw markdown. Raw markdown syntax (`- item`, `## heading`) renders as literal text.
+The description editor is **WYSIWYG** with limited markdown shortcuts:
+- `- ` at line start → converts to bullet (enters list mode)
+- `## ` at line start → converts to heading
 
-**For formatting:**
-- Use toolbar buttons (bullet list icon, heading dropdown)
-- Or type plain text without markdown syntax
+**Pasting markdown**: Works correctly — paste text with `- ` bullets and they render as list items.
+
+**Browser automation typing**: Has a caveat with multi-line lists:
+- Type `- first item` → converts to bullet, enters list mode
+- Press Enter → auto-creates new bullet (list mode continues)
+- Type `second item` (NO dash) → works correctly
+- **Don't** type `- ` for subsequent items — you'll get duplicate bullets
+
+**Safest approach**: Use toolbar buttons (bullet list icon, heading dropdown) to avoid ambiguity.
 
 ### Workflow Checklist
 
