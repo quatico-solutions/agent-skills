@@ -27,6 +27,7 @@ Reusable skills in `skills/`.
 | Skill | Description | Token Cost |
 |-------|-------------|------------|
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
+| `working-with-bitbucket-web` | Automates Bitbucket web UI via native browser tools (PRs, descriptions, reviewers) | ~800 |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 
 **Example prompts:**
@@ -37,6 +38,11 @@ Reusable skills in `skills/`.
 - Triggers automatically when discussing commits or referenced by other skills
 - Other workflow skills (fix-a-bug, add-feature) can reference this skill
 - Source: [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
+
+**Tips for `working-with-bitbucket-web`:**
+- Requires native browser tools (Claude in Chrome / Cursor Browser) for SSO authentication
+- Never use WebFetch, WebSearch, or MCP browser tools—they can't authenticate
+- Rich text editor supports partial markdown: `- ` and `## ` shortcuts work on paste/first line
 
 **Tips for `writing-clearly-and-concisely`:**
 - Use when writing prose for humans (docs, commits, error messages, UI text)
