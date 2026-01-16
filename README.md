@@ -29,6 +29,7 @@ Reusable skills in `skills/`.
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
 | `working-with-bitbucket-web` | Automates Bitbucket web UI via native browser tools (PRs, descriptions, reviewers) | ~800 |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
+| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
 
 **Example prompts:**
 - `help me write a commit message for these changes`
@@ -49,6 +50,11 @@ Reusable skills in `skills/`.
 - For limited context: dispatch a subagent with your draft + the reference file for copyediting
 - Source: [obra/the-elements-of-style](https://github.com/obra/the-elements-of-style) (Public Domain)
 
+**Tips for `quatico-sso-auth`:**
+- Use native browser tools (Claude in Chrome / Cursor Browser) for SSO
+- Handles both Keycloak (`*.example.invalid`) and generic Google SSO (Atlassian, Miro, Figma)
+- If no Google session exists, ask user to log in manually—never request credentials
+
 ## Creating Skills
 
 Skills teach Claude specialized tasks. [Official docs](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) for full details.
@@ -58,7 +64,8 @@ Skills teach Claude specialized tasks. [Official docs](https://platform.claude.c
 ```
 my-skill/
 ├── SKILL.md          # Required: frontmatter + instructions
-└── REFERENCE.md      # Optional: detailed reference material
+├── README.md         # Required: development notes, design decisions, testing history
+└── REFERENCE.md      # Optional: detailed reference material (>100 lines)
 ```
 
 ### SKILL.md Template
