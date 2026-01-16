@@ -81,6 +81,32 @@ Copy and track progress:
 
 ---
 
+## Adding Images to PR Descriptions
+
+**Limitation**: Browser automation cannot upload files (native file picker, clipboard paste, drag-drop are all inaccessible from automation).
+
+### Workflow (requires user assistance)
+
+1. Enter description edit mode (click body text)
+2. Click **Image** button in toolbar
+3. Run `open /path/to/images/` to open Finder
+4. **Tell user**: "Please drag [filename] into the upload modal"
+5. Wait for user confirmation
+6. Click on inserted image to select it
+7. Click "Add a caption" below image
+8. Type caption text
+9. Repeat steps 2-8 for each image (modal accepts only 1 image)
+10. Click Save
+
+### Key Details
+
+- **One image per upload** — modal closes after each, reopen for next
+- **Caption appears only when image selected** — click image first
+- **Image toolbar** (when selected): align left/center/right, wrap left/right, copy, delete
+- **Markdown tables don't render** — use bullet lists with sub-items instead
+
+---
+
 ## PR Creation
 
 1. Repository → Pull requests → "Create pull request" (top right)
