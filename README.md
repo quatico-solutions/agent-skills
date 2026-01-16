@@ -28,6 +28,7 @@ Reusable skills in `skills/`.
 |-------|-------------|------------|
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
 | `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work | ~1,000 |
+| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns | ~1,200 |
 | `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags | ~600 |
 | `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies | ~900 |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers | ~900 |
@@ -48,8 +49,14 @@ Reusable skills in `skills/`.
 **Tips for `double-loop-bdd-tdd`:**
 - Use for user stories with acceptance criteria, features spanning multiple components
 - Outer BDD loop stays RED while inner TDD loops drive implementation
-- References three sub-skills: `writing-bdd-scenarios`, `implementing-bdd-scenarios`, `jest-testing-conventions`
+- References sub-skills: `writing-bdd-scenarios`, `implementing-bdd-scenarios`, `test-driven-development`
 - Integrates with `commit-notation` for commits after completing work
+
+**Tips for `test-driven-development`:**
+- Inner loop of double-loop-bdd-tdd—use for unit-level Red-Green-Refactor
+- Key insight: test that passes on first run is wrong (revert and rewrite)
+- References `jest-testing-conventions` for Jest-specific mocking patterns
+- See `testing-anti-patterns.md` for common pitfalls when mocking
 
 **Tips for `writing-bdd-scenarios`:**
 - Write scenarios in business language—describe WHAT users do, not HOW the system works

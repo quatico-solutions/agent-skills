@@ -511,5 +511,7 @@ Before committing tests:
 
 ## Related Skills
 
-- **double-loop-bdd-tdd** - When to write unit tests (inner loop)
-- **test-driven-development** - TDD workflow (superpowers)
+| Skill | Use For |
+|-------|---------|
+| **test-driven-development** | TDD workflow—Red-Green-Refactor, when to test |
+| **double-loop-bdd-tdd** | Outer BDD loop for user stories |
