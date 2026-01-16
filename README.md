@@ -27,6 +27,10 @@ Reusable skills in `skills/`.
 | Skill | Description | Token Cost |
 |-------|-------------|------------|
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
+| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work | ~1,000 |
+| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags | ~600 |
+| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies | ~900 |
+| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers | ~900 |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions | ~700 |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) | ~800 |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
@@ -40,6 +44,27 @@ Reusable skills in `skills/`.
 - Triggers automatically when discussing commits or referenced by other skills
 - Other workflow skills (fix-a-bug, add-feature) can reference this skill
 - Source: [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
+
+**Tips for `double-loop-bdd-tdd`:**
+- Use for user stories with acceptance criteria, features spanning multiple components
+- Outer BDD loop stays RED while inner TDD loops drive implementation
+- References three sub-skills: `writing-bdd-scenarios`, `implementing-bdd-scenarios`, `jest-testing-conventions`
+- Integrates with `commit-notation` for commits after completing work
+
+**Tips for `writing-bdd-scenarios`:**
+- Write scenarios in business language—describe WHAT users do, not HOW the system works
+- One scenario per behavior, scenarios must be independent (no shared state)
+- Use `@only` during development, remove before committing
+
+**Tips for `implementing-bdd-scenarios`:**
+- Steps are glue code—keep them thin, put logic in Page Objects
+- Selector priority: data-testid > role + name > text content > CSS
+- See PITFALLS.md for Shadow DOM, timeout, and flaky test debugging
+
+**Tips for `jest-testing-conventions`:**
+- Master three functions: `jest.fn()`, `jest.spyOn()`, `jest.mock()`
+- Use naming conventions: `testObj`, `target*`, `mock*`, `actual`, `expected`
+- Configure `clearMocks: true`, `resetMocks: true`, `restoreMocks: true` in jest.config
 
 **Tips for `handling-pull-requests`:**
 - Platform-agnostic workflow; references `working-with-bitbucket-web` for UI navigation
