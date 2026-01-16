@@ -1,0 +1,92 @@
+digraph tdd_flow {
+    rankdir=TB;
+    compound=true;
+    splines=ortho;
+    nodesep=0.6;
+    ranksep=0.8;
+
+    // Entry point
+    run_all [label="Run All\nUnit Tests", shape=box, style="filled,rounded", fillcolor="#e8f5e9"];
+
+    // Decision after run all
+    run_all_decision [label="", shape=diamond, width=0.4, height=0.4, style=filled, fillcolor="#fff9c4"];
+
+    // RED zone
+    subgraph cluster_red {
+        label="Red";
+        labelloc=t;
+        style=filled;
+        fillcolor="#ffcdd2";
+        color="#c62828";
+
+        write_test [label="Write a\nfailing\nUnit Test", shape=box, style="filled,rounded", fillcolor="#ffebee"];
+    }
+
+    // GREEN zone
+    subgraph cluster_green {
+        label="Green";
+        labelloc=t;
+        style=filled;
+        fillcolor="#c8e6c9";
+        color="#2e7d32";
+
+        change_behavior [label="Change\nBehavior", shape=box, style="filled,rounded", fillcolor="#e8f5e9"];
+    }
+
+    // REFACTOR zone
+    subgraph cluster_refactor {
+        label="Refactor";
+        labelloc=b;
+        style=filled;
+        fillcolor="#e0e0e0";
+        color="#616161";
+
+        change_structure [label="Change\nStructure", shape=box, style="filled,rounded", fillcolor="#fff9c4"];
+    }
+
+    // Shared run unit test
+    run_unit [label="Run\nUnit Test", shape=box, style="filled,rounded", fillcolor="#fff9c4"];
+
+    // Decision after run unit test
+    run_unit_decision [label="", shape=diamond, width=0.4, height=0.4, style=filled, fillcolor="#fff9c4"];
+
+    // Revert node
+    revert [label="Revert\nchanges", shape=box, style="filled,rounded", fillcolor="#ffccbc"];
+
+    // Note for first run
+    note [label="*On 1st run,\nremove test", shape=note, style=filled, fillcolor="#fff9c4", fontsize=10];
+
+    // Edges
+
+    // From run all to decision
+    run_all -> run_all_decision;
+
+    // Pass from run all -> refactor (structure change loop)
+    run_all_decision -> change_structure [xlabel="Pass", style=dashed, color="#2e7d32"];
+
+    // Fail from run all -> RED
+    run_all_decision -> write_test [xlabel="Fail", color="#c62828"];
+
+    // RED: write test -> run unit test
+    write_test -> run_unit;
+
+    // Run unit test -> decision
+    run_unit -> run_unit_decision;
+
+    // If pass first time (bad!) -> revert
+    run_unit_decision -> revert [xlabel="Pass*", style=dashed, color="#ff9800"];
+    revert -> note [style=invis];
+    revert -> run_all [color="#ff9800", constraint=false];
+
+    // If fail (expected) -> GREEN
+    run_unit_decision -> change_behavior [xlabel="Fail", color="#c62828"];
+
+    // GREEN: change behavior -> run unit test
+    change_behavior -> run_unit [xlabel="Make the\nunit test\npass!", fontsize=9];
+
+    // If pass -> refactor
+    run_unit_decision -> change_structure [xlabel="Pass", color="#2e7d32", constraint=false];
+
+    // REFACTOR: change structure -> run all (loop back)
+    change_structure -> run_all;
+}

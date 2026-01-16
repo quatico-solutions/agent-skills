@@ -7,11 +7,67 @@ description: >-
   spy, stub, jest.fn, jest.spyOn, jest.mock.
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0"
+  version: "1.1"
   source: "Based on a colleague's Jest Guide"
 ---
 
 # Jest Testing Conventions
+
+## TDD Flow
+
+The Red-Green-Refactor cycle with decision points:
+
+```dot
+digraph tdd_flow {
+    rankdir=TB;
+    compound=true;
+
+    // Entry point
+    run_all [label="Run All\nUnit Tests", shape=box, style="filled,rounded", fillcolor="#e8f5e9"];
+    run_all_decision [label="", shape=diamond, width=0.4, height=0.4];
+
+    // RED zone
+    subgraph cluster_red {
+        label="Red";
+        style=filled;
+        fillcolor="#ffcdd2";
+        write_test [label="Write failing\nUnit Test", shape=box, style="filled,rounded", fillcolor="#ffebee"];
+    }
+
+    // GREEN zone
+    subgraph cluster_green {
+        label="Green";
+        style=filled;
+        fillcolor="#c8e6c9";
+        change_behavior [label="Change\nBehavior", shape=box, style="filled,rounded", fillcolor="#e8f5e9"];
+    }
+
+    // REFACTOR zone
+    subgraph cluster_refactor {
+        label="Refactor";
+        style=filled;
+        fillcolor="#e0e0e0";
+        change_structure [label="Change\nStructure", shape=box, style="filled,rounded", fillcolor="#fff9c4"];
+    }
+
+    run_unit [label="Run\nUnit Test", shape=box, style="filled,rounded", fillcolor="#fff9c4"];
+    run_unit_decision [label="", shape=diamond, width=0.4, height=0.4];
+    revert [label="Revert\n(test wrong!)", shape=box, style="filled,rounded", fillcolor="#ffccbc"];
+
+    run_all -> run_all_decision;
+    run_all_decision -> change_structure [label="Pass"];
+    run_all_decision -> write_test [label="Fail"];
+    write_test -> run_unit;
+    run_unit -> run_unit_decision;
+    run_unit_decision -> revert [label="Pass*\n(1st run)"];
+    run_unit_decision -> change_behavior [label="Fail"];
+    change_behavior -> run_unit;
+    run_unit_decision -> change_structure [label="Pass"];
+    change_structure -> run_all;
+}
+```
+
+**Key insight:** A test that passes on the first run (before writing implementation) indicates the test is wrong—either it doesn't test new behavior, or the behavior already exists. Remove or rewrite such tests.
 
 ## Overview
 
