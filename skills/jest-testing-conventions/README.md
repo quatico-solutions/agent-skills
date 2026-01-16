@@ -26,9 +26,9 @@ Variables follow internal-project conventions:
 
 ## Source Materials
 
-- `/Users/ma/Downloads/jest-guide.md` - a colleague's Jest guide
-- `/Users/ma/CODE/CDS/internal-project/.cursor/rules.md` - internal-project naming conventions
-- Jest documentation: https://jestjs.io/docs/mock-functions
+- a colleague's internal Jest pocket guide (internal document)
+- [internal-project cursor rules @ 888eb07](https://example.invalid/internal-project/src/888eb0724d798a806c341227c3613f47c34172e1/.cursor/rules.md) - internal-project naming conventions
+- [Jest mock functions](https://jestjs.io/docs/mock-functions) - Official documentation
 
 ## Testing Notes
 
