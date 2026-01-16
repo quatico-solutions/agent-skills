@@ -21,6 +21,14 @@ Development notes for the Bitbucket web automation skill.
 Native browser tools required because Bitbucket uses SSO authentication.
 MCP browser tools (Playwright, Chrome DevTools) spin up isolated instances without session cookies.
 
+### Optimization for Smaller Models (Critical)
+This skill must be followable by Sonnet and Haiku, not just Opus. Design rules:
+- **Numbered steps** for multi-step workflows (not prose)
+- **Explicit key sequences** (e.g., "press `Enter`" not "continue to next line")
+- **One action per step** (don't combine "type X and press Enter")
+- **Avoid ambiguity** — if toolbar buttons work better than markdown shortcuts, say so explicitly
+- **Include "Avoid" sections** listing common mistakes
+
 ## Rich Text Editor Testing (2025-01)
 
 ### Test Environment
@@ -44,6 +52,30 @@ For browser automation:
 3. Type text without dash for subsequent items
 4. OR use toolbar buttons for guaranteed formatting
 
+## Nested List Testing (2026-01)
+
+### Test Environment
+- Bitbucket Cloud (bitbucket.org)
+- PR description editor
+- Tested via Claude in Chrome MCP tools
+
+### Findings
+
+| Input Method | Behavior |
+|--------------|----------|
+| Toolbar bullet button | Starts list reliably, no markdown parsing issues |
+| `Enter` in list mode | Auto-creates bullet at same indent level |
+| `Tab` in list mode | Indents to create sub-item |
+| `Shift+Tab` in list mode | Unindents back to parent level |
+| `Enter Enter` | Exits list mode (creates paragraph) |
+| `## heading` inside list | Renders as LITERAL TEXT (not converted to heading) |
+
+### Key Insight
+The WYSIWYG editor only converts markdown shortcuts at line start in **normal paragraph mode**. Inside list mode, markdown shortcuts like `## ` render as literal text. This means:
+- Section headings must be created BEFORE starting a list, or AFTER exiting list mode
+- Use toolbar buttons for all formatting while in list mode
+- Prefer nested lists over tables (tables don't render at all)
+
 ## Version History
 
 | Version | Date | Changes |
@@ -51,5 +83,7 @@ For browser automation:
 | 1.0 | 2025-01 | Initial skill (bitbucket-ui) |
 | 1.1 | 2025-01 | Renamed to working-with-bitbucket-web, added browser tool guidance |
 | 1.2 | 2025-01 | Updated rich text editor guidance based on testing |
+| 1.3 | 2025-01 | Added image insertion workflow |
 | 1.3 | 2026-01 | Split workflow content to `handling-pull-requests`, added comment reply section |
 | 1.4 | 2026-01 | Added tab management guidance (create new tabs, cleanup when done) |
+| 1.4 | 2026-01 | Added step-by-step nested list workflow, optimized for Sonnet/Haiku |

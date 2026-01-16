@@ -56,13 +56,29 @@ The description editor is **WYSIWYG** with limited markdown shortcuts:
 
 **Pasting markdown**: Works correctly — paste text with `- ` bullets and they render as list items.
 
-**Browser automation typing**: Has a caveat with multi-line lists:
-- Type `- first item` → converts to bullet, enters list mode
-- Press Enter → auto-creates new bullet (list mode continues)
-- Type `second item` (NO dash) → works correctly
-- **Don't** type `- ` for subsequent items — you'll get duplicate bullets
+**Browser automation typing**: Use toolbar buttons for reliable formatting.
 
-**Safest approach**: Use toolbar buttons (bullet list icon, heading dropdown) to avoid ambiguity.
+### Creating Nested Lists (Step-by-Step)
+
+**This workflow is reliable for automation. Follow exactly:**
+
+1. **Start list**: Click bullet list button in toolbar
+2. **Type first item**: Type text, press `Enter`
+3. **Continue list**: Type next item (auto-bulleted), press `Enter`
+4. **Indent (sub-item)**: Press `Tab`, type text, press `Enter`
+5. **Unindent (back to parent)**: Press `Shift+Tab`, type text, press `Enter`
+6. **Exit list**: Press `Enter` twice (creates blank line, exits list mode)
+
+**Key behaviors:**
+- `Enter` → continues list at current indent level
+- `Tab` → indents to create sub-item (nested bullet)
+- `Shift+Tab` → unindents back to parent level
+- `Enter Enter` → exits list mode
+
+**Avoid:**
+- Typing `- ` for bullets (creates duplicates when in list mode)
+- Typing `## ` for headings inside lists (renders as literal text)
+- Using markdown tables (don't render — use nested lists instead)
 
 ### Workflow Checklist
 
