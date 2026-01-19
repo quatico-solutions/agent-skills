@@ -1,0 +1,24 @@
+digraph pr_workflow {
+    rankdir=TB;
+    node [shape=diamond];
+
+    start [label="PR-related task?" shape=ellipse];
+    q1 [label="Creating a PR?"];
+    q2 [label="Addressing review\nfeedback?"];
+    q3 [label="Platform-specific\nUI navigation?"];
+
+    node [shape=box];
+    this [label="This skill\n(handling-pull-requests)"];
+    platform [label="Platform skill\n(working-with-bitbucket-web)"];
+    commit [label="commit-notation skill"];
+
+    start -> q1;
+    q1 -> this [label="yes"];
+    q1 -> q2 [label="no"];
+    q2 -> this [label="yes"];
+    q2 -> q3 [label="no"];
+    q3 -> platform [label="yes"];
+
+    this -> commit [label="for commits" style=dashed];
+    this -> platform [label="for UI" style=dashed];
+}

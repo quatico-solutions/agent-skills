@@ -1,48 +1,36 @@
-> copied from https://github.com/obra/the-elements-of-style/blob/6099c505c2a8eb066f3777f83a97d9d828f7954c/README.md
->
-> LICENSE: Public Domain
+# writing-clearly-and-concisely
 
-***
+Development notes for the clear writing skill.
 
-***
+## Reference Documentation
 
-***
+| Resource | URL |
+|----------|-----|
+| Project Gutenberg Source | https://www.gutenberg.org/files/37134/37134-h/37134-h.htm |
+| Original Repo | https://github.com/obra/the-elements-of-style |
 
-# The Elements of Style - Claude Code Plugin
+## Key Design Decisions
 
-A Claude Code plugin providing William Strunk Jr.'s *The Elements of Style* (1918) as a reference skill for clear, precise writing.
-
-## Purpose
-
-This plugin gives Claude access to Strunk's foundational writing guidance when working on documentation, user-facing text, or any prose that needs clarity and proper style.
-
-## What's Inside
-
-The plugin provides:
-
-- **Skill**: `writing-clearly-and-concisely` - Guidance on when and how to use Strunk's rules
-- **Reference**: Complete 1918 text with all rules, examples, and usage guidance (~12,000 tokens)
+### Source Material
+Based on William Strunk Jr.'s *The Elements of Style* (1918), in the public domain.
 
 The reference contains:
-
 1. **Elementary Rules of Usage** - Seven fundamental grammar and punctuation rules
 2. **Elementary Principles of Composition** - Eleven rules for clear, effective writing
 3. **Words and Expressions Commonly Misused** - An alphabetical guide to usage pitfalls
 
-## Usage
+### Token Cost Warning
+The full reference is ~12,000 tokens. The skill warns about this before loading and suggests dispatching a subagent for copyediting when context is limited.
 
-Once installed, Claude will automatically use the `writing-clearly-and-concisely` skill when appropriate. The skill:
+### Trigger Conditions
+Only loads the full reference when actively writing or editing prose. Lists all rules at a glance first to allow selective reading.
 
-- Warns about the 12,000-token reference size
-- Lists all rules at a glance
-- Suggests dispatching a subagent for copyediting when context is limited
-- Only loads the full reference when actively writing or editing prose
+## License
 
-## Source
+Public Domain - Original 1918 edition by William Strunk Jr.
 
-This text is in the public domain. The original 1918 edition by William Strunk Jr. was obtained from Project Gutenberg and converted to clean markdown format.
+## Version History
 
-- **Original Source**: [Project Gutenberg #37134](https://www.gutenberg.org/files/37134/37134-h/37134-h.htm)
-- **Author**: William Strunk Jr.
-- **Publication**: 1918
-- **License**: Public Domain
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2025-01 | Initial skill from obra/the-elements-of-style |

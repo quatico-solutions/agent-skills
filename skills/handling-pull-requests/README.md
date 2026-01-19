@@ -1,16 +1,6 @@
 # handling-pull-requests
 
-Platform-agnostic PR workflow skill for Claude Code and Cursor.
-
-## Purpose
-
-Guides the high-level PR workflow:
-- When to create PRs
-- How to address review feedback
-- When to reply vs resolve comments
-- AI signature conventions
-
-Does NOT cover platform-specific UI navigation (see `working-with-bitbucket-web`).
+Development notes for the PR workflow skill.
 
 ## Design Rationale
 
