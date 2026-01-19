@@ -13,7 +13,7 @@ pnpm run install-claude-config
 
 Reusable slash commands in `commands/`.
 
-**Usage:** `/qs:init-agent` (Claude Code) or `/qs/init-agent` (Cursor)
+**Usage:** `/init-agent`
 
 | Command | Description |
 |---------|-------------|
