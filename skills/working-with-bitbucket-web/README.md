@@ -51,3 +51,4 @@ For browser automation:
 | 1.0 | 2025-01 | Initial skill (bitbucket-ui) |
 | 1.1 | 2025-01 | Renamed to working-with-bitbucket-web, added browser tool guidance |
 | 1.2 | 2025-01 | Updated rich text editor guidance based on testing |
+| 1.3 | 2026-01 | Split workflow content to `handling-pull-requests`, added comment reply section |

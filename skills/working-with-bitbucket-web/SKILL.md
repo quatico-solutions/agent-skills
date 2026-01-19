@@ -1,17 +1,22 @@
 ---
 name: working-with-bitbucket-web
 description: >-
-  Automates Bitbucket web UI via native browser tools. Creates PRs, edits
-  descriptions, manages reviewers, resolves comments and tasks. Use when
-  interacting with Bitbucket in a browser. Triggers: bitbucket, pull request,
-  PR description, PR review, code review, bitbucket comments.
+  Navigates Bitbucket web UI for PR operations. Use when interacting with
+  Bitbucket in a browser. Triggers: bitbucket, bitbucket UI, bitbucket web,
+  bitbucket PR, bitbucket comments, bitbucket reviewers.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.2"
+  version: "1.3"
 ---
 
 # Working with Bitbucket Web
+
+**For workflow guidance** (when to create PRs, address feedback, signature conventions): See `handling-pull-requests` skill.
+
+This skill covers **Bitbucket UI mechanics only**.
+
+---
 
 ## Browser Tool Selection
 
@@ -84,6 +89,17 @@ Copy and track progress:
 | Merge | Top right (blue) | Merges PR |
 | Files changed | Tab bar | View diff |
 | Commits | Tab bar | View commits |
+
+---
+
+## Replying to Comments
+
+1. Scroll to the comment thread
+2. Click **"Reply"** link below the comment
+3. Type reply in text area (same rich text editor as description)
+4. Click **"Add comment now"** button
+
+**Resolving comments**: Click the checkmark/resolve icon on the comment thread.
 
 ---
 
