@@ -60,10 +60,12 @@ Reusable skills in `skills/`.
 
 **Tips for `writing-bdd-scenarios`:**
 - Write scenarios in business language—describe WHAT users do, not HOW the system works
+- Define domain glossary first—ubiquitous language ensures consistency across team
 - One scenario per behavior, scenarios must be independent (no shared state)
 - Use `@only` during development, remove before committing
 
 **Tips for `implementing-bdd-scenarios`:**
+- Steps MUST be reusable—design every step for reuse across scenarios
 - Steps are glue code—keep them thin, put logic in Page Objects
 - Selector priority: data-testid > role + name > text content > CSS
 - See PITFALLS.md for Shadow DOM, timeout, and flaky test debugging
