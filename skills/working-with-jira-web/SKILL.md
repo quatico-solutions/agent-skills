@@ -2,12 +2,12 @@
 name: working-with-jira-web
 description: >-
   Navigates JIRA web UI for ticket operations. Use when creating issues,
-  filling forms, linking tickets, or working with wiki markup in JIRA.
+  editing descriptions, linking tickets, or using the WYSIWYG editor in JIRA.
   Triggers: JIRA, JIRA UI, create ticket, link issues, JIRA web, fix version.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Working with JIRA Web
@@ -41,7 +41,7 @@ This skill covers **JIRA UI mechanics only**.
 2. Change Work type: Click dropdown → select type (Bug, Story, Task, etc.)
 3. Fill Summary: Click field → type summary text
 4. Select Fix Version: Click "Fix versions" dropdown → select version from list
-5. Fill Description: Click description area → `Cmd+A` (select all) → type wiki markup
+5. Fill Description: Click description area → `Cmd+A` (select all) → use WYSIWYG toolbar for formatting
 6. **Scroll down** — the Create button is below the fold
 7. Click **"Create"** button
 
@@ -52,7 +52,7 @@ This skill covers **JIRA UI mechanics only**.
 - [ ] Select Work type from dropdown
 - [ ] Fill Summary field
 - [ ] Select Fix Version(s)
-- [ ] Fill Description (Cmd+A to replace template)
+- [ ] Fill Description (Cmd+A to replace template, use WYSIWYG toolbar)
 - [ ] Scroll down to reveal Create button
 - [ ] Click Create
 - [ ] Verify: ticket created (redirects to ticket or shows success)
@@ -60,22 +60,65 @@ This skill covers **JIRA UI mechanics only**.
 
 ---
 
-## JIRA Wiki Markup
+## Description Editor (WYSIWYG)
 
-Use in description fields:
+**CRITICAL**: JIRA uses Atlassian's **WYSIWYG editor**, NOT wiki markup. Typing `h2.`, `{code}`, etc. will show as literal text, not formatting!
 
-| Element | Syntax |
-|---------|--------|
-| Heading 2 | `h2. Heading` |
-| Heading 3 | `h3. Subheading` |
-| Code block | `{code}...{code}` |
-| Table header | `\|\| Col1 \|\| Col2 \|\|` |
-| Table row | `\| cell1 \| cell2 \|` |
-| Bullet list | `* item` |
-| Numbered list | `# item` |
-| Bold | `*bold*` |
-| Italic | `_italic_` |
-| Link | `[text\|url]` |
+### Formatting Reference
+
+| Format | How to Create |
+|--------|---------------|
+| Heading 2 | Toolbar dropdown OR `Cmd+Alt+2` |
+| Heading 3 | Toolbar dropdown OR `Cmd+Alt+3` |
+| Bullet list | Toolbar button OR `Cmd+Shift+8` |
+| Numbered list | Toolbar button OR `Cmd+Shift+7` |
+| Code block | Toolbar "+" → Code snippet |
+| Bold | `Cmd+B` |
+| Link | `Cmd+K` |
+
+### Editing Workflow
+
+1. Click description body to enter edit mode
+2. Wait for toolbar to appear (confirms edit mode)
+3. Use `Cmd+A` to select all if replacing content
+4. Use toolbar buttons or keyboard shortcuts for formatting
+5. **Click Save button** when done (changes NOT auto-saved)
+
+---
+
+## CRITICAL: Browser Automation Pitfalls
+
+### Global Keyboard Shortcuts
+
+**JIRA has global shortcuts that trigger when the editor loses focus.**
+
+| Key | What it Opens |
+|-----|---------------|
+| `L` | Log Time panel |
+| `@` | Add people / Invite to JIRA popup |
+| Various | Other panels and dialogs |
+
+**The Problem**: After pressing Enter or navigation keys, focus may leave the description editor. Subsequent keystrokes then trigger these global shortcuts instead of typing.
+
+**Solution**:
+1. After EVERY Enter or navigation action, **click inside the editor** before typing
+2. Take a screenshot to verify the editor toolbar is active
+3. If a panel opens unexpectedly, press **Escape** or click **Cancel**
+
+### @ Symbol Triggers Mentions
+
+Typing `@` anywhere triggers a mention/invite dropdown popup.
+
+**Workaround**: Write package names without `@` (e.g., `ewz/elements` instead of `@ewz/elements`), or press Escape immediately after `@` to dismiss the popup.
+
+### Editor Focus Loss
+
+Signs the editor lost focus:
+- Typing triggers a panel instead of appearing in editor
+- Toolbar appears grayed out
+- List buttons not highlighted
+
+**Recovery**: Press Escape to close panels, click inside editor text, verify toolbar is active
 
 ---
 
@@ -111,7 +154,7 @@ Use in description fields:
 | Create button | Top navigation (right) | Opens create dialog |
 | Work type | Create dialog (top) | Dropdown to select type |
 | Summary | Create dialog | Text field |
-| Description | Create dialog | Wiki markup textarea |
+| Description | Create dialog | WYSIWYG editor (use toolbar) |
 | Fix versions | Create dialog | Multi-select dropdown |
 | Linked work items | Ticket view (scroll down) | Section with Add button |
 
@@ -119,14 +162,16 @@ Use in description fields:
 
 ## Common Pitfalls
 
-| Issue | Solution |
-|-------|----------|
-| Escape key closes entire dialog | Click outside dropdown instead of pressing Escape |
-| Tab switches after dropdown selection | Always track `tabId`, verify after dropdown operations |
-| Create button not visible | Scroll down in dialog — button is below fold |
-| Link type doesn't show selection | Click search field and type directly after selecting type |
-| Template text in description | Use `Cmd+A` to select all before typing new content |
-| Dialog closes unexpectedly | Avoid clicking outside dialog boundaries |
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| "Log Time" panel opens | Editor lost focus, `L` key triggered shortcut | Click Cancel, click in editor, retry |
+| "Add people" panel opens | `@` symbol triggered invite flow | Press Escape, avoid `@` or dismiss popup quickly |
+| Text not appearing in editor | Focus left editor | Click inside editor before every typing action |
+| Wiki markup shows literally | JIRA is WYSIWYG, not wiki | Use toolbar buttons or keyboard shortcuts |
+| Changes lost | Clicked outside without saving | Always click Save button explicitly |
+| Escape closes entire dialog | Escape has multiple behaviors | Click outside dropdown instead of Escape |
+| Create button not visible | Button is below fold | Scroll down in dialog |
+| Template text in description | Default template content | Use `Cmd+A` to select all before typing |
 
 ---
 
