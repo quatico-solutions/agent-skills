@@ -94,7 +94,8 @@ Generated with Claude Code
 3. **Make code changes** for all change requests
 4. **Commit with notation**: `b: Address review feedback` (or more specific)
 5. **Reply to comments** explaining what was done
-6. **Push changes**
+6. **Resolve comments** that were fully addressed (if the platform supports it—not all Bitbucket comments can be resolved)
+7. **Push changes**
 
 ### Comment Response Checklist
 
@@ -103,6 +104,7 @@ Generated with Claude Code
 - [ ] Make code changes
 - [ ] Commit changes
 - [ ] Reply to each comment
+- [ ] Resolve fully-addressed comments (where possible)
 - [ ] Push
 ```
 
