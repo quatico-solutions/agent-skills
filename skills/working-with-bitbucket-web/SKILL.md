@@ -33,12 +33,12 @@ This skill covers **Bitbucket UI mechanics only**.
 
 **Start of session**: Always create a NEW tab with `tabs_create_mcp`. Never reuse tabs from previous sessions — tab IDs don't persist and another Claude instance may have left stale state.
 
-**End of session**: Navigate to `about:blank` when done. Claude in Chrome has no close tab tool, so this signals to the user that the tab is safe to close.
+**End of session**: Navigate to `example.com` when done. Claude in Chrome has no close tab tool, so this signals to the user that the tab is safe to close.
 
 ```
 Session cleanup:
 - [ ] Task complete
-- [ ] Navigate to about:blank
+- [ ] Navigate to example.com
 - [ ] Inform user: "Browser tab ready to close"
 ```
 
