@@ -38,116 +38,67 @@ No session ID environment variable is available. Rely on:
 
 ---
 
-## Step 1: Reconstruct Session History
-
-**Problem:** Context may have been compacted (auto-summarized). You need the full picture.
-
-### Shared Sources
-
-1. **This conversation** - Read backward through all messages
-2. **Git history** - `git log --oneline -20` (beware: may include parallel session commits!)
+## Step 1: Reconstruct Full History
 
 ### Claude Code Only
 
-3. **Compaction summaries** - Messages containing "Here is a summary of our conversation so far"
-4. **Episodic memory** - Check `~/.claude/episodic-memory/` for recent entries
-5. **Session logs** - Check `~/.claude/logs/` for this session's activity
+**Check the FIRST system message in this conversation for these patterns:**
+
+#### Pattern A: Compacted Session
+
+If you see this at the start:
+> "This session is being continued from a previous conversation that ran out of context"
+
+→ **Action:** The embedded summary IS your history. Read it carefully—it contains the complete prior conversation in `User:` / `Agent:` blocks.
+
+**DO NOT** try to read JSONL files. The summary is already here.
+
+#### Pattern B: Plan Execution Session
+
+If you see a message ending with:
+> "If you need specific details from before exiting plan mode... read the full transcript at:
+> `/path/to/session.jsonl`"
+
+→ **Action:** The JSONL file is usually too large for the Read tool. Use this jq command:
 
 ```bash
-# Find today's logs
-ls -la ~/.claude/logs/ | tail -20
-
-# Check episodic memory
-ls -la ~/.claude/episodic-memory/ | tail -10
+# Extract user messages and assistant responses (adapt path from the message)
+jq -r 'select(.type == "user" or .type == "assistant") |
+  if .type == "user" then "USER: " + (.message.content // .content | tostring)
+  else "CLAUDE: " + (.message.content // .content | tostring | .[0:500]) + "..."
+  end' /path/to/session.jsonl | head -100
 ```
 
-**When reading logs:** Match timestamps and session IDs to THIS conversation.
+If jq is not available, use grep:
+```bash
+# Quick summary of user messages only
+grep '"type":"user"' /path/to/session.jsonl |
+  grep -o '"content":"[^"]*"' |
+  head -20
+```
+
+#### Pattern C: Normal Session
+
+No special patterns at start → This conversation IS the full history.
 
 ### Cursor Only
 
-3. **Chat history** - Stored in SQLite databases (platform-specific):
-   - macOS: `~/Library/Application Support/Cursor/User/workspaceStorage/`
-   - Linux: `~/.config/Cursor/User/workspaceStorage/`
-   - Windows: `%APPDATA%\Cursor\User\workspaceStorage\`
-4. **Use `/summarize` output** if you ran it earlier in the session
+No compaction or plan mode. The conversation in the chat window IS the full history.
 
----
+### Shared: Git History
 
-## Step 1b: Detect Session Type
-
-### Claude Code Only
-
-**Run these checks IN ORDER to classify this session:**
-
-#### Check 1: Am I in a subagent?
-
-Subagents should NOT run /bye - they are child work sessions.
-
-Detection:
-- Session file is in a `subagents/` directory
-- Session JSON contains `"isSidechain": true`
-
-If subagent → **STOP**. Do not proceed with /bye.
-
-#### Check 2: Is this a metadata-only session?
-
-Compaction creates short "metadata" sessions (2 messages) just to generate summaries.
-
-Detection:
-- `messageCount <= 2` in sessions-index.json
-- First message contains `"Context: This summary will be shown"`
-
-If metadata session → **SKIP** /bye wrap-up. These aren't real work sessions.
-
-#### Check 3: Does this conversation contain compaction?
-
-Compaction embeds prior conversation in summary messages.
-
-Detection - look for messages containing:
-- `"Context: This summary will be shown"` AND `"Please write a concise, factual summary"` (single compaction)
-- `"Context: This summary will be shown"` AND `"synthesizes these part-summaries"` (multi-part synthesis)
-- Embedded `User:` / `Agent:` / `---` blocks (conversation transcript format)
-
-If found → **Compaction detected**. Parse the embedded transcript:
-```
-User: [their message]
-Agent: [response]
----
-User: [next message]
-...
-```
-
-#### Check 4: Is this a plan EXECUTION session?
-
-When you accept a plan, Claude Code **auto-clears context** so the plan executes fresh.
-
-Detection:
-- First messages reference a plan file or "execute the plan"
-- System message references `~/.claude/plans/*.md`
-- Session starts with implementation work without prior planning discussion
-
+After identifying session type, check recent commits (may include parallel session work):
 ```bash
-# Check for recent plan files
-ls -lt ~/.claude/plans/ | head -5
+git log --oneline -20
 ```
 
-If found → **Plan execution session**. Read the plan file to understand what was PLANNED vs what was DONE.
+---
 
-#### Check 5: Is this a plan CREATION session?
-
-Detection:
-- System message contains `"Plan mode is active"`
-- Session focused on analysis and planning, not implementation
-
-If found → **Plan mode session**. The plan file IS the deliverable.
-
-#### Check 6: Normal session
-
-None of the above → Standard session. Continue with existing logic.
-
-### Cursor
-
-Skip this section - these session types (subagent, compaction transcripts, plan mode auto-clear) don't apply to Cursor.
+**After reconstruction, you should know:**
+- [ ] What the user originally requested
+- [ ] What decisions were made and why
+- [ ] What files were created/modified
+- [ ] What's done vs what's pending
 
 ---
 
@@ -294,83 +245,3 @@ If written to temp file:
 3. **Check all sources** - conversation, memory, logs (tool-specific)
 4. **Never auto-commit ambiguous files** - could be parallel session work
 5. **Always push** if remote tracking exists
-
----
-
-## Subagent Instructions (for long/compacted sessions)
-
-### Claude Code Only
-
-When the conversation is too long to analyze directly, use subagents:
-
-#### Subagent Task: Analyze Session File
-
-```
-Use Task tool with subagent_type=Explore:
-prompt: |
-  Analyze the session file to determine session type.
-
-  Session file location:
-  ~/.claude/projects/{project-path-encoded}/{session-id}.jsonl
-
-  To find the project path:
-  PROJECT_PATH=$(pwd | tr '/' '-' | sed 's/^-//')
-  ls ~/.claude/projects/$PROJECT_PATH/
-
-  Steps:
-  1. Find the session file using the project path above
-  2. Read first 10 lines of the JSONL file
-  3. Look for these patterns:
-     - "Context: This summary will be shown" → compaction
-     - "Plan mode is active" → plan mode
-     - "isSidechain": true → subagent (skip)
-  4. Return:
-     - session_type: "compaction" | "plan_mode" | "plan_execution" | "normal" | "subagent"
-     - work_summary: 2-3 sentences of what happened
-     - files_mentioned: list of file paths discussed
-```
-
-#### Subagent Task: Detect Plan Execution Session
-
-```
-Use Task tool with subagent_type=Explore:
-prompt: |
-  Determine if this is a plan EXECUTION session (auto-cleared after plan approval).
-
-  Steps:
-  1. List ~/.claude/plans/ - find files modified in the last 2 hours
-  2. Check first few messages of current conversation:
-     - Do they reference executing/implementing a plan?
-     - Is there implementation work without prior planning discussion?
-  3. If plan file found, read it and extract:
-     - Verification checklist items
-     - Files to be modified
-  4. Return:
-     - is_plan_execution: true/false
-     - plan_path: path to plan file (if found)
-     - plan_summary: what was planned
-```
-
-#### Subagent Task: Parse Compaction Transcript
-
-```
-Use Task tool with subagent_type=Explore:
-prompt: |
-  Parse the compaction summary transcript.
-
-  The compaction message contains conversation in this format:
-  User: [their message]
-  Agent: [claude's response]
-  ---
-  User: [next message]
-  ...
-
-  Steps:
-  1. Extract each User/Agent exchange
-  2. Identify: files created, files modified, decisions made
-  3. Return:
-     - exchanges_count: number of User/Agent pairs
-     - files_created: list of new files
-     - files_modified: list of changed files
-     - key_decisions: list of choices made
-```
