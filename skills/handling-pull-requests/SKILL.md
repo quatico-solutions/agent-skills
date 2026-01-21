@@ -119,13 +119,17 @@ Generated with Claude Code
 
 ### AI Signature Convention
 
-When Claude posts comments on behalf of a user, **always sign**:
+When Claude posts comments on behalf of a user, **always sign**.
 
-```
-🤖 – Claude
-```
+**Format:** *🤖 – [Model Name]* in italic (if the editor supports it)
 
-This prevents impersonation and maintains transparency.
+Example: *🤖 – Claude*
+
+**Placement:**
+- **Inline:** Add at end of your reply: `...fixed in commit abc123.` *🤖 – Claude*
+- **Own line:** Start a new paragraph directly after your text—no blank line above or below
+
+**Why:** Prevents impersonation and maintains transparency. The signature should be unobtrusive but always present.
 
 ### Reply Guidelines
 
