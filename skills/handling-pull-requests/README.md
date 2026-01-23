@@ -38,6 +38,13 @@ Session 2: User said "check this PR"
   - Comment reply workflow
   - List formatting in rich text editor
 
+Session 3: User said "make a PR" (2026-01-22)
+- Skill not triggered despite matching triggers
+- Claude rationalized: "I know how to do this manually"
+- Missing AI signature on comment reply
+- No session cleanup (didn't navigate to example.com)
+- **Lesson:** Trigger matching works, but AI may still skip skills through rationalization
+
 ### Verification
 
 - [ ] "create a PR" triggers this skill

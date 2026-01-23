@@ -3,7 +3,8 @@ name: working-with-bitbucket-web
 description: >-
   Navigates Bitbucket web UI for PR operations. Use when interacting with
   Bitbucket in a browser. Triggers: bitbucket, bitbucket UI, bitbucket web,
-  bitbucket PR, bitbucket comments, bitbucket reviewers.
+  bitbucket PR, bitbucket comments, bitbucket reviewers, reply to comment,
+  resolve comment, add reviewer, edit PR description.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
