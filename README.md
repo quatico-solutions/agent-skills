@@ -34,6 +34,7 @@ Reusable skills in `skills/`.
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers | ~900 |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions | ~700 |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) | ~800 |
+| `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) | ~700 |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
 
@@ -85,6 +86,13 @@ Reusable skills in `skills/`.
 - Never use WebFetch, WebSearch, or MCP browser tools—they can't authenticate
 - Rich text editor supports partial markdown: `- ` and `## ` shortcuts work on paste/first line
 - For workflow guidance (when to reply vs resolve), see `handling-pull-requests`
+
+**Tips for `working-with-jira-web`:**
+- Requires native browser tools (Claude in Chrome / Cursor Browser) for SSO authentication
+- Never use WebFetch, WebSearch, or MCP browser tools—they can't authenticate
+- Use wiki markup in descriptions for predictable formatting with browser automation
+- Create button is below the fold in dialogs—always scroll down to find it
+- Escape key closes entire dialog, not just dropdowns—click outside instead
 
 **Tips for `writing-clearly-and-concisely`:**
 - Use when writing prose for humans (docs, commits, error messages, UI text)
