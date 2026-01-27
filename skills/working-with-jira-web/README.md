@@ -49,6 +49,8 @@ Same pattern as `working-with-bitbucket-web`: requires native browser integratio
 - Links work properly
 - Single operation vs. dozens of fragile interactions
 
+**Note:** Same technique documented in `working-with-bitbucket-web` skill. Duplication intentional for discoverability.
+
 ### 2026-01-21 MCP Discovery (Major)
 
 **Session context:** Testing atlassian MCP plugin for ticket updates.

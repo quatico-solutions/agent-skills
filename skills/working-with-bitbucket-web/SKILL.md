@@ -8,7 +8,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Working with Bitbucket Web
@@ -165,3 +165,36 @@ Copy and track progress:
 - Links in description body are clickable — avoid accidental clicks
 - Left sidebar extends into content area — avoid clicking near edges
 - Always take a screenshot after edits to verify persistence
+
+---
+
+## Advanced: JavaScript Content Injection
+
+For complex descriptions (tables, multiple sections, links), directly inject HTML into ProseMirror:
+
+```javascript
+const editor = document.querySelector('.ProseMirror');
+editor.innerHTML = `
+<h2>Summary</h2>
+<p>Description with <strong>formatting</strong> and <a href="...">links</a></p>
+<ul>
+  <li>Bullet point</li>
+  <li>Another point
+    <ul><li>Nested item</li></ul>
+  </li>
+</ul>
+`;
+editor.dispatchEvent(new Event('input', { bubbles: true }));
+```
+
+**When to use:**
+- Complex descriptions with tables, nested lists, multiple headings
+- Content with many links (commits, tickets, external URLs)
+- Avoiding duplicate bullet issues during list entry
+
+**Why this works:**
+- Bitbucket uses ProseMirror editor under the hood
+- Direct HTML injection bypasses WYSIWYG interaction fragility
+- `input` event dispatch triggers Bitbucket's state management
+
+**Note:** Same technique documented in `working-with-jira-web` skill.

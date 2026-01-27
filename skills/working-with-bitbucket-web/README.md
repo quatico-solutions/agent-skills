@@ -76,10 +76,32 @@ The WYSIWYG editor only converts markdown shortcuts at line start in **normal pa
 - Use toolbar buttons for all formatting while in list mode
 - Prefer nested lists over tables (tables don't render at all)
 
+## ProseMirror JavaScript Injection Testing (2026-01-27)
+
+### Discovery
+Direct `.ProseMirror.innerHTML` injection for complex content
+
+### Context
+Creating PR #47 description with nested structure and cross-references
+
+### Problem
+Duplicate bullets when mixing markdown input (`- `) with list mode (already auto-bulleted)
+
+### Solution
+JavaScript injection of complete HTML structure, bypassing WYSIWYG entirely
+
+### Results
+- Reliable complex content entry
+- Lists render correctly without duplicates
+- Single operation vs. fragile multi-step interactions
+
+**Note:** Same technique documented in `working-with-jira-web` skill. Duplication intentional for discoverability.
+
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.5 | 2026-01-27 | Added ProseMirror JavaScript injection technique (same as JIRA skill) |
 | 1.0 | 2025-01 | Initial skill (bitbucket-ui) |
 | 1.1 | 2025-01 | Renamed to working-with-bitbucket-web, added browser tool guidance |
 | 1.2 | 2025-01 | Updated rich text editor guidance based on testing |
