@@ -7,7 +7,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "2.0"
+  version: "2.1"
 ---
 
 # Working with JIRA
@@ -161,6 +161,33 @@ JIRA uses Atlassian's **WYSIWYG editor**, NOT wiki markup.
 | Wiki markup literal | JIRA is WYSIWYG | Use toolbar, not `h2.` syntax |
 
 **Why MCP is better**: All these pitfalls disappear with the API approach.
+
+### Advanced: JavaScript Content Injection
+
+For complex descriptions (tables, multiple sections, links), directly inject HTML into ProseMirror:
+
+```javascript
+const editor = document.querySelector('.ProseMirror');
+editor.innerHTML = `
+<h2>Goal</h2>
+<p>Description with <strong>formatting</strong> and <a href="...">links</a></p>
+<table>
+  <tr><th>Column</th><th>Value</th></tr>
+  <tr><td>Row 1</td><td>Data</td></tr>
+</table>
+`;
+editor.dispatchEvent(new Event('input', { bubbles: true }));
+```
+
+**When to use:**
+- Complex descriptions with tables, nested lists, multiple headings
+- Content with many links (Bitbucket, external URLs)
+- Avoiding focus-loss issues during multi-section entry
+
+**Why this works:**
+- JIRA uses ProseMirror editor under the hood
+- Direct HTML injection bypasses WYSIWYG interaction fragility
+- `input` event dispatch triggers JIRA's state management
 
 ---
 

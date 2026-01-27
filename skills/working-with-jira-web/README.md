@@ -30,6 +30,25 @@ Same pattern as `working-with-bitbucket-web`: requires native browser integratio
 
 ## Testing History
 
+### 2026-01-27 ProseMirror JavaScript Injection
+
+**Discovery:** Direct `.ProseMirror.innerHTML` injection for complex content
+
+**Context:** Creating CDSTLZ-181 with tables, 5 implementation sections, Bitbucket links
+
+**Problem:** Character-by-character typing failed due to:
+- Focus loss when applying headings (content deleted)
+- Table entry impossible via WYSIWYG
+- Multiple heading applications unreliable
+
+**Solution:** JavaScript injection of complete HTML structure
+
+**Results:**
+- 100% reliable for complex descriptions
+- Tables render correctly
+- Links work properly
+- Single operation vs. dozens of fragile interactions
+
 ### 2026-01-21 MCP Discovery (Major)
 
 **Session context:** Testing atlassian MCP plugin for ticket updates.
@@ -80,6 +99,7 @@ Same pattern as `working-with-bitbucket-web`: requires native browser integratio
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1 | 2026-01-27 | Added ProseMirror JavaScript injection technique for complex browser automation |
 | 2.0 | 2026-01-21 | **Breaking**: Atlassian MCP as primary approach, browser demoted to fallback |
 | 1.1 | 2026-01-20 | Replaced wiki markup with WYSIWYG; added browser automation pitfalls |
 | 1.0 | 2026-01 | Initial release with create, linking |
