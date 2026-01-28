@@ -4,10 +4,22 @@ Shared commands and skills for AI-assisted development with Claude Code and Curs
 
 ## Setup
 
-Install commands and skills (creates symlinks in `~/.claude/`):
+### One-liner (skills only)
+
 ```bash
-pnpm run install-claude-config
+pnpx skills add git@bitbucket.org:quatico/config.git -g -a claude-code --all -y
 ```
+
+### Full install (skills + commands)
+
+```bash
+git clone git@bitbucket.org:quatico/config.git && cd config
+pnpm install && pnpm run install-claude-config
+```
+
+Installs to `~/.claude/` (works for Claude Code and Cursor).
+
+**Note:** The one-liner installs skills only. Commands require cloning the repo.
 
 ## Commands
 
