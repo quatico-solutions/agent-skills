@@ -45,6 +45,13 @@ Session 3: User said "make a PR" (2026-01-22)
 - No session cleanup (didn't navigate to example.com)
 - **Lesson:** Trigger matching works, but AI may still skip skills through rationalization
 
+Session 4: User said "commit this and make a draft PR" (2026-02-02)
+- Skill not triggered despite Session 3 lesson
+- Claude invoked `working-with-bitbucket-web` directly, bypassing workflow skill
+- Same rationalization pattern: jumped to platform-specific skill
+- **Fix applied:** Added "draft PR" triggers, strengthened cross-reference in bitbucket skill
+- **Lesson:** Passive cross-references get ignored; need active enforcement in dependent skills
+
 ### Verification
 
 - [ ] "create a PR" triggers this skill
