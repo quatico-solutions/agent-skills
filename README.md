@@ -17,9 +17,15 @@ git clone git@bitbucket.org:quatico/config.git && cd config
 pnpm install && pnpm run install-claude-config
 ```
 
-Installs to `~/.claude/` (works for Claude Code and Cursor).
+**Install locations:**
+| Content  | Claude Code         | Cursor               |
+|----------|---------------------|----------------------|
+| Commands | `~/.claude/commands/` | `~/.claude/commands/` (shared) |
+| Skills   | `~/.claude/skills/` | `~/.cursor/skills/`  |
 
-**Note:** The one-liner installs skills only. Commands require cloning the repo.
+Skills are stored in `~/.agents/skills/` and symlinked to both tool-specific locations.
+
+**Note:** The one-liner installs skills only (Claude Code). Commands and Cursor skills require cloning the repo.
 
 ## Commands
 
