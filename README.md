@@ -17,7 +17,7 @@ git clone git@bitbucket.org:quatico/config.git && cd config
 pnpm install && pnpm run install-claude-config
 ```
 
-Skills are installed to `~/.agents/skills/` and symlinked to both `~/.claude/skills/` and `~/.cursor/skills/`.
+Installation uses the [`skills`](https://www.npmjs.com/package/skills) CLI to install skills to `~/.agents/skills/` and symlink to both `~/.claude/skills/` and `~/.cursor/skills/`.
 
 **Note:** The one-liner installs skills only. Commands require cloning the repo.
 
