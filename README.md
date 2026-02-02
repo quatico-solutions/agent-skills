@@ -39,6 +39,7 @@ Reusable skills in `skills/`.
 | Skill | Description | Token Cost |
 |-------|-------------|------------|
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
+| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies | ~600 |
 | `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work | ~1,000 |
 | `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns | ~1,200 |
 | `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags | ~600 |
@@ -58,6 +59,12 @@ Reusable skills in `skills/`.
 - Triggers automatically when discussing commits or referenced by other skills
 - Other workflow skills (fix-a-bug, add-feature) can reference this skill
 - Source: [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
+
+**Tips for `commit`:**
+- Covers WHEN to commit (work done + verified) and WHAT belongs together
+- Use with `commit-notation` for complete guidance (this = timing/composition, that = message format)
+- Git hooks: never skip with `--no-verify` without asking the human first
+- Key insight: commits are checkpoints of verified work, not save points
 
 **Tips for `double-loop-bdd-tdd`:**
 - Use for user stories with acceptance criteria, features spanning multiple components
