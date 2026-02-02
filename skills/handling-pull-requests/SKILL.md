@@ -3,8 +3,9 @@ name: handling-pull-requests
 description: >-
   Guides PR workflows: creating PRs, addressing review feedback, replying to comments.
   Use when creating PRs, responding to code review, or managing PR lifecycle.
-  Triggers: create PR, open PR, new PR, make PR, address feedback, review comments,
-  respond to review, PR workflow, pull request creation, commit and push, push and PR.
+  Triggers: create PR, open PR, new PR, make PR, draft PR, create draft, make draft,
+  address feedback, review comments, respond to review, PR workflow, pull request creation,
+  commit and push, push and PR.
 compatibility: claude-code, cursor
 metadata:
   version: "1.0"

@@ -13,9 +13,15 @@ metadata:
 
 # Working with Bitbucket Web
 
-**For workflow guidance** (when to create PRs, address feedback, signature conventions): See `handling-pull-requests` skill.
+## CRITICAL: Invoke Workflow Skill First
 
-This skill covers **Bitbucket UI mechanics only**.
+**Before using this skill for PR operations (creating PRs, replying to comments, addressing feedback), you MUST invoke `handling-pull-requests` first.**
+
+This skill covers **Bitbucket UI mechanics only**. The workflow skill provides:
+- PR description templates
+- Review feedback process (read ALL comments first, batch changes)
+- AI signature conventions (`🤖 – Claude`)
+- When to reply vs resolve comments
 
 ---
 
