@@ -60,6 +60,7 @@ Reusable skills in `skills/`.
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) | ~800 |
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) | ~700 |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
+| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
 
 **Example prompts:**
@@ -140,6 +141,15 @@ Reusable skills in `skills/`.
 - Use when writing prose for humans (docs, commits, error messages, UI text)
 - For limited context: dispatch a subagent with your draft + the reference file for copyediting
 - Source: [obra/the-elements-of-style](https://github.com/obra/the-elements-of-style) (Public Domain)
+
+**Tips for `agents-md-maintenance`:**
+
+- Use after editing AGENTS.md or any docs/rules/ files to verify sync
+- Runs 5 checks: navigation map, critical rule uniqueness, cross-references, example formatting, file sizes
+- Auto-fixes safe issues (orphaned spokes, duplicate rules, missing ✅/❌ markers)
+- Recommends human judgment for complex issues (splitting large files, merging small ones)
+- Include in PR checklist before merging AGENTS.md changes
+- Companion to `consolidate-agent-rules` command (that creates, this maintains)
 
 **Tips for `quatico-sso-auth`:**
 
