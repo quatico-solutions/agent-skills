@@ -21,6 +21,18 @@ Installation uses the [`skills`](https://www.npmjs.com/package/skills) CLI to in
 
 **Note:** The one-liner installs skills only. Commands require cloning the repo.
 
+### Cursor Symlink Issue
+
+Cursor doesn't follow symlinks when discovering skills. If skills don't appear after installation, run this workaround to convert symlinks to real directories:
+
+```bash
+cd ~/.cursor/skills
+for skill in ~/.agents/skills/*/; do
+  name=$(basename "$skill")
+  [ -L "$name" ] && rm "$name" && cp -r "$skill" . && echo "Fixed: $name"
+done
+```
+
 ## Commands
 
 Reusable slash commands in `commands/`.
