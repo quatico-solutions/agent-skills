@@ -74,7 +74,7 @@ Reusable skills in `skills/`.
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
-| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
+| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
 | `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
 
 **Example prompts:**
