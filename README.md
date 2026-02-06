@@ -74,6 +74,7 @@ Reusable skills in `skills/`.
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
+| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, starter-theme theme, shadow DOM patterns | ~2,500 |
 
 **Example prompts:**
 
@@ -168,6 +169,14 @@ Reusable skills in `skills/`.
 - Use native browser tools (Claude in Chrome / Cursor Browser) for SSO
 - Handles both Keycloak (`*.example.invalid`) and generic Google SSO (Atlassian, Miro, Figma)
 - If no Google session exists, ask user to log in manually—never request credentials
+
+**Tips for `styling-wbcomponents`:**
+
+- Use when styling wbcomponents components, creating custom themes, or debugging shadow DOM styling
+- Key insight: CSS custom properties pierce shadow DOM; direct class selectors do not
+- Always reference `starter-theme.scss` for production values—base `_global.scss` provides defaults only
+- Palettes don't auto-generate: must call `@include color.palette()` for full color scales
+- State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
 
 ## Creating Skills
 
