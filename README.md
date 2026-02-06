@@ -74,7 +74,8 @@ Reusable skills in `skills/`.
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
-| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, starter-theme theme, shadow DOM patterns | ~2,500 |
+| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, starter-theme theme, shadow DOM patterns | ~6,000 |
+| `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
 
 **Example prompts:**
 
@@ -177,6 +178,15 @@ Reusable skills in `skills/`.
 - Always reference `starter-theme.scss` for production values—base `_global.scss` provides defaults only
 - Palettes don't auto-generate: must call `@include color.palette()` for full color scales
 - State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
+
+**Tips for `forms-with-wbcomponents`:**
+
+- Always match `formId` on Form with `form` attribute on fields—mismatches break FormData
+- Prefer `defaultValue` (uncontrolled) over `value` (controlled) for simpler forms
+- Use `onValidate` prop for custom validation beyond HTML5 built-in rules
+- Multi-step forms: use `beforeNext` hook for async validation before proceeding
+- Conditional fields: wrap in `FieldGroup` with `condition` prop for show/hide logic
+- For styling forms, reference `styling-wbcomponents` skill—this skill covers behavior only
 
 ## Creating Skills
 
