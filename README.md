@@ -74,7 +74,7 @@ Reusable skills in `skills/`.
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
-| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, starter-theme theme, shadow DOM patterns | ~6,000 |
+| `styling-wbcomponents` | Styling wbcomponents components: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
 | `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
 
 **Example prompts:**
@@ -175,9 +175,10 @@ Reusable skills in `skills/`.
 
 - Use when styling wbcomponents components, creating custom themes, or debugging shadow DOM styling
 - Key insight: CSS custom properties pierce shadow DOM; direct class selectors do not
-- Always reference `starter-theme.scss` for production values—base `_global.scss` provides defaults only
-- Palettes don't auto-generate: must call `@include color.palette()` for full color scales
+- For theming, prefer DS tokens (`--ds-{component}__*`) in `:root` — they affect all instances
+- Two perspectives: "How to Build a Theme" (DS tokens) vs "How to Style Components" (props → style → CSS → innerCss)
 - State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
+- Both `spritemapUrl` and `spritemap` are valid — choose based on build setup
 
 **Tips for `forms-with-wbcomponents`:**
 
