@@ -2,16 +2,14 @@
 name: branch-and-commit
 description: >-
   Intelligently groups and commits changes based on revertibility, intention, and logical
-  dependencies. Creates feature branches, orders commits for optimal review, and prepares
+  dependencies. Optionally creates feature branches. Orders commits for optimal review and prepares
   for PR using Arlo's Commit Notation.
-  Use when: ready to commit multiple changes, preparing feature branch, organizing work for PR.
+  Use when: ready to commit multiple changes, organizing work on current or new branch, preparing for PR.
   Triggers: branch and commit, branch-and-commit, smart commit, organize changes,
   commit and branch, prepare branch, structure commits.
   Related: commit (principles), commit-notation (formatting), handling-pull-requests (PR creation).
 compatibility: claude-code
 license: MIT
-metadata:
-  version: "1.1"
 ---
 
 # Branch and Commit
@@ -23,7 +21,7 @@ metadata:
 Use this skill when you have **uncommitted changes** and need to:
 - Group changes into logical, atomic commits
 - Apply proper risk notation (Arlo's Commit Notation)
-- Create a feature branch with well-structured history
+- Organize commits on current branch OR create a new feature branch
 - Prepare changes for pull request review
 
 **Do NOT use for:**
@@ -39,8 +37,9 @@ This skill transforms messy working directory changes into a clean commit histor
 2. **Interviewing** you with in-depth questions to uncover missing changes and improvements
 3. **Grouping** changes by intention and risk level (after understanding context from interview)
 4. **Ordering** commits optimally (provably safe changes first, features last)
-5. **Creating** a feature branch with proper commit messages
-6. **Preparing** for PR creation (optional)
+5. **Deciding** whether to use current branch or create new feature branch
+6. **Committing** with proper commit messages
+7. **Preparing** for PR creation (optional)
 
 ## Workflow
 
@@ -65,8 +64,8 @@ Before proceeding, scan diffs for sensitive data:
 - API keys: Long alphanumeric strings (32+ chars)
 - AWS credentials: `AKIA[A-Z0-9]{16}` pattern
 - Private keys: `-----BEGIN.*PRIVATE KEY-----`
-- Passwords: Common variable names in plain text (`password =`, `PASSWORD =`)
-- Tokens: `token =`, `auth_token =`, `bearer =`
+- Passwords: Common variable names in plain text (like `password =` or `PASSWORD =`)
+- Tokens: patterns like `token =` or `auth_token =` or `bearer =`
 
 If potentially sensitive data is found:
 1. **Warn user** with file path and line number
@@ -206,16 +205,70 @@ Commits are ordered for optimal review:
 
 ### Phase 7: User Interaction
 
-1. **Branch name** - Propose based on detected ticket or first commit, allow custom input
+**Step 1: Detect current branch:**
+```bash
+current_branch=$(git branch --show-current)
+```
 
-2. **Final confirmation** - Show refined commits with:
-   - Commit notation (e.g., `F: Add user authentication`)
-   - Files included
-   - Ticket number (if applicable)
+**Branch Decision Flowchart:**
 
-   Options: Proceed / Adjust / Cancel
+```dot
+digraph branch_decision {
+    rankdir=TD;
+    node [shape=box, style=rounded];
+
+    detect [label="Detect current branch\n(git branch --show-current)"];
+    is_protected [label="Is branch protected?\n(main/master/develop/trunk/\nstaging/production)", shape=diamond];
+    case_a [label="Case A: Protected Branch\nInform: 'Creating feature branch required'\nPropose branch name\nSet needs_new_branch = true", style="rounded,filled", fillcolor="#ffcccc"];
+    ask_user [label="Case B: Feature Branch\nAsk: 'Use this branch?'", shape=diamond, style="filled", fillcolor="#ccf0ff"];
+    use_current [label="User: YES\nUse current branch\nSet needs_new_branch = false", style="rounded,filled", fillcolor="#ccffcc"];
+    create_new [label="User: NO\nPropose new branch name\nSet needs_new_branch = true", style="rounded,filled", fillcolor="#ffcccc"];
+    confirm [label="Final Confirmation\nShow commits + branch strategy"];
+
+    detect -> is_protected;
+    is_protected -> case_a [label="Yes"];
+    is_protected -> ask_user [label="No"];
+    ask_user -> use_current [label="Yes"];
+    ask_user -> create_new [label="No"];
+    case_a -> confirm;
+    use_current -> confirm;
+    create_new -> confirm;
+}
+```
+
+**Step 2: Branch decision logic:**
+
+**Case A: User on main/master/develop/trunk**
+- Inform: "You're on `<branch>`. Creating a feature branch is required."
+- Propose branch name based on detected ticket or first commit
+- Allow custom input
+- Mark: `needs_new_branch = true`
+
+**Case B: User on feature branch**
+- Ask: "You're on `<current-branch>`. Use this branch for commits?"
+  - **Yes** → Mark: `needs_new_branch = false`, use existing branch
+  - **No** → Propose new branch name, mark: `needs_new_branch = true`
+
+**Step 3: Final confirmation** - Show refined commits with:
+- Commit notation (e.g., `F: Add user authentication`)
+- Files included
+- Ticket number (if applicable)
+- Branch strategy:
+  - If `needs_new_branch = false`: "Using current branch: `<name>`"
+  - If `needs_new_branch = true`: "Creating new branch: `<name>`"
+
+Options: Proceed / Adjust / Cancel
 
 ### Phase 8: Execution
+
+**Step 1: Create branch (only if `needs_new_branch = true`):**
+```bash
+# Create and switch to new branch
+# Skip this step if using existing branch
+git checkout -b <branch-name>
+```
+
+**Step 2: Create commits:**
 
 For each commit group:
 
@@ -236,12 +289,27 @@ EOF
 - This overrides Quatico standard which uses no prefix
 - Required for this project's conventions
 
-After all commits:
+**Step 3: Push commits:**
 
 ```bash
-# Push branch
-git push -u origin <branch-name>
+# Always check if branch tracks remote (regardless of needs_new_branch flag)
+# This handles edge case: user on local-only branch that doesn't track remote yet
+
+current_branch=$(git branch --show-current)
+
+if git rev-parse --abbrev-ref @{upstream} &>/dev/null; then
+  # Branch already tracks remote - just push
+  echo "Pushing to existing upstream..."
+  git push
+else
+  # Branch doesn't track remote yet - set upstream and push
+  # (Can happen even if needs_new_branch=false: user on local-only feature branch)
+  echo "Setting upstream and pushing..."
+  git push -u origin "$current_branch"
+fi
 ```
+
+**Key insight:** Don't rely solely on `needs_new_branch` flag. A user might be on an existing local branch that never tracked remote. Always check tracking status to determine correct push command.
 
 ### Phase 9: PR Preparation (Optional)
 
@@ -294,6 +362,41 @@ When executing this skill, Claude should use the following tools and patterns:
    - Check file patterns
    - Analyze diff content for security issues
 
+### Protected Branches Configuration
+
+The skill treats these branches as **"protected"** - requiring new branch creation:
+- `main`
+- `master`
+- `develop`
+- `trunk`
+- `staging`
+- `production`
+
+When current branch matches any of these, the skill will **require** creating a feature branch (Case A logic).
+
+**Detection logic:**
+```bash
+current_branch=$(git branch --show-current)
+protected_branches=("main" "master" "develop" "trunk" "staging" "production")
+
+if [[ " ${protected_branches[@]} " =~ " ${current_branch} " ]]; then
+  # Case A: Protected branch - must create feature branch
+  echo "You're on protected branch '$current_branch'. Creating a feature branch is required."
+  # Propose branch name...
+else
+  # Case B: Feature branch - ask user preference
+  echo "You're on '$current_branch'. Use this branch for commits?"
+  # Get user choice...
+fi
+```
+
+**Branches NOT in this list** are considered "feature branches" and trigger the "use this branch?" prompt.
+
+**Edge cases:**
+- `release/1.0` → Considered feature branch (ask user)
+- `hotfix/critical` → Considered feature branch (ask user)
+- Custom base branches → If you use different base branch names (e.g., `dev` instead of `develop`), add them to the protected list
+
 ### Implementation Flow
 
 ```
@@ -306,11 +409,18 @@ When executing this skill, Claude should use the following tools and patterns:
    a. Gather context
    b. Invoke /commit-notation (Skill tool)
    c. Store annotation for later
-7. Show proposed commits (text output)
-8. Get confirmation (AskUserQuestion or wait for approval)
-9. Execute commits (Bash - git add, git commit)
-10. Push branch (Bash - git push)
-11. Optional: PR workflow (two-step questions)
+7. Detect current branch (Bash - git branch --show-current)
+8. Branch decision:
+   - If on main/master/develop/trunk: Propose new branch, set needs_new_branch=true
+   - If on feature branch: Ask "Use this branch?", set needs_new_branch accordingly
+9. Show proposed commits with branch strategy (text output)
+10. Get confirmation (AskUserQuestion or wait for approval)
+11. If needs_new_branch=true: Create branch (Bash - git checkout -b)
+12. Execute commits (Bash - git add, git commit)
+13. Push commits:
+    - If needs_new_branch=true: git push -u origin <branch-name>
+    - If needs_new_branch=false: git push
+14. Optional: PR workflow (two-step questions)
 ```
 
 ### Pattern: Invoking commit-notation
@@ -342,7 +452,7 @@ const context = {
 // `
 
 // Parse response
-// Expected response format: annotation letter(s) like "F", "a", "R!!", etc.
+// Expected response format: annotation letters like "F" or "a" or with risk suffix like "R" with double-bang
 // Use in commit message: "<annotation> <summary>"
 ```
 
@@ -433,11 +543,40 @@ Use AskUserQuestion with structure:
 
 ### Branch Already Exists
 
-**If proposed branch name exists:**
+**If proposed branch name exists (only relevant when creating new branch):**
 
 1. Check if it's the current branch
-2. If current: "Already on branch `<name>`. Continue with commits?"
+2. If current: "Already on branch `<name>`. Use this branch for commits?"
+   - This should have been caught in Phase 7 detection
 3. If different: "Branch `<name>` exists. Choose different name or switch to it?"
+
+**If user chose to use current branch in Phase 7:**
+- No branch creation, proceed directly to commits
+
+### Detached HEAD State
+
+**If `git branch --show-current` returns empty string:**
+
+1. User is in **detached HEAD** state (not on any branch)
+2. Detect with additional check:
+   ```bash
+   current_branch=$(git branch --show-current)
+   if [ -z "$current_branch" ]; then
+     # Detached HEAD state
+     echo "You're not on a branch (detached HEAD state)."
+   fi
+   ```
+
+3. **Inform user:** "You're in detached HEAD state (not on any branch). Creating a feature branch is required to save your commits."
+
+4. **Propose branch name** based on:
+   - Current commit: `git log -1 --format=%s` (use commit message)
+   - Or ticket number if detected
+   - Or generic: `feature/detached-work-$(date +%s)`
+
+5. **Proceed with Case A logic** (mandatory branch creation)
+
+**Why this matters:** Commits made in detached HEAD are easy to lose. The skill protects users by forcing branch creation.
 
 ### No Changes Detected
 
@@ -502,7 +641,7 @@ Based on `/commit-notation` skill with **project override for ticket format**:
 Examples:
 - `F: Add user authentication endpoint` + `#FOO-123` (uppercase with `:`)
 - `r Extract calculateTotal method` + `#FOO-123` (lowercase without `:`)
-- `B!! Fix race condition in event handler` + `#BAR-456` (uppercase with `:`)
+- `B` with risk suffix: `Fix race condition in event handler` + `#BAR-456` (uppercase with `:`)
 - `E: Add axios-retry dependency` + (optional ticket)
 - `a Update imports after file move` + `#FOO-123` (lowercase without `:`)
 
@@ -571,7 +710,7 @@ Then invoke `/commit-notation` with this context to get the proper annotation.
 **With commit-notation (CRITICAL - Active Integration):**
 - **Invoke `/commit-notation` for EACH commit group** to determine risk level
 - Provide context: intention, LoC, file count, change nature, test status
-- Use the annotation it returns (`x`, `X`, `X!!`, `X**`)
+- Use the annotation it returns (like `x` or `X` or with suffixes like `X!!` or `X**`)
 - This ensures 100% consistency with manual commits
 - Also use for final message formatting
 
@@ -587,7 +726,37 @@ Then invoke `/commit-notation` with this context to get the proper annotation.
 
 ## Examples
 
-### Example 1: Simple Feature
+### Example 1: Using Current Branch
+
+**Scenario:**
+- Already on branch: `feature/auth-improvements`
+- Changes: authentication improvements
+
+**Changes:**
+- `src/auth.ts` - improved token validation
+- `src/auth.spec.ts` - additional tests
+
+**Phase 7 interaction:**
+```
+You're on `feature/auth-improvements`. Use this branch for commits?
+→ Yes
+```
+
+**Result:**
+```bash
+# No branch creation
+# Commits directly to feature/auth-improvements
+
+# Commit 1
+F: Improve token validation logic
+
+#FOO-123
+
+# Push
+git push
+```
+
+### Example 2: Simple Feature (New Branch)
 
 **Changes:**
 - `src/auth.ts` - new authentication function
@@ -601,7 +770,7 @@ F: Add user authentication endpoint
 #FOO-123
 ```
 
-### Example 2: Mixed Changes
+### Example 3: Mixed Changes
 
 **Changes:**
 - `src/feature.ts` - new feature
@@ -629,7 +798,7 @@ D: Document data fetching API
 #FOO-123
 ```
 
-### Example 3: IDE Rename
+### Example 4: IDE Rename
 
 **Changes:**
 - 50 files changed
@@ -647,7 +816,7 @@ a Rename oldMethod to newMethod
 Note: **Lowercase `a`** because provably safe (IDE-assisted, type-checked)
 Note: **All 50 files in one commit** because it's safe to do so
 
-### Example 4: Typo Fix Across Docs
+### Example 5: Typo Fix Across Docs
 
 **Changes:**
 - 10 markdown files
@@ -671,9 +840,15 @@ Note: **All 10 files in one commit** because it's safe to do so
 ✓ Commits grouped logically (test+impl together, intentions separate)
 ✓ Provably safe commits (lowercase) can touch many files without being split
 ✓ Commits ordered optimally (lowercase first, then UPPERCASE, features last)
-✓ Branch created with proposed/custom name
+✓ Detects current branch and offers to use it (if on feature branch)
+✓ Creates new branch only when user chooses to (or when on main/master/develop)
+✓ Correctly handles both workflows: current branch vs new branch
 ✓ Two-step PR workflow works (markdown generation + optional PR creation)
 ✓ Uses `#` prefix for ticket numbers in commit messages
+✓ Handles detached HEAD state gracefully (forces branch creation)
+✓ Always checks upstream tracking status before pushing (not just flag-based)
+✓ Correctly identifies protected vs feature branches using explicit list
+✓ Handles local-only branches (no upstream tracking) without errors
 
 ## Common Pitfalls
 
@@ -682,12 +857,16 @@ Note: **All 10 files in one commit** because it's safe to do so
 - Split provably safe changes across multiple commits
 - Skip the interview phase (it reveals critical improvements)
 - Create PR without asking user preference
+- Force branch creation when user is already on a feature branch
+- Forget to detect current branch before proposing new one
 - Forget `#` prefix on ticket numbers
 
 **Do:**
 - Invoke `/commit-notation` for every commit group
 - Ask in-depth, contextual questions during interview
 - Allow many files in lowercase commits (they're provably safe)
+- Detect current branch and ask if user wants to use it
+- Create new branch only when explicitly chosen or on main/master/develop
 - Give user choice on PR description (markdown vs full PR)
 - Use `#FOO-123` format for ticket numbers
 

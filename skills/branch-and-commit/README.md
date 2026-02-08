@@ -4,9 +4,11 @@ Development notes for the intelligent commit organization and branch creation sk
 
 ## Overview
 
-Automates the workflow of analyzing uncommitted changes, grouping them into atomic commits with proper Arlo notation, creating feature branches, and preparing for PRs.
+Automates the workflow of analyzing uncommitted changes, grouping them into atomic commits with proper Arlo notation, optionally creating feature branches, and preparing for PRs.
 
-**Key innovation:** Conducts in-depth interview before grouping to uncover missing changes, edge cases, and better commit organization.
+**Key innovations:**
+- Conducts in-depth interview before grouping to uncover missing changes, edge cases, and better commit organization
+- Intelligently detects current branch and offers to use it (v2.0) - no forced branch creation
 
 ## Design Decisions
 
@@ -83,6 +85,26 @@ Automates the workflow of analyzing uncommitted changes, grouping them into atom
 - Consistency with existing commits
 - Git doesn't treat `#` as comment in commit message body (only first line)
 
+### 7. Optional Branch Creation (v2.0)
+
+**Decision:** Detect current branch and ask user whether to use it or create new one
+
+**Rationale:**
+- Users often want to organize commits on existing feature branch
+- Forced branch creation was annoying when already on correct branch
+- Protected branches (main/master/develop/trunk/staging/production) still require new branch
+- Feature branches offer choice: use current or create new
+
+**Alternative considered:** Always create new branch
+- **Rejected:** Forces unnecessary branch creation, poor UX for existing feature branches
+
+**Implementation:**
+- Phase 7 detects current branch with `git branch --show-current`
+- Protected branches → Case A: Must create new branch
+- Feature branches → Case B: Ask user preference
+- Visual flowchart shows decision tree
+- Always check upstream tracking status before push (handles local-only branches)
+
 ## Implementation Patterns
 
 ### Skill Tool Invocation
@@ -148,6 +170,10 @@ const context = {
 - Large files (>1000 lines) → Categorize by path only
 - Mixed intentions in same file → Try `git add -p`, ask user
 - Multiple tickets → Group by ticket, separate commits
+- **Detached HEAD state (v2.0)** → Force branch creation, propose intelligent name
+- **Local-only branch (v2.0)** → Check tracking status, use `git push -u` if needed
+- **Protected branch (v2.0)** → Require new feature branch creation
+- **Feature branch (v2.0)** → Ask user preference: use current or create new
 
 ## Known Limitations
 
@@ -194,7 +220,19 @@ const context = {
 
 ## Version History
 
-### v1.1 (Current)
+### v2.0 (Current)
+
+**Breaking Change:** Branch creation is now optional
+
+- ✅ Optional branch creation - detects current branch and asks user preference
+- ✅ Protected branches list (main/master/develop/trunk/staging/production)
+- ✅ Detached HEAD detection and handling
+- ✅ Robust git push logic - always checks upstream tracking status
+- ✅ Visual flowchart for branch decision logic
+- ✅ Four new edge case success criteria
+- ✅ Comprehensive error handling for branch states
+
+### v1.1
 
 - ✅ Security checks (API keys, AWS credentials, private keys)
 - ✅ Error handling (8 scenarios documented)
