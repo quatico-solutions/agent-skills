@@ -4,34 +4,16 @@ Shared commands and skills for AI-assisted development with Claude Code and Curs
 
 ## Setup
 
-### One-liner (skills only)
-
-```bash
-pnpx skills add git@bitbucket.org:quatico/config.git --global --agent claude-code --agent cursor --all --yes
-```
-
-### Full install (skills + commands)
+### Full install (recommended)
 
 ```bash
 git clone git@bitbucket.org:quatico/config.git && cd config
 pnpm install && pnpm run install-claude-config
 ```
 
-Installation uses the [`skills`](https://www.npmjs.com/package/skills) CLI to install skills to `~/.agents/skills/` and symlink to both `~/.claude/skills/` and `~/.cursor/skills/`.
+Skills are copied to `~/.claude/skills/` which both Claude Code and Cursor read from.
 
-**Note:** The one-liner installs skills only. Commands require cloning the repo.
-
-### Cursor Symlink Issue
-
-Cursor doesn't follow symlinks when discovering skills. If skills don't appear after installation, run this workaround to convert symlinks to real directories:
-
-```bash
-cd ~/.cursor/skills
-for skill in ~/.agents/skills/*/; do
-  name=$(basename "$skill")
-  [ -L "$name" ] && rm "$name" && cp -r "$skill" . && echo "Fixed: $name"
-done
-```
+**Note:** Commands are installed as symlinks to the repo, so pulling updates applies them immediately. Skills are copied (not symlinked) for Cursor compatibility—re-run install after pulling to update skills.
 
 ## Commands
 
