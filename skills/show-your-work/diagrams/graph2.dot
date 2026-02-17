@@ -1,0 +1,52 @@
+digraph workflow {
+    rankdir=TB;
+    compound=true;
+    node [shape=box fontname="Helvetica"];
+
+    trigger [label="Trigger:\n'show your work'" shape=ellipse];
+
+    subgraph cluster_setup {
+        label="Setup";
+        style=filled;
+        fillcolor="#fff8e1";
+        check [label="Check prerequisites\nuvx showboat --version"];
+        mode [label="Determine mode\n(proactive / reactive)"];
+        init [label="showboat init\ndocs/demos/YYYY-MM-DD-slug.md"];
+    }
+
+    subgraph cluster_capture {
+        label="Capture Evidence";
+        style=filled;
+        fillcolor="#e3f2fd";
+        context [label="showboat note\n(what changed, why)"];
+        tests [label="showboat exec\n(test commands)"];
+        commands [label="showboat exec\n(build, lint, API calls)"];
+        screenshots [label="rodney start --local\nrodney screenshot\nshowboat image"];
+    }
+
+    subgraph cluster_finalize {
+        label="Finalize";
+        style=filled;
+        fillcolor="#c8e6c9";
+        verify [label="showboat verify"];
+        fix [label="showboat pop\n+ re-add"];
+        commit_doc [label="git commit\nD: Add demo"];
+        offer_pr [label="Offer PR\nattachment?" shape=diamond];
+    }
+
+    done [label="Done" shape=ellipse];
+
+    trigger -> check;
+    check -> mode;
+    mode -> init;
+    init -> context;
+    context -> tests;
+    tests -> commands;
+    commands -> screenshots;
+    screenshots -> verify;
+    verify -> commit_doc [label="pass"];
+    verify -> fix [label="mismatch"];
+    fix -> verify;
+    commit_doc -> offer_pr;
+    offer_pr -> done;
+}

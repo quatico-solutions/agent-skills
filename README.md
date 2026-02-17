@@ -42,6 +42,7 @@ Reusable skills in `skills/`.
 | `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops | ~4,000 |
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions | ~300 |
 | `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions | ~2,500 |
+| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) | ~800 |
 | `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps | *external* |
 
 `bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
@@ -199,6 +200,15 @@ Reusable skills in `skills/`.
 - Deferred questions tracked in plain text "Open Questions" section for team collaboration
 - Covers: technical, domain, UX, non-functional, and trade-off dimensions
 
+**Tips for `show-your-work`:**
+
+- Triggered by "show your work" — creates reproducible demo documents with showboat + rodney
+- Requires `uv` installed (`brew install uv`); tools fetched on demand via `uvx`
+- Default output: `docs/demos/` (committed to git). Use `tmp/` only for non-git destinations
+- Two modes: proactive (build alongside work) or reactive (capture after completion)
+- Always run `showboat verify` before committing to confirm outputs are reproducible
+- Offers to attach key demo sections to PR descriptions (see `handling-pull-requests`)
+
 ## Creating Skills
 
 Skills teach Claude specialized tasks. [Official docs](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) for full details.
@@ -207,9 +217,10 @@ Skills teach Claude specialized tasks. [Official docs](https://platform.claude.c
 
 ```
 my-skill/
-├── SKILL.md          # Required: frontmatter + instructions
-├── README.md         # Required: development notes, design decisions, testing history
-└── REFERENCE.md      # Optional: detailed reference material (>100 lines)
+├── SKILL.md                  # Required: frontmatter + instructions
+├── README.md                 # Required: development notes, design decisions, testing history
+├── REFERENCE.md              # Optional: detailed reference material (>100 lines)
+└── install-dependencies.sh   # Required if skill has external dependencies (CLI tools, runtimes)
 ```
 
 ### SKILL.md Template
