@@ -9,7 +9,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.2"
+  version: "1.0"
 ---
 
 # Show Your Work
@@ -65,9 +65,11 @@ Embed with `showboat image <doc> <image-path>`.
 
 **Naming:** `YYYY-MM-DD-<slug>.md`, images as `*-<description>.png`.
 
-## Attaching to Pull Requests
+## Sharing the Demo
 
-**Offer** to embed key sections in the PR description under a `## Demo` heading. Do NOT force-attach — ask first. See **handling-pull-requests** skill.
+**PR attachment:** Offer to embed key sections in the PR description under a `## Demo` heading. Do NOT force-attach — ask first. See **handling-pull-requests** skill.
+
+**Gist fallback:** If the user declines PR/ticket attachment (or there's no PR), and `gh` is available, offer to push the demo as a private gist: `gh gist create --private <demo-file> <images...>`.
 
 ## Common Mistakes
 

@@ -55,8 +55,6 @@ Development notes for the executable demo document skill.
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-02-17 | Initial version |
-| 1.1 | 2026-02-17 | Slimmed from 326→170 lines; prefer project-native screenshot tools; rely on `--help` |
-| 1.2 | 2026-02-17 | Writing-skills review: fixed CSO description (triggers only, no workflow summary), removed 2 flowcharts (binary decision + linear process → inline text + checklist), removed redundant trigger table, added "When NOT to use", folded modes into When to Use. 170→~80 lines, 885→<500 words |
 
 ## Testing Notes
 
