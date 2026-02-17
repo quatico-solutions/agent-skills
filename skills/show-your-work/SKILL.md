@@ -38,7 +38,7 @@ Build a reproducible demo document that proves completed work — tests passing,
 - [ ] showboat exec — test runs, build output, key commands
 - [ ] Screenshots if UI changed (see tool selection below)
 - [ ] showboat verify — re-run if outputs changed
-- [ ] Commit (D intention, one atomic commit with images)
+- [ ] Commit demo + images (D intention, droppable on merge)
 - [ ] Offer to attach key sections to PR description
 ```
 
@@ -84,7 +84,7 @@ Embed with `showboat image <doc> <image-path>`.
 | Skill | Integration |
 |-------|-------------|
 | `commit-notation` | Demo commits use `D` intention (documentation) |
-| `commit` | Demo document + images = one atomic commit |
+| `commit` | One commit near the end; squash on updates; droppable if merging without demo |
 | `handling-pull-requests` | Offer to embed demo highlights in PR description |
 | Plan review skills | Suggest adding a demo step when reviewing plans |
 | `double-loop-bdd-tdd` | BDD test screenshots feed into showboat documents |
