@@ -33,8 +33,16 @@ Development notes for the executable demo document skill.
 ### `--help` Delegation
 
 - Skill covers WHEN and WHY, not HOW to use tools
-- Keeps skill lean (~170 lines) and avoids churn when tools gain new options
+- Keeps skill lean (~80 lines) and avoids churn when tools gain new options
 - Inspired by blog post: "The --help text acts a bit like a Skill"
+
+### No Flowcharts
+
+- v1.1 had two dot flowcharts consuming ~250 words (63 lines of syntax)
+- Mode selection was ONE binary decision — a sentence suffices
+- Workflow was mostly linear — writing-skills says "Linear instructions → Numbered lists"
+- The checklist already captures all workflow steps; the only non-obvious part (verify→re-capture loop) is noted inline
+- Removing flowcharts halved the word count and improved smaller-model compatibility
 
 ### Trigger Design
 
@@ -48,6 +56,7 @@ Development notes for the executable demo document skill.
 |---------|------|---------|
 | 1.0 | 2026-02-17 | Initial version |
 | 1.1 | 2026-02-17 | Slimmed from 326→170 lines; prefer project-native screenshot tools; rely on `--help` |
+| 1.2 | 2026-02-17 | Writing-skills review: fixed CSO description (triggers only, no workflow summary), removed 2 flowcharts (binary decision + linear process → inline text + checklist), removed redundant trigger table, added "When NOT to use", folded modes into When to Use. 170→~80 lines, 885→<500 words |
 
 ## Testing Notes
 
