@@ -24,6 +24,18 @@ Development notes for the executable demo document skill.
 - Exception: `tmp/` only when user specifies non-git destination
 - Rationale: demos are documentation — belong in version control
 
+### Screenshot Tool Selection
+
+- Prefer project-native tools (Playwright, Cypress, BDD test runner) over rodney
+- Rationale: avoids adding dependencies; reuses existing test infrastructure
+- Rodney is the fallback when no project tools exist
+
+### `--help` Delegation
+
+- Skill covers WHEN and WHY, not HOW to use tools
+- Keeps skill lean (~170 lines) and avoids churn when tools gain new options
+- Inspired by blog post: "The --help text acts a bit like a Skill"
+
 ### Trigger Design
 
 - Primary: "show your work" (natural language, memorable)
@@ -35,6 +47,7 @@ Development notes for the executable demo document skill.
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-02-17 | Initial version |
+| 1.1 | 2026-02-17 | Slimmed from 326→170 lines; prefer project-native screenshot tools; rely on `--help` |
 
 ## Testing Notes
 

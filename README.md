@@ -42,7 +42,7 @@ Reusable skills in `skills/`.
 | `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops | ~4,000 |
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions | ~300 |
 | `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions | ~2,500 |
-| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) | ~800 |
+| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) | ~400 |
 | `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps | *external* |
 
 `bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
