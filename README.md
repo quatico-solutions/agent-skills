@@ -56,6 +56,8 @@ Reusable skills in `skills/`.
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
 | `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
+| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
+| `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
 
 **Example prompts:**
 
@@ -150,6 +152,24 @@ Reusable skills in `skills/`.
 - Use native browser tools (Claude in Chrome / Cursor Browser) for SSO
 - Handles both Keycloak (`*.example.invalid`) and generic Google SSO (Atlassian, Miro, Figma)
 - If no Google session exists, ask user to log in manually—never request credentials
+
+**Tips for `styling-wbcomponents`:**
+
+- Use when styling wbcomponents components, creating custom themes, or debugging shadow DOM styling
+- Key insight: CSS custom properties pierce shadow DOM; direct class selectors do not
+- For theming, prefer DS tokens (`--ds-{component}__*`) in `:root` — they affect all instances
+- Two perspectives: "How to Build a Theme" (DS tokens) vs "How to Style Components" (props → CSS → style → innerCss)
+- State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
+- Both `spritemapUrl` and `spritemap` are valid — choose based on build setup
+
+**Tips for `forms-with-wbcomponents`:**
+
+- Always match `formId` on Form with `form` attribute on fields—mismatches break FormData
+- Prefer `defaultValue` (uncontrolled) over `value` (controlled) for simpler forms
+- Use `onValidate` prop for custom validation beyond HTML5 built-in rules
+- Multi-step forms: use `beforeNext` hook for async validation before proceeding
+- Conditional fields: wrap in `FieldGroup` with `condition` prop for show/hide logic
+- For styling forms, reference `styling-wbcomponents` skill—this skill covers behavior only
 
 ## Creating Skills
 
