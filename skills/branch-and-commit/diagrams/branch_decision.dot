@@ -1,0 +1,21 @@
+digraph branch_decision {
+    rankdir=TD;
+    node [shape=box, style=rounded];
+
+    detect [label="Detect current branch\n(git branch --show-current)"];
+    is_protected [label="Is branch protected?\n(main/master/develop/trunk/\nstaging/production)", shape=diamond];
+    case_a [label="Case A: Protected Branch\nInform: 'Creating feature branch required'\nPropose branch name\nSet needs_new_branch = true", style="rounded,filled", fillcolor="#ffcccc"];
+    ask_user [label="Case B: Feature Branch\nAsk: 'Use this branch?'", shape=diamond, style="filled", fillcolor="#ccf0ff"];
+    use_current [label="User: YES\nUse current branch\nSet needs_new_branch = false", style="rounded,filled", fillcolor="#ccffcc"];
+    create_new [label="User: NO\nPropose new branch name\nSet needs_new_branch = true", style="rounded,filled", fillcolor="#ffcccc"];
+    confirm [label="Final Confirmation\nShow commits + branch strategy"];
+
+    detect -> is_protected;
+    is_protected -> case_a [label="Yes"];
+    is_protected -> ask_user [label="No"];
+    ask_user -> use_current [label="Yes"];
+    ask_user -> create_new [label="No"];
+    case_a -> confirm;
+    use_current -> confirm;
+    create_new -> confirm;
+}

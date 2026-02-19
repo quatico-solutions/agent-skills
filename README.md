@@ -24,6 +24,7 @@ Reusable skills in `skills/`.
 |-------|-------------|------------|
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
 | `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies | ~600 |
+| `branch-and-commit` | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR | ~1,500 |
 | `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work | ~1,000 |
 | `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns | ~1,200 |
 | `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags | ~600 |
@@ -62,6 +63,17 @@ Reusable skills in `skills/`.
 - Use with `commit-notation` for complete guidance (this = timing/composition, that = message format)
 - Git hooks: never skip with `--no-verify` without asking the human first
 - Key insight: commits are checkpoints of verified work, not save points
+
+**Tips for `branch-and-commit`:**
+
+- Use when you have uncommitted changes and need to organize them into atomic commits
+- Conducts 2-4 in-depth interview questions BEFORE grouping to uncover missing changes and edge cases
+- Invokes `/commit-notation` for each commit group to determine proper risk level (a/F/R!!/etc)
+- Provably safe commits (lowercase) can span many files—50-file IDE rename = 1 commit, not 5
+- Two-step PR workflow: "Need description?" → "How to provide?" (markdown vs create PR)
+- Security checks in Phase 1: scans for API keys, AWS credentials, private keys before grouping
+- Large file handling: files >1000 lines categorized by path only (skips detailed analysis)
+- Project override: uses `#FOO-123` ticket format (not standard Quatico `FOO-123`)
 
 **Tips for `double-loop-bdd-tdd`:**
 
