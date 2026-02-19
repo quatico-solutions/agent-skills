@@ -1,41 +1,20 @@
 # Claude Code & Cursor Configuration
 
-Shared commands and skills for AI-assisted development with Claude Code and Cursor.
+Shared skills for AI-assisted development with Claude Code and Cursor.
 
 ## Setup
 
-### Full install (recommended)
-
 ```bash
-git clone git@bitbucket.org:quatico/config.git && cd config
-pnpm install && pnpm run install-claude-config
+# Claude Code
+pnpx skills add git@bitbucket.org:quatico/config.git -g -a claude-code --all -y && pnpx skills add eins78/skills -g -a claude-code -s bye -y
 ```
 
-Skills are copied to `~/.claude/skills/` which both Claude Code and Cursor read from.
+```bash
+# Cursor (run after the above — copies skills for Cursor compatibility)
+for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n" && cp -r "$s" ~/.cursor/skills/"$n"; done
+```
 
-**Note:** Commands are installed as symlinks to the repo, so pulling updates applies them immediately. Skills are copied (not symlinked) for Cursor compatibility—re-run install after pulling to update skills.
-
-## Commands
-
-Reusable slash commands in `commands/`.
-
-**Usage:** `/init-agent`
-
-| Command | Description |
-|---------|-------------|
-| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis |
-| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops |
-| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps |
-
-**Tips for `consolidate-agent-rules`:**
-
-- Use when CLAUDE.md is too long (>200 lines) or rules get ignored in agent sessions
-- Implements hub-and-spoke pattern: minimal AGENTS.md (50-80 lines) + detailed docs/rules/*.md
-- Runs 3 verification loops: (1) completeness (100% rule coverage), (2) consistency (0 contradictions), (3) format validation
-- Critical rules moved to top of AGENTS.md with numbered, bold formatting (NEVER/MUST/ALWAYS keywords)
-- Example-driven spokes with ✅/❌ patterns for visual learning
-- Generates timestamped proposal directory—review before applying to project
-- Based on successful real-world pattern from internal-project-stable
+Re-run to update after pulling changes.
 
 ## Skills
 
@@ -58,6 +37,12 @@ Reusable skills in `skills/`.
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
 | `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
 | `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
+| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis | ~1,200 |
+| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops | ~4,000 |
+| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions | ~300 |
+| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps | *external* |
+
+`bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
 
 **Example prompts:**
 
@@ -145,7 +130,7 @@ Reusable skills in `skills/`.
 - Auto-fixes safe issues (orphaned spokes, duplicate rules, missing ✅/❌ markers)
 - Recommends human judgment for complex issues (splitting large files, merging small ones)
 - Include in PR checklist before merging AGENTS.md changes
-- Companion to `consolidate-agent-rules` command (that creates, this maintains)
+- Companion to `consolidate-agent-rules` skill (that creates, this maintains)
 
 **Tips for `quatico-sso-auth`:**
 
@@ -170,6 +155,29 @@ Reusable skills in `skills/`.
 - Multi-step forms: use `beforeNext` hook for async validation before proceeding
 - Conditional fields: wrap in `FieldGroup` with `condition` prop for show/hide logic
 - For styling forms, reference `styling-wbcomponents` skill—this skill covers behavior only
+
+**Tips for `init-agent`:**
+
+- Discovers project context from sources—TYPE A (rule templates) and TYPE B (ecosystem projects)
+- Validates every section with the user before writing
+- Launches parallel agents for architecture, commands, ecosystem exploration
+- Known repo templates and org structure are hardcoded context
+
+**Tips for `consolidate-agent-rules`:**
+
+- Use when CLAUDE.md is too long (>200 lines) or rules get ignored in agent sessions
+- Implements hub-and-spoke pattern: minimal AGENTS.md (50-80 lines) + detailed docs/rules/*.md
+- Runs 3 verification loops: (1) completeness (100% rule coverage), (2) consistency (0 contradictions), (3) format validation
+- Critical rules moved to top of AGENTS.md with numbered, bold formatting (NEVER/MUST/ALWAYS keywords)
+- Example-driven spokes with ✅/❌ patterns for visual learning
+- Generates timestamped proposal directory—review before applying to project
+
+**Tips for `triage-ticket`:**
+
+- Fetches ticket content via Atlassian MCP or accepts user-pasted content
+- Bugs: validates reproduction steps, researches root cause, proposes solutions
+- Features: validates acceptance criteria, researches codebase, proposes implementation plan
+- Does NOT implement—only proposes with pros/cons for team decision
 
 ## Creating Skills
 
