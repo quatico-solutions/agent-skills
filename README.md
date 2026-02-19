@@ -176,7 +176,7 @@ Reusable skills in `skills/`.
 - Use when styling wbcomponents components, creating custom themes, or debugging shadow DOM styling
 - Key insight: CSS custom properties pierce shadow DOM; direct class selectors do not
 - For theming, prefer DS tokens (`--ds-{component}__*`) in `:root` — they affect all instances
-- Two perspectives: "How to Build a Theme" (DS tokens) vs "How to Style Components" (props → style → CSS → innerCss)
+- Two perspectives: "How to Build a Theme" (DS tokens) vs "How to Style Components" (props → CSS → style → innerCss)
 - State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
 - Both `spritemapUrl` and `spritemap` are valid — choose based on build setup
 
