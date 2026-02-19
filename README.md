@@ -40,6 +40,7 @@ Reusable skills in `skills/`.
 | `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis | ~1,200 |
 | `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops | ~4,000 |
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions | ~300 |
+| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions | ~2,500 |
 | `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps | *external* |
 
 `bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
@@ -178,6 +179,13 @@ Reusable skills in `skills/`.
 - Bugs: validates reproduction steps, researches root cause, proposes solutions
 - Features: validates acceptance criteria, researches codebase, proposes implementation plan
 - Does NOT implement—only proposes with pros/cons for team decision
+
+**Tips for `challenge-the-plan`:**
+
+- Accepts optional plan path as argument; searches cwd for PLAN/SPEC/STORY files, then `~/.claude/plans/`
+- Interviews in rounds of 4 questions with multiple-choice + free-form
+- Deferred questions tracked in plain text "Open Questions" section for team collaboration
+- Covers: technical, domain, UX, non-functional, and trade-off dimensions
 
 ## Creating Skills
 
