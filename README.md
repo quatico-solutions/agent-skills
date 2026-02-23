@@ -20,195 +20,43 @@ Re-run to update after pulling changes.
 
 Reusable skills in `skills/`.
 
-| Skill | Description | Token Cost |
-|-------|-------------|------------|
-| `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages | ~500 |
-| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies | ~600 |
-| `branch-and-commit` | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR | ~1,500 |
-| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work | ~1,000 |
-| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns | ~1,200 |
-| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags | ~600 |
-| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies | ~900 |
-| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers | ~900 |
-| `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions | ~700 |
-| `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) | ~800 |
-| `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) | ~700 |
-| `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text | ~12,000 (full reference) |
-| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates | ~650 |
-| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) | ~600 |
-| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns | ~6,000 |
-| `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields | ~2,200 |
-| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis | ~1,200 |
-| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops | ~4,000 |
-| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions | ~300 |
-| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions | ~2,500 |
-| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) | ~300 |
-| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps | *external* |
+| Skill | Description |
+|-------|-------------|
+| `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
+| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
+| `branch-and-commit` | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
+| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work |
+| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
+| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags |
+| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
+| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
+| `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
+| `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
+| `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
+| `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
+| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates |
+| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) |
+| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns |
+| `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields |
+| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis |
+| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops |
+| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
+| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
+| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
+| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps |
 
 `bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
 
-**Example prompts:**
+**Usage tips:**
 
-- `help me write a commit message for these changes`
-- `rewrite @README.md using elements-of-style`
-
-**Tips for `commit-notation`:**
-
-- Triggers automatically when discussing commits or referenced by other skills
-- Other workflow skills (fix-a-bug, add-feature) can reference this skill
-- Source: [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
-
-**Tips for `commit`:**
-
-- Covers WHEN to commit (work done + verified) and WHAT belongs together
-- Use with `commit-notation` for complete guidance (this = timing/composition, that = message format)
-- Git hooks: never skip with `--no-verify` without asking the human first
-- Key insight: commits are checkpoints of verified work, not save points
-
-**Tips for `branch-and-commit`:**
-
-- Use when you have uncommitted changes and need to organize them into atomic commits
-- Conducts 2-4 in-depth interview questions BEFORE grouping to uncover missing changes and edge cases
-- Invokes `/commit-notation` for each commit group to determine proper risk level (a/F/R!!/etc)
-- Provably safe commits (lowercase) can span many files—50-file IDE rename = 1 commit, not 5
-- Two-step PR workflow: "Need description?" → "How to provide?" (markdown vs create PR)
-- Security checks in Phase 1: scans for API keys, AWS credentials, private keys before grouping
-- Large file handling: files >1000 lines categorized by path only (skips detailed analysis)
-- Project override: uses `#FOO-123` ticket format (not standard Quatico `FOO-123`)
-
-**Tips for `double-loop-bdd-tdd`:**
-
-- Use for user stories with acceptance criteria, features spanning multiple components
-- Outer BDD loop stays RED while inner TDD loops drive implementation
-- References sub-skills: `writing-bdd-scenarios`, `implementing-bdd-scenarios`, `test-driven-development`
-- Integrates with `commit-notation` for commits after completing work
-
-**Tips for `test-driven-development`:**
-
-- Inner loop of double-loop-bdd-tdd—use for unit-level Red-Green-Refactor
-- Key insight: test that passes on first run is wrong (revert and rewrite)
-- References `jest-testing-conventions` for Jest-specific mocking patterns
-- See `testing-anti-patterns.md` for common pitfalls when mocking
-
-**Tips for `writing-bdd-scenarios`:**
-
-- Write scenarios in business language—describe WHAT users do, not HOW the system works
-- Define domain glossary first—ubiquitous language ensures consistency across team
-- One scenario per behavior, scenarios must be independent (no shared state)
-- Use `@only` during development, remove before committing
-
-**Tips for `implementing-bdd-scenarios`:**
-
-- Steps MUST be reusable—design every step for reuse across scenarios
-- Steps are glue code—keep them thin, put logic in Page Objects
-- Selector priority: data-testid > role + name > text content > CSS
-- See PITFALLS.md for Shadow DOM, timeout, and flaky test debugging
-
-**Tips for `jest-testing-conventions`:**
-
-- Master three functions: `jest.fn()`, `jest.spyOn()`, `jest.mock()`
-- Use naming conventions: `testObj`, `target*`, `mock*`, `actual`, `expected`
-- Configure `clearMocks: true`, `resetMocks: true`, `restoreMocks: true` in jest.config
-
-**Tips for `handling-pull-requests`:**
-
-- Platform-agnostic workflow; references `working-with-bitbucket-web` for UI navigation
-- When posting AI-generated comments, always sign with `🤖 – Claude`
-- Address all review feedback before replying—don't fix piecemeal
-
-**Tips for `working-with-bitbucket-web`:**
-
-- Requires native browser tools (Claude in Chrome / Cursor Browser) for SSO authentication
-- Never use WebFetch, WebSearch, or MCP browser tools—they can't authenticate
-- Rich text editor supports partial markdown: `-` and `##` shortcuts work on paste/first line
-- For workflow guidance (when to reply vs resolve), see `handling-pull-requests`
-
-**Tips for `working-with-jira-web`:**
-
-- Requires native browser tools (Claude in Chrome / Cursor Browser) for SSO authentication
-- Never use WebFetch, WebSearch, or MCP browser tools—they can't authenticate
-- Use wiki markup in descriptions for predictable formatting with browser automation
-- Create button is below the fold in dialogs—always scroll down to find it
-- Escape key closes entire dialog, not just dropdowns—click outside instead
-
-**Tips for `writing-clearly-and-concisely`:**
-
-- Use when writing prose for humans (docs, commits, error messages, UI text)
-- For limited context: dispatch a subagent with your draft + the reference file for copyediting
-- Source: [obra/the-elements-of-style](https://github.com/obra/the-elements-of-style) (Public Domain)
-
-**Tips for `agents-md-maintenance`:**
-
-- Use after editing AGENTS.md or any docs/rules/ files to verify sync
-- Runs 5 checks: navigation map, critical rule uniqueness, cross-references, example formatting, file sizes
-- Auto-fixes safe issues (orphaned spokes, duplicate rules, missing ✅/❌ markers)
-- Recommends human judgment for complex issues (splitting large files, merging small ones)
-- Include in PR checklist before merging AGENTS.md changes
-- Companion to `consolidate-agent-rules` skill (that creates, this maintains)
-
-**Tips for `quatico-sso-auth`:**
-
-- Use native browser tools (Claude in Chrome / Cursor Browser) for SSO
-- Handles both Keycloak (`*.example.invalid`) and generic Google SSO (Atlassian, Miro, Figma)
-- If no Google session exists, ask user to log in manually—never request credentials
-
-**Tips for `styling-wbcomponents`:**
-
-- Use when styling wbcomponents components, creating custom themes, or debugging shadow DOM styling
-- Key insight: CSS custom properties pierce shadow DOM; direct class selectors do not
-- For theming, prefer DS tokens (`--ds-{component}__*`) in `:root` — they affect all instances
-- Two perspectives: "How to Build a Theme" (DS tokens) vs "How to Style Components" (props → CSS → style → innerCss)
-- State selectors (`:hover`, `:focus`) require theme context or `:hover` on host element
-- Both `spritemapUrl` and `spritemap` are valid — choose based on build setup
-
-**Tips for `forms-with-wbcomponents`:**
-
-- Always match `formId` on Form with `form` attribute on fields—mismatches break FormData
-- Prefer `defaultValue` (uncontrolled) over `value` (controlled) for simpler forms
-- Use `onValidate` prop for custom validation beyond HTML5 built-in rules
-- Multi-step forms: use `beforeNext` hook for async validation before proceeding
-- Conditional fields: wrap in `FieldGroup` with `condition` prop for show/hide logic
-- For styling forms, reference `styling-wbcomponents` skill—this skill covers behavior only
-
-**Tips for `init-agent`:**
-
-- Discovers project context from sources—TYPE A (rule templates) and TYPE B (ecosystem projects)
-- Validates every section with the user before writing
-- Launches parallel agents for architecture, commands, ecosystem exploration
-- Known repo templates and org structure are hardcoded context
-
-**Tips for `consolidate-agent-rules`:**
-
-- Use when CLAUDE.md is too long (>200 lines) or rules get ignored in agent sessions
-- Implements hub-and-spoke pattern: minimal AGENTS.md (50-80 lines) + detailed docs/rules/*.md
-- Runs 3 verification loops: (1) completeness (100% rule coverage), (2) consistency (0 contradictions), (3) format validation
-- Critical rules moved to top of AGENTS.md with numbered, bold formatting (NEVER/MUST/ALWAYS keywords)
-- Example-driven spokes with ✅/❌ patterns for visual learning
-- Generates timestamped proposal directory—review before applying to project
-
-**Tips for `triage-ticket`:**
-
-- Fetches ticket content via Atlassian MCP or accepts user-pasted content
-- Bugs: validates reproduction steps, researches root cause, proposes solutions
-- Features: validates acceptance criteria, researches codebase, proposes implementation plan
-- Does NOT implement—only proposes with pros/cons for team decision
-
-**Tips for `challenge-the-plan`:**
-
-- Accepts optional plan path as argument; searches cwd for PLAN/SPEC/STORY files, then `~/.claude/plans/`
-- Interviews in rounds of 4 questions with multiple-choice + free-form
-- Deferred questions tracked in plain text "Open Questions" section for team collaboration
-- Covers: technical, domain, UX, non-functional, and trade-off dimensions
-
-**Tips for `show-your-work`:**
-
-- Triggered by "show your work" — creates reproducible demo documents with showboat + rodney
-- Requires `uv` installed (`brew install uv`); tools fetched on demand via `uvx`
-- Default output: `docs/demos/` (committed to git). Use `tmp/` only for non-git destinations
-- Two modes: proactive (build alongside work) or reactive (capture after completion)
-- Always run `showboat verify` before committing to confirm outputs are reproducible
-- Offers to attach key demo sections to PR descriptions (see `handling-pull-requests`)
-- Gist sharing: `gh gist create` rejects binaries — clone the gist, push images via git, use SHA-pinned raw URLs
+- `branch-and-commit`: `"organize my uncommitted changes into commits"`
+- `writing-clearly-and-concisely`: Works on any prose — `"rewrite @README.md using /writing-clearly-and-concisely"`
+- `styling-wbcomponents`: Also useful for reviews, not just development — `"review this PR according to /styling-wbcomponents"`
+- `handling-pull-requests`: Can drive review responses end-to-end — `"use /chrome to address my review comments"`
+- `challenge-the-plan`: Accepts a plan path as argument, or auto-searches for PLAN/SPEC/STORY files
+- `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
+- `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
+- `working-with-bitbucket-web`, `working-with-jira-web`, `quatico-sso-auth`: Require native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 
 ## Creating Skills
 
