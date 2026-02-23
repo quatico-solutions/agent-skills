@@ -9,16 +9,16 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  source: https://github.com/quatico-solutions/QuaticoCommitNotation
+  source: https://docs.example.invalid/internal/development-practices/commit-notation
   version: "1.1"
 ---
 
 # Commit Notation
 
-> **Source of truth:** [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
-> **SYNC REQUIRED:** Changes here MUST also update the source README. Changes incomplete without sync.
+> **Source of truth:** [docs.example.invalid — Commit Notation](https://docs.example.invalid/internal/development-practices/commit-notation)
+> **SYNC REQUIRED:** Changes here MUST stay consistent with the docs site. Changes incomplete without sync.
 
-Quatico uses Arlo's Commit Notation v1 with extensions (T, E, A, C, S).
+Quatico uses Arlo's Commit Notation v1 with extensions (T, E).
 
 ## Quick Reference
 
@@ -46,9 +46,6 @@ Quatico uses Arlo's Commit Notation v1 with extensions (T, E, A, C, S).
 |--------|------|----------|
 | T | Test-only | Alter tests without altering functionality |
 | E | Environment | Dev setup, tooling, non-code changes |
-| A | Automated | Tool-assisted: IDE refactoring, formatters, linters (deterministic tools only, no AI/LLMs) |
-| C | Comment | Comment-only changes (not JSDoc/JavaDoc) |
-| S | Spec | Formal specification, design docs |
 | * | Unknown | Mixed changes, just checking in |
 
 ## Risk Level Guidelines
@@ -74,7 +71,7 @@ TICKET-123
 
 ## Writing Commit Messages
 
-1. **Determine intention**: F, B, R, D, T, E, A, C, S, or *
+1. **Determine intention**: F, B, R, D, T, E, or *
 2. **Assess risk level**: How verified is this change?
 3. **Find ticket number**: See below
 4. **Format**: `[prefix] Summary` with ticket on last line
@@ -85,7 +82,7 @@ TICKET-123
 
 Copy and track progress:
 
-- [ ] Intention identified (F/B/R/D/T/E/A/C/S/*)
+- [ ] Intention identified (F/B/R/D/T/E/*)
 - [ ] Single intention per commit
 - [ ] Risk level assessed (lowercase/UPPER/!!/\*\*)
 - [ ] Active voice summary
@@ -137,16 +134,6 @@ BAR-456
 r Extract method calculateTotal
 
 FOO-123
-```
-
-```
-a Rename userId to userIdentifier
-
-FOO-123
-```
-
-```
-A!! Run prettier on src/**/*.ts
 ```
 
 ```
