@@ -36,6 +36,16 @@ Development notes for the executable demo document skill.
 - Keeps skill lean (~80 lines) and avoids churn when tools gain new options
 - Inspired by blog post: "The --help text acts a bit like a Skill"
 
+### Gist Workflow for Binary Files
+
+- `gh gist create` rejects binary files (`"binary file not supported"`)
+- Workaround: create .md-only gist → `gh gist clone` → git-push images
+- Image refs in markdown need SHA-pinned raw URLs for reliable rendering: `gist.githubusercontent.com/<user>/<id>/raw/<sha>/<file>`
+- Justified exception to `--help` delegation — multi-tool workflow not discoverable from any single tool's help
+- `gh` is repo-agnostic: creates gists in user's GitHub account regardless of project host
+- Gist files sort: `!#-.` → digits → `_` → alpha. Since 2025-03, `readme.*` auto-pins to top — name the demo `readme.md` in the gist
+- Learned from two internal-project sessions (Feb 2026) where the naive approach failed
+
 ### No Flowcharts
 
 - v1.1 had two dot flowcharts consuming ~250 words (63 lines of syntax)
@@ -67,6 +77,8 @@ Development notes for the executable demo document skill.
 - [ ] Demo committed to docs/demos/
 - [ ] PR attachment offer appears
 - [ ] rodney screenshots captured correctly
+- [ ] Gist fallback creates text-only gist then pushes images via clone
+- [ ] Image URLs in gist markdown use SHA-pinned raw URLs
 
 ## Related Skills
 

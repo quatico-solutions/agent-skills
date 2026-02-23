@@ -208,6 +208,7 @@ Reusable skills in `skills/`.
 - Two modes: proactive (build alongside work) or reactive (capture after completion)
 - Always run `showboat verify` before committing to confirm outputs are reproducible
 - Offers to attach key demo sections to PR descriptions (see `handling-pull-requests`)
+- Gist sharing: `gh gist create` rejects binaries — clone the gist, push images via git, use SHA-pinned raw URLs
 
 ## Creating Skills
 

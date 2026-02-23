@@ -69,7 +69,19 @@ Embed with `showboat image <doc> <image-path>`.
 
 **PR attachment:** Offer to embed key sections in the PR description under a `## Demo` heading. Do NOT force-attach — ask first. See **handling-pull-requests** skill.
 
-**Gist fallback:** If the user declines PR/ticket attachment (or there's no PR), and `gh` is available, offer to push the demo as a private gist: `gh gist create --private <demo-file> <images...>`.
+**Gist fallback** (`gh` is repo-agnostic — works even when the project is on Bitbucket/GitLab):
+
+If no PR exists or the user declines attachment, offer to share as a gist. Ask visibility preference (private/public).
+
+1. Create gist with markdown only: `gh gist create [--public] <demo>.md`
+2. If the demo has images:
+   - Clone: `gh gist clone <id> /tmp/gist-<id>`
+   - Copy demo as `readme.md` (auto-pinned to top since 2025-03) and images into clone
+   - `git add`, commit, push
+   - Update `readme.md` image refs to raw URLs: `https://gist.githubusercontent.com/<user>/<id>/raw/<sha>/<file>`
+   - Push updated markdown, then `trash /tmp/gist-<id>`
+
+Gist file sort order: `!#-.` → digits → `_` → alpha. Name the demo `readme.md` so it pins above image files.
 
 ## Common Mistakes
 
@@ -78,6 +90,8 @@ Embed with `showboat image <doc> <image-path>`.
 | Skipping `showboat verify` | Always verify before commit |
 | Demo in `tmp/` when it should be committed | Default to `docs/demos/`; `tmp/` only for non-git destinations |
 | Duplicating tool flags in this skill | Run `--help` at runtime |
+| Passing images to `gh gist create` | Binary files rejected — clone gist repo, push images via git |
+| Demo file sorts below images in gist | Name the demo `readme.md` — auto-pinned to top since 2025-03 |
 
 ## Integration with Other Skills
 
