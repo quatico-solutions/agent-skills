@@ -46,7 +46,7 @@ Quatico uses Arlo's Commit Notation v1 with extensions (T, E).
 |--------|------|----------|
 | T | Test-only | Alter tests without altering functionality |
 | E | Environment | Dev setup, tooling, non-code changes |
-| * | Unknown | Mixed changes, just checking in |
+| WIP | Unknown | Mixed changes, just checking in |
 
 ## Risk Level Guidelines
 

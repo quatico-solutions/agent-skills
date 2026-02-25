@@ -11,7 +11,7 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 - [The Four Risk Levels](#the-four-risk-levels)
 - [Intentions](#intentions)
   - [Feature (F)](#feature-f) | [Bugfix (B)](#bugfix-b) | [Refactoring (R)](#refactoring-r) | [Documentation (D)](#documentation-d)
-  - [Test-only (T)](#test-only-t) | [Environment (E)](#environment-e) | [Unknown (*)](#unknown-)
+  - [Test-only (T)](#test-only-t) | [Environment (E)](#environment-e) | [Unknown (WIP)](#unknown-wip)
 - [Provable Refactorings](#provable-refactorings)
 - [Test-supported Procedural Refactorings](#test-supported-procedural-refactorings)
 - [Small Features and Bug Fixes](#small-features-and-bug-fixes)
@@ -42,7 +42,7 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 | D | Documentation | Change something which communicates and does not impact behavior. Includes comment-only changes and formal specifications. |
 | T | Test-only | Alter tests without altering functionality |
 | E | Environment | Non-code development setup changes |
-| * | Unknown | Multiple changes, just getting it checked in |
+| WIP | Unknown | Multiple changes, just getting it checked in |
 
 ### Feature (F)
 
@@ -119,9 +119,9 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 | `E!!` | CI/CD change, not fully tested |
 | `E**` | Experimenting with build config |
 
-### Unknown (*)
+### Unknown (WIP)
 
-Multiple unrelated changes, just getting it checked in. Usually `***`.
+Multiple unrelated changes, just getting it checked in.
 
 **Alternative**: Require each commit to have exactly one intention.
 
