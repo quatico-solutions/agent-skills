@@ -1,10 +1,10 @@
 ---
 name: working-with-bitbucket-web
 description: >-
-  Navigates Bitbucket web UI for PR operations. Use when interacting with
-  Bitbucket in a browser. Triggers: bitbucket, bitbucket UI, bitbucket web,
-  bitbucket PR, bitbucket comments, bitbucket reviewers, reply to comment,
-  resolve comment, add reviewer, edit PR description.
+  Last resort for Bitbucket operations that `bb` CLI cannot handle (image
+  uploads, SSO-gated pages). Prefer `working-with-bitbucket-api` for all
+  PR operations. Triggers: bitbucket UI, bitbucket web, upload image to PR,
+  bitbucket SSO.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -13,15 +13,15 @@ metadata:
 
 # Working with Bitbucket Web
 
-## CRITICAL: Invoke Workflow Skill First
+## CRITICAL: Use `bb` CLI First
 
-**Before using this skill for PR operations (creating PRs, replying to comments, addressing feedback), you MUST invoke `handling-pull-requests` first.**
+**Before using the browser, try `bb` CLI (`working-with-bitbucket-api` skill).** It handles all PR operations — create, edit, comment, approve, merge, resolve — including markdown descriptions. Run `bb --help` for the full command list.
 
-This skill covers **Bitbucket UI mechanics only**. The workflow skill provides:
-- PR description templates
-- Review feedback process (read ALL comments first, batch changes)
-- AI signature conventions (`🤖 – Claude`)
-- When to reply vs resolve comments
+**Only use this browser skill for:**
+- Uploading images to PRs (no API support)
+- SSO-gated pages that require browser authentication
+
+If you also need PR workflow guidance (templates, feedback process), invoke `handling-pull-requests`.
 
 ---
 

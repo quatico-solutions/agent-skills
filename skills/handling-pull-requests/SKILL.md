@@ -23,11 +23,12 @@ digraph pr_workflow {
     start [label="PR-related task?" shape=ellipse];
     q1 [label="Creating a PR?"];
     q2 [label="Addressing review\nfeedback?"];
-    q3 [label="Platform-specific\nUI navigation?"];
+    q3 [label="Image upload or\nSSO-gated page?"];
 
     node [shape=box];
     this [label="This skill\n(handling-pull-requests)"];
-    platform [label="Platform skill\n(working-with-bitbucket-web)"];
+    bb [label="bb CLI\n(working-with-bitbucket-api)"];
+    platform [label="Browser (last resort)\n(working-with-bitbucket-web)"];
     commit [label="commit-notation skill"];
 
     start -> q1;
@@ -37,8 +38,9 @@ digraph pr_workflow {
     q2 -> q3 [label="no"];
     q3 -> platform [label="yes"];
 
+    this -> bb [label="for BB operations" style=dashed];
     this -> commit [label="for commits" style=dashed];
-    this -> platform [label="for UI" style=dashed];
+    this -> platform [label="images only" style=dashed];
 }
 ```
 
@@ -76,10 +78,12 @@ Generated with Claude Code
 ### Steps
 
 1. **Push branch** if not already pushed
-2. **Navigate to PR creation** (use platform skill for UI)
-3. **Fill description** using template above
-4. **Add reviewers** as identified
-5. **Create PR**
+2. **Fill description** using template above
+3. **Add reviewers** as identified
+4. **Create PR**: `bb pr create --title "..." --body "..." --reviewer "Name"`
+5. **Verify** with `bb pr view <id>`
+
+> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, and all PR lifecycle operations. See `bb --help`. Browser is only needed for image uploads.
 
 ---
 
@@ -87,15 +91,15 @@ Generated with Claude Code
 
 ### Process
 
-1. **Read ALL comments first** — don't fix piecemeal
+1. **Read ALL comments first** — don't fix piecemeal: `bb pr view <id> --comments`
 2. **Categorize each comment**:
    - **Question** → needs reply
    - **Change request** → needs code change + reply
    - **Approval/praise** → acknowledge or resolve
 3. **Make code changes** for all change requests
 4. **Commit with notation**: `b: Address review feedback` (or more specific)
-5. **Reply to comments** explaining what was done
-6. **Resolve comments** that were fully addressed (if the platform supports it—not all Bitbucket comments can be resolved)
+5. **Reply to comments** explaining what was done: `bb pr comment <id> --body "..."`
+6. **Resolve comments** that were fully addressed: `bb pr comment <id> --resolve <comment_id>`
 7. **Push changes**
 
 ### Comment Response Checklist
@@ -146,9 +150,11 @@ Example: *🤖 – Claude*
 
 | Skill | Use For |
 |-------|---------|
+| `working-with-bitbucket-api` | **Primary**: all Bitbucket operations via `bb` CLI |
 | `commit-notation` | Commit messages (F:, B:, R:, etc.) |
-| `working-with-bitbucket-web` | Bitbucket UI navigation |
+| `markdown` | CommonMark formatting for PR descriptions and comments |
 | `writing-clearly-and-concisely` | PR descriptions and comments |
+| `working-with-bitbucket-web` | Last resort: image uploads, SSO pages |
 
 ---
 
