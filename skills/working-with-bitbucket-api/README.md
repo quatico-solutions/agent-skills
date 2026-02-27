@@ -12,6 +12,8 @@ Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Follows the same API-
 - **macOS Keychain auth**: no tokens in files or env by default — `security find-generic-password` at runtime
 - **Auto-detect workspace/repo**: parses `git remote get-url origin` so you don't have to type it
 - **Bundled in qs-config**: `bb` script ships in `bin/bb` within this skill directory; `install-dependencies.sh` symlinks it to `~/bin/`
+- **Defer to `--help`**: SKILL.md documents *when* and *why* to use `bb` (decision tree, auth scopes, fallback rules). Command syntax and flags live in `bb --help` / `bb <cmd> --help` — single source of truth, no sync burden. Inspired by the `show-your-work` pattern: "Duplicating tool flags in this skill → Run `--help` at runtime."
+- **Clone `gh` CLI conventions**: Flag names, command structure (`bb pr <verb>`), output modes, and UX patterns mirror GitHub's `gh` CLI wherever possible. This leverages existing model knowledge about `gh` — agents already know `--body`, `--head`, `--base`, `--reviewer`, `--json`, etc.
 
 ## Dependencies
 

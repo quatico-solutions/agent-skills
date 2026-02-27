@@ -89,105 +89,13 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 
 ## Command Reference
 
-### `bb auth login [--email <email>]`
-Log in with an Atlassian API token. Interactive mode prompts for email and token; non-interactive reads token from stdin (requires `--email`).
+Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags and usage.
 
-### `bb auth status [--json]`
-Show authenticated user.
-
-### `bb pr list [--state open|merged|declined|superseded] [--author user] [--json]`
-List pull requests. Defaults to open PRs in the current repo.
-
-```bash
-bb pr list
-bb pr list --state merged
-bb pr list --json
-```
-
-### `bb pr view <id> [--comments] [--json]`
-View PR details. Add `--comments` to include all comments.
-
-```bash
-bb pr view 42
-bb pr view 42 --comments
-bb pr view 42 --json
-```
-
-### `bb pr create --title "..." [--body "..."] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--json]`
-Create a pull request. Auto-detects `--head` from current branch and defaults `--base` to `main`.
-
-```bash
-bb pr create --title "Add auth module" --body "## Summary\nNew OAuth flow" --reviewer alice
-bb pr create --title "Fix typo" --head fix/typo --base develop
-```
-
-### `bb pr edit <id> [--title "..."] [--body "..."] [--add-reviewer user] [--remove-reviewer user] [--json]`
-Edit a pull request. Add/remove reviewers, update title or description. Reviewer accepts display name, UUID, or account_id. Display name resolution searches existing PR participants — use account_id or UUID for users who haven't participated in any PRs yet.
-
-```bash
-bb pr edit 42 --add-reviewer "Egemen Kaba"
-bb pr edit 42 --remove-reviewer "Max Albrecht" --add-reviewer "a colleague Tremp"
-bb pr edit 42 --title "New title"
-```
-
-### `bb pr tasks <id> [--resolve <task_id>] [--reopen <task_id>] [--json]`
-List tasks on a PR. Use `--resolve` or `--reopen` to change task state.
-
-```bash
-bb pr tasks 42
-bb pr tasks 42 --resolve 12345
-bb pr tasks 42 --reopen 12345
-```
-
-### `bb pr comment <id> --body "..." [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]`
-Add a comment, or resolve/unresolve an existing comment. Use `--file` and `--line` for inline comments on specific code.
-
-```bash
-bb pr comment 42 --body "Looks good! 🤖 – Qubert"
-bb pr comment 42 --body "This needs a null check" --file src/auth.ts --line 15
-bb pr comment 42 --resolve 12345
-bb pr comment 42 --unresolve 12345
-```
-
-### `bb pr review <id> --approve [--comment "..."] [--json]`
-Approve a PR, optionally with a comment.
-
-```bash
-bb pr review 42 --approve
-bb pr review 42 --approve --comment "LGTM 🤖 – Qubert"
-```
-
-### `bb pr merge <id> [--squash|--merge] [--delete-branch] [--json]`
-Merge a PR. Defaults to merge commit strategy.
-
-```bash
-bb pr merge 42
-bb pr merge 42 --squash --delete-branch
-```
-
-### `bb pr close <id> [--json]`
-Decline/close a PR.
-
----
-
-## Auto-detection
-
-`bb` infers workspace and repo from `git remote get-url origin`:
-- SSH: `git@bitbucket.org:workspace/repo.git`
-- HTTPS: `https://bitbucket.org/workspace/repo.git`
-
-Override with `-R workspace/repo`:
-
-```bash
-bb -R quatico/ewz-portal pr list
-```
-
----
-
-## Output Modes
-
-- **Default**: human-readable tables and summaries (for terminal use)
-- **`--json`**: raw JSON from the Bitbucket API (for machine consumption / piping to jq)
+**Gotchas not in `--help`:**
+- **Reviewer resolution**: `--add-reviewer` / `--reviewer` accepts display name, UUID, or account_id. Display names are resolved by searching existing PR participants — use account_id or UUID for users not yet on any PR.
+- **Non-interactive auth**: `echo "$TOKEN" | bb auth login --email user@example.com` (reads token from stdin).
+- **Repo auto-detection**: Inferred from `git remote get-url origin`. Override with `-R workspace/repo`.
+- **Output modes**: Human-readable by default, `--json` for raw API JSON.
 
 ---
 
