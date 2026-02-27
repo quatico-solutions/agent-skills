@@ -43,6 +43,8 @@ Reusable skills in `skills/`.
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
 | `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
 | `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
+| `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
+| `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
 | `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps |
 
 `bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
@@ -56,6 +58,8 @@ Reusable skills in `skills/`.
 - `challenge-the-plan`: Accepts a plan path as argument, or auto-searches for PLAN/SPEC/STORY files
 - `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
+- `story-tracking`: `"continue on FOOBAR-1234"` or `"create a story for the WCAG audit"`
+- `story-tracking` + `markdown`: Complementary — `story-tracking` covers structure, `markdown` covers syntax
 - `working-with-bitbucket-web`, `working-with-jira-web`, `quatico-sso-auth`: Require native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 
 ## Creating Skills
