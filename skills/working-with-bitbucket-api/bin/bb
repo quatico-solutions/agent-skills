@@ -189,13 +189,6 @@ bb_paginate() {
   echo "$all"
 }
 
-# --- Help --------------------------------------------------------------------
-
-bb_usage() {
-  echo "$1"
-  exit 0
-}
-
 # --- Output formatting -------------------------------------------------------
 
 bb_format_pr_list() {
@@ -242,7 +235,22 @@ bb_format_comment_list() {
 cmd_auth_status() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb auth status [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Show the currently authenticated Bitbucket user.
+
+USAGE
+  bb auth status [--json]
+
+FLAGS
+  --json   Output raw JSON from the /user endpoint
+
+EXAMPLES
+  bb auth status
+  bb auth status --json | jq .account_id
+HELP
+        exit 0
+        ;;
       --json)    JSON_OUTPUT=1; shift ;;
       -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
       *)         echo >&2 "unknown argument: $1"; exit 1 ;;
@@ -264,7 +272,27 @@ cmd_auth_login() {
   local email=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb auth login [--email <email>]" ;;
+      --help|-h)
+        cat <<'HELP'
+Log in with an Atlassian API token. Credentials are stored in macOS Keychain.
+
+USAGE
+  bb auth login [--email <email>]
+
+FLAGS
+  --email <email>   Atlassian account email (required for non-interactive)
+
+Interactive mode prompts for email and opens the token creation page.
+Non-interactive mode reads the token from stdin (requires --email).
+
+Override stored credentials with BB_TOKEN and BB_EMAIL env vars.
+
+EXAMPLES
+  bb auth login
+  echo "$TOKEN" | bb auth login --email user@example.com
+HELP
+        exit 0
+        ;;
       --email)   email="$2"; shift 2 ;;
       *)         echo >&2 "unknown flag: $1"; exit 1 ;;
     esac
@@ -333,7 +361,25 @@ cmd_pr_list() {
   local state="OPEN" author=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb pr list [--state open|merged|declined|superseded] [--author name] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+List pull requests in the current repository.
+
+USAGE
+  bb pr list [--state <state>] [--author <name>] [--json]
+
+FLAGS
+  --state <state>   Filter by state: open, merged, declined, superseded (default: open)
+  --author <name>   Filter by author (nickname or display name)
+  --json            Output raw JSON array
+
+EXAMPLES
+  bb pr list
+  bb pr list --state merged
+  bb pr list --author alice --json
+HELP
+        exit 0
+        ;;
       --state)
         state="${2^^}"; shift 2
         case "$state" in
@@ -387,7 +433,24 @@ cmd_pr_view() {
   local pr_id="" show_comments=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h)  bb_usage "usage: bb pr view <id> [--comments] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+View pull request details.
+
+USAGE
+  bb pr view <id> [--comments] [--json]
+
+FLAGS
+  --comments   Include all comments
+  --json       Output raw JSON (with --comments: {pr, comments})
+
+EXAMPLES
+  bb pr view 42
+  bb pr view 42 --comments
+  bb pr view 42 --json | jq .state
+HELP
+        exit 0
+        ;;
       --comments) show_comments=1; shift ;;
       --json)     JSON_OUTPUT=1; shift ;;
       -*)         echo >&2 "unknown flag: $1"; exit 1 ;;
@@ -438,7 +501,35 @@ cmd_pr_create() {
   local title="" body="" head="" base="" reviewers=() close_branch=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h)      bb_usage "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Create a pull request.
+
+USAGE
+  bb pr create --title "..." [--body "..."] [--head <branch>] [--base <branch>]
+               [--reviewer <user>] [--close-branch] [--json]
+
+FLAGS
+  --title <text>      PR title (required)
+  --body <text>       PR description (markdown)
+  --head <branch>     Source branch (default: current branch)
+  --base <branch>     Target branch (default: main)
+  --reviewer <user>   Add reviewer (repeatable; see REVIEWER RESOLUTION below)
+  --close-branch      Close source branch after merge
+  --json              Output raw JSON
+
+REVIEWER RESOLUTION
+  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex).
+  Display names are resolved from existing PR participants in the repo.
+  For users not on any PR yet, use account_id or UUID directly.
+
+EXAMPLES
+  bb pr create --title "Add auth module"
+  bb pr create --title "Fix bug" --body "Fixes #42" --reviewer "Alice Smith"
+  bb pr create --title "Feature" --head feature/x --base develop --close-branch
+HELP
+        exit 0
+        ;;
       --title)        title="$2"; shift 2 ;;
       --body)         body="$2"; shift 2 ;;
       --head)         head="$2"; shift 2 ;;
@@ -509,7 +600,33 @@ cmd_pr_edit() {
   local pr_id="" title="" body="" add_reviewers=() remove_reviewers=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h)         bb_usage "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--add-reviewer user] [--remove-reviewer user] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Edit a pull request. Update title, description, or reviewers.
+
+USAGE
+  bb pr edit <id> [--title "..."] [--body "..."] [--add-reviewer <user>]
+             [--remove-reviewer <user>] [--json]
+
+FLAGS
+  --title <text>            New PR title
+  --body <text>             New PR description
+  --add-reviewer <user>     Add reviewer (repeatable; see REVIEWER RESOLUTION below)
+  --remove-reviewer <user>  Remove reviewer (repeatable)
+  --json                    Output raw JSON
+
+REVIEWER RESOLUTION
+  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex).
+  Display names are resolved from existing PR participants in the repo.
+  For users not on any PR yet, use account_id or UUID directly.
+
+EXAMPLES
+  bb pr edit 42 --title "New title"
+  bb pr edit 42 --add-reviewer "Alice Smith"
+  bb pr edit 42 --remove-reviewer alice --add-reviewer bob
+HELP
+        exit 0
+        ;;
       --title)           title="$2"; shift 2 ;;
       --body)            body="$2"; shift 2 ;;
       --add-reviewer)    add_reviewers+=("$2"); shift 2 ;;
@@ -611,7 +728,27 @@ cmd_pr_tasks() {
   local pr_id="" resolve_id="" reopen_id=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb pr tasks <id> [--resolve <task_id>] [--reopen <task_id>] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+List, resolve, or reopen tasks on a pull request.
+
+USAGE
+  bb pr tasks <id> [--resolve <task_id>] [--reopen <task_id>] [--json]
+
+FLAGS
+  --resolve <task_id>   Mark task as resolved
+  --reopen <task_id>    Reopen a resolved task
+  --json                Output raw JSON
+
+Without flags, lists all tasks. Use --resolve or --reopen to change state.
+
+EXAMPLES
+  bb pr tasks 42
+  bb pr tasks 42 --resolve 12345
+  bb pr tasks 42 --reopen 12345
+HELP
+        exit 0
+        ;;
       --resolve) resolve_id="$2"; shift 2 ;;
       --reopen)  reopen_id="$2"; shift 2 ;;
       --json)    JSON_OUTPUT=1; shift ;;
@@ -682,7 +819,33 @@ cmd_pr_comment() {
   local pr_id="" body="" file="" line="" resolve_id="" unresolve_id=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h)   bb_usage "usage: bb pr comment <id> --body \"...\" [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Add, resolve, or unresolve a comment on a pull request.
+
+USAGE
+  bb pr comment <id> --body "..." [--file <path>] [--line <num>]
+                [--resolve <id>] [--unresolve <id>] [--json]
+
+FLAGS
+  --body <text>             Comment text (required for new comments)
+  --file <path>             File path for inline comment
+  --line <num>              Line number for inline comment (requires --file)
+  --resolve <comment_id>    Resolve a comment thread
+  --unresolve <comment_id>  Unresolve a comment thread
+  --json                    Output raw JSON
+
+Use --file and --line together for inline code comments.
+Use --resolve or --unresolve without --body to change thread state.
+
+EXAMPLES
+  bb pr comment 42 --body "Looks good!"
+  bb pr comment 42 --body "Needs null check" --file src/auth.ts --line 15
+  bb pr comment 42 --resolve 12345
+  bb pr comment 42 --unresolve 12345
+HELP
+        exit 0
+        ;;
       --body)      body="$2"; shift 2 ;;
       --file)      file="$2"; shift 2 ;;
       --line)      line="$2"; shift 2 ;;
@@ -767,7 +930,24 @@ cmd_pr_review() {
   local pr_id="" approve=0 comment=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb pr review <id> --approve [--comment \"...\"] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Approve a pull request, optionally with a comment.
+
+USAGE
+  bb pr review <id> --approve [--comment "..."] [--json]
+
+FLAGS
+  --approve          Approve the PR (required)
+  --comment <text>   Post a comment alongside the approval
+  --json             Output raw JSON
+
+EXAMPLES
+  bb pr review 42 --approve
+  bb pr review 42 --approve --comment "LGTM"
+HELP
+        exit 0
+        ;;
       --approve) approve=1; shift ;;
       --comment) comment="$2"; shift 2 ;;
       --json)    JSON_OUTPUT=1; shift ;;
@@ -812,7 +992,25 @@ cmd_pr_merge() {
   local pr_id="" strategy="merge" delete_branch=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h)       bb_usage "usage: bb pr merge <id> [--squash|--merge] [--delete-branch] [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Merge a pull request.
+
+USAGE
+  bb pr merge <id> [--squash|--merge] [--delete-branch] [--json]
+
+FLAGS
+  --squash          Squash and merge
+  --merge           Merge commit (default)
+  --delete-branch   Delete source branch after merge
+  --json            Output raw JSON
+
+EXAMPLES
+  bb pr merge 42
+  bb pr merge 42 --squash --delete-branch
+HELP
+        exit 0
+        ;;
       --squash)        strategy="squash"; shift ;;
       --merge)         strategy="merge"; shift ;;
       --delete-branch) delete_branch=1; shift ;;
@@ -857,7 +1055,21 @@ cmd_pr_close() {
   local pr_id=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --help|-h) bb_usage "usage: bb pr close <id> [--json]" ;;
+      --help|-h)
+        cat <<'HELP'
+Decline and close a pull request.
+
+USAGE
+  bb pr close <id> [--json]
+
+FLAGS
+  --json   Output raw JSON
+
+EXAMPLES
+  bb pr close 42
+HELP
+        exit 0
+        ;;
       --json)    JSON_OUTPUT=1; shift ;;
       -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
       *)         pr_id="$1"; shift ;;
@@ -912,6 +1124,10 @@ Pull Requests:
 Global flags:
   -R workspace/repo   Specify repository (default: auto-detect from git remote)
   --json              Output raw JSON
+
+Environment:
+  BB_TOKEN            API token (overrides keychain)
+  BB_EMAIL            Account email (overrides keychain)
 
 Examples:
   bb pr list

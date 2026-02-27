@@ -89,13 +89,7 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 
 ## Command Reference
 
-Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags and usage.
-
-**Gotchas not in `--help`:**
-- **Reviewer resolution**: `--add-reviewer` / `--reviewer` accepts display name, UUID, or account_id. Display names are resolved by searching existing PR participants — use account_id or UUID for users not yet on any PR.
-- **Non-interactive auth**: `echo "$TOKEN" | bb auth login --email user@example.com` (reads token from stdin).
-- **Repo auto-detection**: Inferred from `git remote get-url origin`. Override with `-R workspace/repo`.
-- **Output modes**: Human-readable by default, `--json` for raw API JSON.
+Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags, defaults, and examples.
 
 ---
 
