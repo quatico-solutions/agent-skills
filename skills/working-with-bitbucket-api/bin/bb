@@ -511,7 +511,7 @@ USAGE
 
 FLAGS
   --title <text>      PR title (required)
-  --body <text>       PR description (markdown)
+  --body <text>       PR description (CommonMark markdown — no GFM extensions)
   --head <branch>     Source branch (default: current branch)
   --base <branch>     Target branch (default: main)
   --reviewer <user>   Add reviewer (repeatable; see REVIEWER RESOLUTION below)
@@ -610,7 +610,7 @@ USAGE
 
 FLAGS
   --title <text>            New PR title
-  --body <text>             New PR description
+  --body <text>             New PR description (CommonMark markdown — no GFM extensions)
   --add-reviewer <user>     Add reviewer (repeatable; see REVIEWER RESOLUTION below)
   --remove-reviewer <user>  Remove reviewer (repeatable)
   --json                    Output raw JSON
@@ -828,7 +828,7 @@ USAGE
                 [--resolve <id>] [--unresolve <id>] [--json]
 
 FLAGS
-  --body <text>             Comment text (required for new comments)
+  --body <text>             Comment text in CommonMark markdown (required for new comments)
   --file <path>             File path for inline comment
   --line <num>              Line number for inline comment (requires --file)
   --resolve <comment_id>    Resolve a comment thread

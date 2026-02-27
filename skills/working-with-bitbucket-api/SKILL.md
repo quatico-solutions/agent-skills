@@ -39,6 +39,8 @@ Need to interact with Bitbucket?
 `bb` handles everything including markdown in `--body` (descriptions, comments).
 Browser is a **last resort** — only for image uploads and SSO-gated pages.
 
+> **Markdown**: Bitbucket uses CommonMark, not GFM — no task lists, no strikethrough, no bare autolinks. Use the `markdown` skill if installed.
+
 ---
 
 ## Authentication
