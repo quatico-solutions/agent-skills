@@ -43,8 +43,13 @@ bb_parse_remote() {
   }
   # SSH:  git@bitbucket.org:workspace/repo.git
   # HTTPS: https://bitbucket.org/workspace/repo.git
+  if [[ "$url" != *bitbucket.org* ]]; then
+    echo >&2 "error: origin remote is not a bitbucket.org URL: $url"
+    echo >&2 "  Use -R workspace/repo to specify the repository"
+    exit 1
+  fi
   local path
-  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://[^/]+/)##; s/\.git$//')"
+  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://bitbucket\.org/)##; s/\.git$//')"
   echo "$path"
 }
 
@@ -67,8 +72,8 @@ bb_repo() {
 # --- User resolution ---------------------------------------------------------
 
 bb_resolve_user() {
-  # Resolve a reviewer identifier to an account_id JSON object.
-  # Accepts: UUID ({...}), account_id (24-char hex), or display name.
+  # Resolve a reviewer identifier to a JSON object for the reviewers array.
+  # Returns {account_id} or {uuid}. Accepts: UUID ({...}), account_id (24-char hex), or display name.
   local input="$1"
 
   # UUID — use directly
@@ -88,7 +93,7 @@ bb_resolve_user() {
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
   local prs account_id
-  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50 2>/dev/null)" || prs="[]"
+  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50)" || prs="[]"
   account_id="$(echo "$prs" | jq -r --arg name "$input" '
     [.[] | (.author, .reviewers[]?) |
      select(.display_name == $name or .nickname == $name) |
@@ -96,7 +101,7 @@ bb_resolve_user() {
 
   if [[ -z "$account_id" ]]; then
     # Also search open PRs
-    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50 2>/dev/null)" || prs="[]"
+    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50)" || prs="[]"
     account_id="$(echo "$prs" | jq -r --arg name "$input" '
       [.[] | (.author, .reviewers[]?) |
        select(.display_name == $name or .nickname == $name) |
@@ -307,8 +312,16 @@ cmd_auth_login() {
   display_name="$(echo "$body" | jq -r '.display_name // "?"')"
 
   # Store in keychain (-U = update if exists, create if not)
-  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "token" -w "$token"
-  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "email" -w "$email"
+  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "token" -w "$token" || {
+    echo >&2 "error: failed to store token in keychain"
+    echo >&2 "  Try: security unlock-keychain ~/Library/Keychains/login.keychain-db"
+    exit 1
+  }
+  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "email" -w "$email" || {
+    echo >&2 "error: failed to store email in keychain"
+    echo >&2 "  Try: security unlock-keychain ~/Library/Keychains/login.keychain-db"
+    exit 1
+  }
 
   echo "Logged in as ${display_name} (${username})"
   echo "Token stored in keychain."
@@ -321,7 +334,13 @@ cmd_pr_list() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h) bb_usage "usage: bb pr list [--state open|merged|declined|superseded] [--author name] [--json]" ;;
-      --state)   state="${2^^}"; shift 2 ;;
+      --state)
+        state="${2^^}"; shift 2
+        case "$state" in
+          OPEN|MERGED|DECLINED|SUPERSEDED) ;;
+          *) echo >&2 "error: invalid --state '$state' (must be open, merged, declined, or superseded)"; exit 1 ;;
+        esac
+        ;;
       --author)  author="$2"; shift 2 ;;
       --json)    JSON_OUTPUT=1; shift ;;
       *)         echo >&2 "unknown flag: $1"; exit 1 ;;
@@ -713,6 +732,11 @@ cmd_pr_comment() {
     exit 1
   fi
 
+  if [[ -n "$line" && ! "$line" =~ ^[0-9]+$ ]]; then
+    echo >&2 "error: --line must be a number, got '$line'"
+    exit 1
+  fi
+
   local payload
   if [[ -n "$file" ]]; then
     payload="$(jq -n \
@@ -772,7 +796,10 @@ cmd_pr_review() {
   fi
 
   if [[ -n "$comment" ]]; then
-    cmd_pr_comment "$pr_id" --body "$comment"
+    cmd_pr_comment "$pr_id" --body "$comment" || {
+      echo >&2 "warning: PR was approved but comment failed to post"
+      return 1
+    }
   fi
 
   if [[ "$approve" -eq 0 && -z "$comment" ]]; then
@@ -904,6 +931,10 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -R)
+      if [[ "$2" != */* ]]; then
+        echo >&2 "error: -R requires workspace/repo format (e.g., -R quatico/my-repo)"
+        exit 1
+      fi
       _BB_WORKSPACE="${2%%/*}"
       _BB_REPO="${2##*/}"
       shift 2

@@ -16,9 +16,9 @@ fi
 
 # Symlink bb to ~/bin/ (on PATH)
 mkdir -p ~/bin
-if [[ -L ~/bin/bb ]]; then
-    echo "bb: symlink exists, updating..."
-    rm ~/bin/bb
+if [[ -e ~/bin/bb || -L ~/bin/bb ]]; then
+    echo "bb: removing old ~/bin/bb..."
+    trash ~/bin/bb
 fi
 ln -s "${SCRIPT_DIR}/bin/bb" ~/bin/bb
 echo "bb: symlinked to ~/bin/bb"
@@ -26,8 +26,8 @@ echo "bb: symlinked to ~/bin/bb"
 # Verify
 echo ""
 echo "Verifying installation..."
-bb --version
-bb auth status 2>/dev/null || echo "  (not logged in — run: bb auth login)"
+~/bin/bb --version
+~/bin/bb auth status 2>/dev/null || echo "  (not logged in — run: bb auth login)"
 
 echo ""
 echo "All dependencies installed. Ready to use 'bb' CLI."

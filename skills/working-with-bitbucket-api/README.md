@@ -4,7 +4,7 @@ Development notes for the Bitbucket Cloud API skill.
 
 ## Overview
 
-Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Mirrors the API-first pattern established by `working-with-jira-web` (Atlassian MCP = primary, browser = fallback).
+Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Follows the same API-first pattern as `working-with-jira-web`: CLI for data operations, browser fallback for rich-text and visual tasks.
 
 ## Design Decisions
 

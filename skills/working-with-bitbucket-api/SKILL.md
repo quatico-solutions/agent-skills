@@ -5,10 +5,10 @@ description: >-
   create, comment, approve, merge). Fallback: browser for rich-text editing.
   Triggers: bitbucket, bitbucket API, bb, PR list, PR comments, create PR,
   merge PR, approve PR, bitbucket repo.
-compatibility: claude-code
+compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "0.1"
+  version: "1.0.0"
 ---
 
 # Working with Bitbucket API
@@ -79,7 +79,7 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 | **read:pullrequest:bitbucket** | `bb pr list`, `bb pr view --comments` |
 | **write:pullrequest:bitbucket** | `bb pr create`, `bb pr edit`, `bb pr comment`, `bb pr review`, `bb pr merge`, `bb pr close`, `bb pr tasks --resolve/--reopen` |
 
-**Minimum for full use (recommended):** All four scopes above.
+**Minimum for full use (recommended):** All four scopes above. Scope-to-command mappings are approximate — Bitbucket may require additional scopes depending on repository permissions.
 
 > **Common failure mode:** A token with only read scopes will list and view PRs successfully but fail with HTTP 400 or 401 on any write operation (commenting, approving, merging). Bitbucket error messages do not mention the missing scope — they just say "Bad Request" or "Token is not supported for this endpoint."
 
@@ -92,10 +92,10 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 ### `bb auth login [--email <email>]`
 Log in with an Atlassian API token. Interactive mode prompts for email and token; non-interactive reads token from stdin (requires `--email`).
 
-### `bb auth status`
+### `bb auth status [--json]`
 Show authenticated user.
 
-### `bb pr list [--state open|merged|declined] [--author user] [--json]`
+### `bb pr list [--state open|merged|declined|superseded] [--author user] [--json]`
 List pull requests. Defaults to open PRs in the current repo.
 
 ```bash
@@ -122,7 +122,7 @@ bb pr create --title "Fix typo" --head fix/typo --base develop
 ```
 
 ### `bb pr edit <id> [--title "..."] [--body "..."] [--add-reviewer user] [--remove-reviewer user] [--json]`
-Edit a pull request. Add/remove reviewers, update title or description. Reviewer accepts display name, UUID, or account_id.
+Edit a pull request. Add/remove reviewers, update title or description. Reviewer accepts display name, UUID, or account_id. Display name resolution searches existing PR participants — use account_id or UUID for users who haven't participated in any PRs yet.
 
 ```bash
 bb pr edit 42 --add-reviewer "Egemen Kaba"
@@ -140,7 +140,7 @@ bb pr tasks 42 --reopen 12345
 ```
 
 ### `bb pr comment <id> --body "..." [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]`
-Add a comment, or resolve/unresolve an existing inline comment. Use `--file` and `--line` for inline comments on specific code.
+Add a comment, or resolve/unresolve an existing comment. Use `--file` and `--line` for inline comments on specific code.
 
 ```bash
 bb pr comment 42 --body "Looks good! 🤖 – Qubert"
