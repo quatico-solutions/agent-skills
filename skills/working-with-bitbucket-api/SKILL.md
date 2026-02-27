@@ -1,10 +1,10 @@
 ---
 name: working-with-bitbucket-api
 description: >-
-  Bitbucket Cloud API via `bb` CLI. Primary for PR operations (list, view,
-  create, comment, approve, merge). Fallback: browser for rich-text editing.
-  Triggers: bitbucket, bitbucket API, bb, PR list, PR comments, create PR,
-  merge PR, approve PR, bitbucket repo.
+  Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view,
+  create, edit, comment, approve, merge) including markdown descriptions.
+  Browser only for image uploads. Triggers: bitbucket, bitbucket API, bb,
+  PR list, PR comments, create PR, merge PR, approve PR, bitbucket repo.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -27,29 +27,17 @@ Need to interact with Bitbucket?
 ├── Read PR comments? → bb pr view <id> --comments
 ├── Post comment? → bb pr comment
 ├── Create PR? → bb pr create
-├── Edit PR (reviewers, title)? → bb pr edit
+├── Edit PR (reviewers, title, description)? → bb pr edit
 ├── Approve PR? → bb pr review --approve
 ├── Merge PR? → bb pr merge
 ├── Close/decline PR? → bb pr close
 ├── List/resolve tasks? → bb pr tasks
-├── Edit PR description (rich text)? → Browser (working-with-bitbucket-web)
-├── Add images to PR? → Browser
-└── SSO-gated page? → Browser
+├── Upload images to PR? → Browser (working-with-bitbucket-web)
+└── SSO-gated page? → Browser (last resort)
 ```
 
-| Operation | bb CLI | Browser |
-|-----------|--------|---------|
-| List PRs | `bb pr list` | Slow, fragile |
-| View PR details | `bb pr view <id>` | Unnecessary |
-| Read comments | `bb pr view <id> --comments` | Unnecessary |
-| Post comment | `bb pr comment <id> --body "..."` | Use for rich text only |
-| Create PR | `bb pr create --title "..." --body "..."` | Use for rich-text body |
-| Edit PR (reviewers, title) | `bb pr edit <id> --add-reviewer ...` | Unnecessary |
-| Approve | `bb pr review <id> --approve` | Unnecessary |
-| Merge | `bb pr merge <id>` | Unnecessary |
-| List/resolve tasks | `bb pr tasks <id>` | Unnecessary |
-| Edit description (rich text) | `bb pr edit <id> --body` or Browser | Browser for complex formatting |
-| Upload images | — | **Required** |
+`bb` handles everything including markdown in `--body` (descriptions, comments).
+Browser is a **last resort** — only for image uploads and SSO-gated pages.
 
 ---
 
@@ -95,10 +83,8 @@ Run `bb --help` for the full command list, or `bb <command> <subcommand> --help`
 
 ## Fallback: Browser Automation
 
-Use `working-with-bitbucket-web` skill when:
-- Editing PR descriptions with rich text formatting
-- Uploading images to PRs
-- Operations not covered by the API
+Use `working-with-bitbucket-web` skill only when:
+- Uploading images to PRs (no API support)
 - SSO-gated pages that require browser authentication
 
 ---
@@ -108,5 +94,5 @@ Use `working-with-bitbucket-web` skill when:
 | Skill | Use For |
 |-------|---------|
 | `handling-pull-requests` | PR workflow (when to create, how to handle feedback) |
-| `working-with-bitbucket-web` | Browser fallback for rich-text and image operations |
+| `working-with-bitbucket-web` | Browser fallback (image uploads, SSO pages) |
 | `commit-notation` | Commit messages |
