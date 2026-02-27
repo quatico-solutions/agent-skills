@@ -31,6 +31,7 @@ Reusable skills in `skills/`.
 | `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
+| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations (list, view, create, comment, approve, merge). Requires `install-dependencies.sh` |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
@@ -60,7 +61,8 @@ Reusable skills in `skills/`.
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
 - `story-tracking`: `"continue on FOOBAR-1234"` or `"create a story for the WCAG audit"`
 - `story-tracking` + `markdown`: Complementary — `story-tracking` covers structure, `markdown` covers syntax
-- `working-with-bitbucket-web`, `working-with-jira-web`, `quatico-sso-auth`: Require native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
+- `working-with-bitbucket-api` + `working-with-bitbucket-web`: Complementary — API skill handles PR operations via `bb` CLI, web skill handles rich text and images. Run `install-dependencies.sh` to set up `bb`
+- `working-with-jira-web`, `quatico-sso-auth`: Require native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 
 ## Creating Skills
 

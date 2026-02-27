@@ -1,0 +1,957 @@
+#!/usr/bin/env bash
+# bb — Bitbucket Cloud CLI (gh-style wrapper around REST API v2)
+set -euo pipefail
+
+BB_VERSION="1.0.0"
+BB_API="https://api.bitbucket.org/2.0"
+
+# --- Auth -------------------------------------------------------------------
+
+bb_token() {
+  if [[ -n "${BB_TOKEN:-}" ]]; then
+    echo "$BB_TOKEN"
+    return
+  fi
+  local token
+  token="$(security find-generic-password -s "com.quatico.bitbucket-cli" -a "token" -w 2>/dev/null)" || {
+    echo >&2 "error: no Bitbucket API token found"
+    echo >&2 "  Run: bb auth login"
+    echo >&2 "  Or export BB_TOKEN=<token>"
+    exit 1
+  }
+  echo "$token"
+}
+
+bb_email() {
+  if [[ -n "${BB_EMAIL:-}" ]]; then
+    echo "$BB_EMAIL"
+    return
+  fi
+  security find-generic-password -s "com.quatico.bitbucket-cli" -a "email" -w 2>/dev/null || {
+    echo >&2 "error: no email found — run: bb auth login"
+    exit 1
+  }
+}
+
+# --- Repo detection ----------------------------------------------------------
+
+bb_parse_remote() {
+  local url
+  url="$(git remote get-url origin 2>/dev/null)" || {
+    echo >&2 "error: not a git repository or no 'origin' remote"
+    exit 1
+  }
+  # SSH:  git@bitbucket.org:workspace/repo.git
+  # HTTPS: https://bitbucket.org/workspace/repo.git
+  local path
+  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://[^/]+/)##; s/\.git$//')"
+  echo "$path"
+}
+
+bb_workspace() {
+  if [[ -n "${_BB_WORKSPACE:-}" ]]; then
+    echo "$_BB_WORKSPACE"
+  else
+    bb_parse_remote | cut -d/ -f1
+  fi
+}
+
+bb_repo() {
+  if [[ -n "${_BB_REPO:-}" ]]; then
+    echo "$_BB_REPO"
+  else
+    bb_parse_remote | cut -d/ -f2
+  fi
+}
+
+# --- User resolution ---------------------------------------------------------
+
+bb_resolve_user() {
+  # Resolve a reviewer identifier to an account_id JSON object.
+  # Accepts: UUID ({...}), account_id (24-char hex), or display name.
+  local input="$1"
+
+  # UUID — use directly
+  if [[ "$input" == \{*\} ]]; then
+    jq -n --arg uuid "$input" '{"uuid": $uuid}'
+    return
+  fi
+
+  # Account ID — 24-char hex
+  if [[ "$input" =~ ^[0-9a-f]{24}$ ]]; then
+    jq -n --arg id "$input" '{"account_id": $id}'
+    return
+  fi
+
+  # Display name — search PR participants in the current repo
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+  local prs account_id
+  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50 2>/dev/null)" || prs="[]"
+  account_id="$(echo "$prs" | jq -r --arg name "$input" '
+    [.[] | (.author, .reviewers[]?) |
+     select(.display_name == $name or .nickname == $name) |
+     .account_id] | first // empty')"
+
+  if [[ -z "$account_id" ]]; then
+    # Also search open PRs
+    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50 2>/dev/null)" || prs="[]"
+    account_id="$(echo "$prs" | jq -r --arg name "$input" '
+      [.[] | (.author, .reviewers[]?) |
+       select(.display_name == $name or .nickname == $name) |
+       .account_id] | first // empty')"
+  fi
+
+  if [[ -z "$account_id" ]]; then
+    echo >&2 "error: cannot resolve reviewer '$input'"
+    echo >&2 "  Use account_id (24-char hex) or UUID ({...}) directly"
+    echo >&2 "  Or check: bb -R $ws/$repo pr list --state merged --json | jq '.[].reviewers[].display_name'"
+    return 1
+  fi
+
+  jq -n --arg id "$account_id" '{"account_id": $id}'
+}
+
+# --- HTTP core ---------------------------------------------------------------
+
+bb_api_call() {
+  local method="$1" path="$2"; shift 2
+  local token email
+  token="$(bb_token)" || exit 1
+  email="$(bb_email)" || exit 1
+  local response http_code
+  response="$(curl -sS -w "\n%{http_code}" -X "$method" \
+    -u "${email}:${token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    "$@" \
+    "${BB_API}${path}")"
+  http_code="$(echo "$response" | tail -1)"
+  local body
+  body="$(echo "$response" | sed '$d')"
+
+  if [[ "$http_code" -ge 400 ]]; then
+    local msg
+    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+    echo >&2 "error: HTTP $http_code — $msg"
+    return 1
+  fi
+  echo "$body"
+}
+
+bb_paginate() {
+  local path="$1"; shift
+  local limit="${1:-50}"
+  local all="[]"
+  local url="${BB_API}${path}"
+  local token email
+  token="$(bb_token)" || exit 1
+  email="$(bb_email)" || exit 1
+  local page=0
+
+  while [[ -n "$url" && "$page" -lt 10 ]]; do
+    local response http_code
+    response="$(curl -sS -w "\n%{http_code}" -X GET \
+      -u "${email}:${token}" \
+      -H "Accept: application/json" \
+      "$url")"
+    http_code="$(echo "$response" | tail -1)"
+    local body
+    body="$(echo "$response" | sed '$d')"
+
+    if [[ "$http_code" -ge 400 ]]; then
+      local msg
+      msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+      echo >&2 "error: HTTP $http_code — $msg"
+      return 1
+    fi
+
+    local values
+    values="$(echo "$body" | jq '.values // []')"
+    all="$(jq -n --argjson a "$all" --argjson b "$values" '$a + $b')"
+
+    local count
+    count="$(echo "$all" | jq 'length')"
+    if [[ "$count" -ge "$limit" ]]; then
+      all="$(echo "$all" | jq --argjson l "$limit" '.[:$l]')"
+      break
+    fi
+
+    url="$(echo "$body" | jq -r '.next // empty')"
+    page=$((page + 1))
+  done
+  echo "$all"
+}
+
+# --- Help --------------------------------------------------------------------
+
+bb_usage() {
+  echo "$1"
+  exit 0
+}
+
+# --- Output formatting -------------------------------------------------------
+
+bb_format_pr_list() {
+  jq -r '.[] | [
+    (.id | tostring),
+    (.state // "OPEN"),
+    (.author.display_name // .author.nickname // "unknown"),
+    (.source.branch.name // "?"),
+    (.title // "(no title)")
+  ] | @tsv' | column -t -s $'\t'
+}
+
+bb_format_pr_view() {
+  jq -r '
+    "Title:    " + (.title // "(no title)"),
+    "State:    " + (.state // "?"),
+    "Author:   " + (.author.display_name // .author.nickname // "?"),
+    "Source:   " + (.source.branch.name // "?"),
+    "Dest:     " + (.destination.branch.name // "?"),
+    "Created:  " + (.created_on // "?"),
+    "Updated:  " + (.updated_on // "?"),
+    "URL:      " + (.links.html.href // "?"),
+    "",
+    "Reviewers:",
+    ((.reviewers // []) | if length == 0 then "  (none)" else .[] | "  - " + (.display_name // .nickname // "?") end),
+    "",
+    "---",
+    "",
+    (.description // "(no description)")'
+}
+
+bb_format_comment_list() {
+  jq -r '.[] | [
+    (.id | tostring),
+    (.user.display_name // .user.nickname // "unknown"),
+    (.created_on | split("T")[0] // "?"),
+    (if .inline then "inline:" + (.inline.path // "?") + ":" + ((.inline.to // .inline.from // 0) | tostring) else "general" end),
+    (.content.raw // "(empty)" | gsub("\n"; " ") | .[:80])
+  ] | @tsv' | column -t -s $'\t'
+}
+
+# --- Subcommands: auth -------------------------------------------------------
+
+cmd_auth_status() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb auth status [--json]" ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local result
+  result="$(bb_api_call GET /user)"
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    echo "$result" | jq -r '"Logged in as: " + (.display_name // "?") + " (" + (.username // "?") + ")"'
+    echo "$result" | jq -r '"Account ID:   " + (.account_id // "?")'
+    echo "$result" | jq -r '"UUID:         " + (.uuid // "?")'
+  fi
+}
+
+cmd_auth_login() {
+  local email=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb auth login [--email <email>]" ;;
+      --email)   email="$2"; shift 2 ;;
+      *)         echo >&2 "unknown flag: $1"; exit 1 ;;
+    esac
+  done
+
+  local token=""
+  if [[ -t 0 ]]; then
+    # Interactive mode
+    [[ -z "$email" ]] && read -rp "Atlassian account email: " email
+    echo ""
+    echo "Opening Atlassian API token page..."
+    echo "  Select these scopes:"
+    echo "    read:user:bitbucket, read:repository:bitbucket,"
+    echo "    read:pullrequest:bitbucket, write:pullrequest:bitbucket"
+    open "https://id.atlassian.com/manage-profile/security/api-tokens"
+    echo ""
+    read -rsp "Paste your API token: " token
+    echo ""
+  else
+    # Non-interactive: token from stdin, --email required
+    [[ -z "$email" ]] && { echo >&2 "error: --email required in non-interactive mode"; exit 1; }
+    read -r token
+  fi
+
+  [[ -z "$token" ]] && { echo >&2 "error: no token provided"; exit 1; }
+  [[ -z "$email" ]] && { echo >&2 "error: no email provided"; exit 1; }
+
+  # Validate token (inline curl — can't use bb_api_call since credentials aren't stored yet)
+  local result http_code body
+  result="$(curl -sS -w '\n%{http_code}' \
+    -u "${email}:${token}" \
+    -H "Accept: application/json" \
+    "${BB_API}/user")"
+  http_code="$(echo "$result" | tail -1)"
+  body="$(echo "$result" | sed '$d')"
+
+  if [[ "$http_code" -ge 400 ]]; then
+    echo >&2 "error: authentication failed (HTTP ${http_code})"
+    [[ "$http_code" == "401" ]] && echo >&2 "  Check that the email and token are correct"
+    exit 1
+  fi
+
+  local username display_name
+  username="$(echo "$body" | jq -r '.username // "?"')"
+  display_name="$(echo "$body" | jq -r '.display_name // "?"')"
+
+  # Store in keychain (-U = update if exists, create if not)
+  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "token" -w "$token"
+  security add-generic-password -U -s "com.quatico.bitbucket-cli" -a "email" -w "$email"
+
+  echo "Logged in as ${display_name} (${username})"
+  echo "Token stored in keychain."
+}
+
+# --- Subcommands: pr ---------------------------------------------------------
+
+cmd_pr_list() {
+  local state="OPEN" author=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb pr list [--state open|merged|declined|superseded] [--author name] [--json]" ;;
+      --state)   state="${2^^}"; shift 2 ;;
+      --author)  author="$2"; shift 2 ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      *)         echo >&2 "unknown flag: $1"; exit 1 ;;
+    esac
+  done
+
+  local ws repo path
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+  if [[ -n "$author" ]]; then
+    # Try server-side filter by nickname first
+    local encoded_author
+    encoded_author="$(printf '%s' "$author" | jq -sRr @uri)"
+    path="/repositories/${ws}/${repo}/pullrequests?q=state+%3D+%22${state}%22+AND+author.nickname+%3D+%22${encoded_author}%22"
+  else
+    path="/repositories/${ws}/${repo}/pullrequests?state=${state}"
+  fi
+
+  local result
+  result="$(bb_paginate "$path")"
+
+  # If author filter returned nothing, fall back to client-side display_name match
+  if [[ -n "$author" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
+    path="/repositories/${ws}/${repo}/pullrequests?state=${state}"
+    result="$(bb_paginate "$path")"
+    result="$(echo "$result" | jq --arg name "$author" '[.[] | select(.author.display_name == $name)]')"
+  fi
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No pull requests match the query"
+    else
+      echo "ID   STATE   AUTHOR   BRANCH   TITLE"
+      echo "$result" | bb_format_pr_list
+    fi
+  fi
+}
+
+cmd_pr_view() {
+  local pr_id="" show_comments=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)  bb_usage "usage: bb pr view <id> [--comments] [--json]" ;;
+      --comments) show_comments=1; shift ;;
+      --json)     JSON_OUTPUT=1; shift ;;
+      -*)         echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)          pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr view <id> [--comments] [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    if [[ "$show_comments" -eq 1 ]]; then
+      local comments
+      comments="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments")"
+      jq -n --argjson pr "$result" --argjson comments "$comments" '{pr: $pr, comments: $comments}'
+    else
+      echo "$result" | jq .
+    fi
+  else
+    echo "$result" | bb_format_pr_view
+    if [[ "$show_comments" -eq 1 ]]; then
+      echo ""
+      echo "Comments:"
+      local comments
+      comments="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments")"
+      local count
+      count="$(echo "$comments" | jq 'length')"
+      if [[ "$count" -eq 0 ]]; then
+        echo "  (no comments)"
+      else
+        echo "ID   AUTHOR   DATE   LOCATION   TEXT"
+        echo "$comments" | bb_format_comment_list
+      fi
+    fi
+  fi
+}
+
+cmd_pr_create() {
+  local title="" body="" head="" base="" reviewers=() close_branch=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)      bb_usage "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--json]" ;;
+      --title)        title="$2"; shift 2 ;;
+      --body)         body="$2"; shift 2 ;;
+      --head)         head="$2"; shift 2 ;;
+      --base)         base="$2"; shift 2 ;;
+      --reviewer)     reviewers+=("$2"); shift 2 ;;
+      --close-branch) close_branch=1; shift ;;
+      --json)         JSON_OUTPUT=1; shift ;;
+      *)              echo >&2 "unknown flag: $1"; exit 1 ;;
+    esac
+  done
+
+  if [[ -z "$title" ]]; then
+    echo >&2 "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch]"
+    exit 1
+  fi
+
+  # Default head to current branch
+  [[ -z "$head" ]] && head="$(git branch --show-current 2>/dev/null || echo "")"
+  [[ -z "$head" ]] && { echo >&2 "error: cannot detect current branch — use --head"; exit 1; }
+  # Default base to main
+  [[ -z "$base" ]] && base="main"
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local reviewer_json="[]"
+  if [[ ${#reviewers[@]} -gt 0 ]]; then
+    local resolved=()
+    for r in "${reviewers[@]}"; do
+      local obj
+      obj="$(bb_resolve_user "$r")" || exit 1
+      resolved+=("$obj")
+    done
+    reviewer_json="$(printf '%s\n' "${resolved[@]}" | jq -s '.')"
+  fi
+
+  local payload
+  payload="$(jq -n \
+    --arg title "$title" \
+    --arg body "$body" \
+    --arg head "$head" \
+    --arg base "$base" \
+    --argjson close "$close_branch" \
+    --argjson reviewers "$reviewer_json" \
+    '{
+      title: $title,
+      source: { branch: { name: $head } },
+      destination: { branch: { name: $base } },
+      close_source_branch: ($close == 1),
+      reviewers: $reviewers
+    } + (if $body != "" then { description: $body } else {} end)')"
+
+  local result
+  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests" -d "$payload")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local pr_id pr_url
+    pr_id="$(echo "$result" | jq -r '.id')"
+    pr_url="$(echo "$result" | jq -r '.links.html.href')"
+    echo "Created PR #${pr_id}: ${pr_url}"
+  fi
+}
+
+cmd_pr_edit() {
+  local pr_id="" title="" body="" add_reviewers=() remove_reviewers=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)         bb_usage "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--add-reviewer user] [--remove-reviewer user] [--json]" ;;
+      --title)           title="$2"; shift 2 ;;
+      --body)            body="$2"; shift 2 ;;
+      --add-reviewer)    add_reviewers+=("$2"); shift 2 ;;
+      --remove-reviewer) remove_reviewers+=("$2"); shift 2 ;;
+      --json)            JSON_OUTPUT=1; shift ;;
+      -*)                echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)                 pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--add-reviewer user] [--remove-reviewer user]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Fetch current PR state
+  local current
+  current="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")"
+
+  # Build update payload starting from current values
+  local payload="{}"
+
+  # Title
+  if [[ -n "$title" ]]; then
+    payload="$(echo "$payload" | jq --arg t "$title" '. + {title: $t}')"
+  fi
+
+  # Body/description
+  if [[ -n "$body" ]]; then
+    payload="$(echo "$payload" | jq --arg b "$body" '. + {description: $b}')"
+  fi
+
+  # Reviewer changes
+  if [[ ${#add_reviewers[@]} -gt 0 || ${#remove_reviewers[@]} -gt 0 ]]; then
+    # Get current reviewer account_ids
+    local current_reviewers
+    current_reviewers="$(echo "$current" | jq '[.reviewers[]? | {account_id}]')"
+
+    # Resolve and add new reviewers
+    for r in "${add_reviewers[@]}"; do
+      local obj
+      obj="$(bb_resolve_user "$r")" || exit 1
+      local aid
+      aid="$(echo "$obj" | jq -r '.account_id // empty')"
+      if [[ -n "$aid" ]]; then
+        current_reviewers="$(echo "$current_reviewers" | jq --arg id "$aid" '. + [{"account_id": $id}] | unique_by(.account_id)')"
+      else
+        # UUID-based — convert to that format
+        current_reviewers="$(echo "$current_reviewers" | jq --argjson obj "$obj" '. + [$obj]')"
+      fi
+    done
+
+    # Remove reviewers — match against current PR reviewers by name, UUID, or account_id
+    for r in "${remove_reviewers[@]}"; do
+      local before_count after_count
+      before_count="$(echo "$current_reviewers" | jq 'length')"
+      # Try matching by account_id, UUID, display_name, or nickname from the PR's reviewer data
+      current_reviewers="$(echo "$current" | jq --arg r "$r" --argjson cr "$current_reviewers" '
+        # Find the account_id to remove by matching against the full reviewer objects
+        (.reviewers // []) as $full |
+        ($full | map(select(
+          .account_id == $r or .uuid == $r or .display_name == $r or .nickname == $r
+        )) | map(.account_id)) as $remove_ids |
+        $cr | map(select(.account_id as $aid | $remove_ids | index($aid) | not))')"
+      after_count="$(echo "$current_reviewers" | jq 'length')"
+      if [[ "$before_count" -eq "$after_count" ]]; then
+        echo >&2 "warning: reviewer '$r' not found on PR #${pr_id}"
+      fi
+    done
+
+    payload="$(echo "$payload" | jq --argjson r "$current_reviewers" '. + {reviewers: $r}')"
+  fi
+
+  if [[ "$payload" == "{}" ]]; then
+    echo >&2 "error: nothing to update — specify --title, --body, --add-reviewer, or --remove-reviewer"
+    exit 1
+  fi
+
+  local result
+  result="$(bb_api_call PUT "/repositories/${ws}/${repo}/pullrequests/${pr_id}" -d "$payload")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    echo "Updated PR #${pr_id}"
+    # Show what changed
+    [[ -n "$title" ]] && echo "  Title: $(echo "$result" | jq -r '.title')"
+    if [[ ${#add_reviewers[@]} -gt 0 || ${#remove_reviewers[@]} -gt 0 ]]; then
+      echo "  Reviewers: $(echo "$result" | jq -r '[.reviewers[].display_name] | join(", ") // "(none)"')"
+    fi
+  fi
+}
+
+cmd_pr_tasks() {
+  local pr_id="" resolve_id="" reopen_id=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb pr tasks <id> [--resolve <task_id>] [--reopen <task_id>] [--json]" ;;
+      --resolve) resolve_id="$2"; shift 2 ;;
+      --reopen)  reopen_id="$2"; shift 2 ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr tasks <id> [--resolve <task_id>] [--reopen <task_id>]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Resolve a task
+  if [[ -n "$resolve_id" ]]; then
+    local result
+    result="$(bb_api_call PUT "/repositories/${ws}/${repo}/pullrequests/${pr_id}/tasks/${resolve_id}" \
+      -d '{"state": "RESOLVED"}')"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      echo "Resolved task #${resolve_id} on PR #${pr_id}"
+    fi
+    return
+  fi
+
+  # Reopen a task
+  if [[ -n "$reopen_id" ]]; then
+    local result
+    result="$(bb_api_call PUT "/repositories/${ws}/${repo}/pullrequests/${pr_id}/tasks/${reopen_id}" \
+      -d '{"state": "UNRESOLVED"}')"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      echo "Reopened task #${reopen_id} on PR #${pr_id}"
+    fi
+    return
+  fi
+
+  # List tasks
+  local result
+  result="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}/tasks")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq '.values'
+  else
+    local count
+    count="$(echo "$result" | jq '.values | length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No tasks on PR #${pr_id}"
+    else
+      echo "ID   STATE   CREATOR   TEXT"
+      echo "$result" | jq -r '.values[] | [
+        (.id | tostring),
+        .state,
+        (.creator.display_name // .creator.nickname // "unknown"),
+        (.content.raw // "(empty)" | gsub("\n"; " ") | .[:80])
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
+cmd_pr_comment() {
+  local pr_id="" body="" file="" line="" resolve_id="" unresolve_id=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)   bb_usage "usage: bb pr comment <id> --body \"...\" [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]" ;;
+      --body)      body="$2"; shift 2 ;;
+      --file)      file="$2"; shift 2 ;;
+      --line)      line="$2"; shift 2 ;;
+      --resolve)   resolve_id="$2"; shift 2 ;;
+      --unresolve) unresolve_id="$2"; shift 2 ;;
+      --json)      JSON_OUTPUT=1; shift ;;
+      -*)          echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)           pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr comment <id> --body \"...\" [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Resolve a comment
+  if [[ -n "$resolve_id" ]]; then
+    local result
+    result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments/${resolve_id}/resolve" -d '{}')"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      echo "Resolved comment #${resolve_id} on PR #${pr_id}"
+    fi
+    return
+  fi
+
+  # Unresolve a comment
+  if [[ -n "$unresolve_id" ]]; then
+    bb_api_call DELETE "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments/${unresolve_id}/resolve" > /dev/null
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo '{}'
+    else
+      echo "Unresolved comment #${unresolve_id} on PR #${pr_id}"
+    fi
+    return
+  fi
+
+  # Create a comment
+  if [[ -z "$body" ]]; then
+    echo >&2 "error: --body is required (or use --resolve / --unresolve)"
+    exit 1
+  fi
+
+  local payload
+  if [[ -n "$file" ]]; then
+    payload="$(jq -n \
+      --arg body "$body" \
+      --arg file "$file" \
+      --arg line "${line:-}" \
+      '{
+        content: { raw: $body },
+        inline: ({ path: $file } + (if $line != "" then { to: ($line | tonumber) } else {} end))
+      }')"
+  else
+    payload="$(jq -n --arg body "$body" '{ content: { raw: $body } }')"
+  fi
+
+  local result
+  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments" -d "$payload")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local comment_id
+    comment_id="$(echo "$result" | jq -r '.id')"
+    echo "Comment #${comment_id} added to PR #${pr_id}"
+  fi
+}
+
+cmd_pr_review() {
+  local pr_id="" approve=0 comment=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb pr review <id> --approve [--comment \"...\"] [--json]" ;;
+      --approve) approve=1; shift ;;
+      --comment) comment="$2"; shift 2 ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr review <id> --approve [--comment \"...\"]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  if [[ "$approve" -eq 1 ]]; then
+    local result
+    result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/approve")"
+    if [[ "${JSON_OUTPUT:-}" != "1" ]]; then
+      echo "Approved PR #${pr_id}"
+    else
+      echo "$result" | jq .
+    fi
+  fi
+
+  if [[ -n "$comment" ]]; then
+    cmd_pr_comment "$pr_id" --body "$comment"
+  fi
+
+  if [[ "$approve" -eq 0 && -z "$comment" ]]; then
+    echo >&2 "error: specify --approve and/or --comment"
+    exit 1
+  fi
+}
+
+cmd_pr_merge() {
+  local pr_id="" strategy="merge" delete_branch=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)       bb_usage "usage: bb pr merge <id> [--squash|--merge] [--delete-branch] [--json]" ;;
+      --squash)        strategy="squash"; shift ;;
+      --merge)         strategy="merge"; shift ;;
+      --delete-branch) delete_branch=1; shift ;;
+      --json)          JSON_OUTPUT=1; shift ;;
+      -*)              echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)               pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr merge <id> [--squash|--merge] [--delete-branch]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local merge_strategy
+  case "$strategy" in
+    squash) merge_strategy="squash" ;;
+    *)      merge_strategy="merge_commit" ;;
+  esac
+
+  local payload
+  payload="$(jq -n \
+    --arg strategy "$merge_strategy" \
+    --argjson close "$delete_branch" \
+    '{ type: "pullrequest", merge_strategy: $strategy, close_source_branch: ($close == 1) }')"
+
+  local result
+  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/merge" -d "$payload")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    echo "Merged PR #${pr_id} (strategy: ${strategy})"
+  fi
+}
+
+cmd_pr_close() {
+  local pr_id=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h) bb_usage "usage: bb pr close <id> [--json]" ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr close <id> [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/decline")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    echo "Closed PR #${pr_id}"
+  fi
+}
+
+# --- Main dispatch -----------------------------------------------------------
+
+usage() {
+  cat <<'EOF'
+bb — Bitbucket Cloud CLI
+
+Usage: bb <command> [flags]
+
+Setup:
+  bb auth login
+
+Auth:
+  auth login          Log in with an Atlassian API token
+  auth status         Show authenticated user
+
+Pull Requests:
+  pr list             List pull requests
+  pr view <id>        View a pull request
+  pr create           Create a pull request
+  pr edit <id>        Edit a pull request (reviewers, title, body)
+  pr comment <id>     Comment on a pull request (create, resolve, unresolve)
+  pr review <id>      Approve a pull request
+  pr merge <id>       Merge a pull request
+  pr close <id>       Decline a pull request
+  pr tasks <id>       List, resolve, or reopen tasks
+
+Global flags:
+  -R workspace/repo   Specify repository (default: auto-detect from git remote)
+  --json              Output raw JSON
+
+Examples:
+  bb pr list
+  bb pr list --state merged --json
+  bb pr view 42 --comments
+  bb pr create --title "Add feature" --body "Details..." --reviewer alice
+  bb pr edit 42 --add-reviewer bob --remove-reviewer alice
+  bb pr comment 42 --body "Looks good!"
+  bb pr comment 42 --resolve 12345
+  bb pr tasks 42
+  bb pr tasks 42 --resolve 12345
+  bb pr merge 42 --squash --delete-branch
+EOF
+}
+
+# Parse global flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -R)
+      _BB_WORKSPACE="${2%%/*}"
+      _BB_REPO="${2##*/}"
+      shift 2
+      ;;
+    --version|-v)
+      echo "bb ${BB_VERSION}"
+      exit 0
+      ;;
+    --json)
+      JSON_OUTPUT=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+case "${1:-help}" in
+  auth)
+    case "${2:-status}" in
+      status)    shift 2; cmd_auth_status "$@" ;;
+      login)     shift 2; cmd_auth_login "$@" ;;
+      --help|-h) usage; exit 0 ;;
+      *)         echo >&2 "unknown auth command: $2"; exit 1 ;;
+    esac
+    ;;
+  pr)
+    case "${2:-list}" in
+      list)    shift 2; cmd_pr_list "$@" ;;
+      view)    shift 2; cmd_pr_view "$@" ;;
+      create)  shift 2; cmd_pr_create "$@" ;;
+      edit)    shift 2; cmd_pr_edit "$@" ;;
+      tasks)   shift 2; cmd_pr_tasks "$@" ;;
+      comment) shift 2; cmd_pr_comment "$@" ;;
+      review)  shift 2; cmd_pr_review "$@" ;;
+      merge)   shift 2; cmd_pr_merge "$@" ;;
+      close)   shift 2; cmd_pr_close "$@" ;;
+      --help|-h) usage; exit 0 ;;
+      *)       echo >&2 "unknown pr command: $2"; exit 1 ;;
+    esac
+    ;;
+  help|--help|-h)
+    usage
+    ;;
+  *)
+    echo >&2 "unknown command: $1"
+    usage >&2
+    exit 1
+    ;;
+esac
