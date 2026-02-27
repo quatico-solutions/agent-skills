@@ -189,6 +189,32 @@ bb_paginate() {
   echo "$all"
 }
 
+bb_api_raw() {
+  local path="$1"; shift
+  local token email
+  token="$(bb_token)" || exit 1
+  email="$(bb_email)" || exit 1
+  local response http_code
+  response="$(curl -sS -w "\n%{http_code}" -X GET \
+    -u "${email}:${token}" \
+    "$@" \
+    "${BB_API}${path}")"
+  http_code="$(echo "$response" | tail -1)"
+  local body
+  body="$(echo "$response" | sed '$d')"
+  if [[ "$http_code" -ge 400 ]]; then
+    local msg
+    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+    echo >&2 "error: HTTP $http_code — $msg"
+    return 1
+  fi
+  printf '%s' "$body"
+}
+
+bb_current_ref() {
+  git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD"
+}
+
 # --- Output formatting -------------------------------------------------------
 
 bb_format_pr_list() {
@@ -1095,6 +1121,228 @@ HELP
   fi
 }
 
+# --- Subcommands: source -----------------------------------------------------
+
+cmd_source_ls() {
+  local ref="" path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+List files and directories at a given path.
+
+USAGE
+  bb source ls [path] [--ref <ref>] [--json]
+
+FLAGS
+  --ref <ref>   Branch, tag, or commit SHA (default: current branch)
+  --json        Output raw JSON array of file objects
+
+EXAMPLES
+  bb source ls
+  bb source ls src/
+  bb source ls --ref develop
+  bb source ls --ref v1.0.0 --json
+HELP
+        exit 0
+        ;;
+      --ref)  ref="$2"; shift 2 ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      path="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$ref" ]] && ref="$(bb_current_ref)"
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local api_path="/repositories/${ws}/${repo}/src/${ref}/${path}"
+  local result
+  result="$(bb_paginate "$api_path")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No files found"
+    else
+      echo "TYPE   SIZE   PATH"
+      echo "$result" | jq -r '.[] | [
+        (if .type == "commit_directory" then "dir" else "file" end),
+        (if .type == "commit_directory" then "-" else (.size | tostring) end),
+        .path
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
+cmd_source_cat() {
+  local ref="" path="" raw=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Print file contents to stdout.
+
+USAGE
+  bb source cat <path> [--ref <ref>] [--raw]
+
+FLAGS
+  --ref <ref>   Branch, tag, or commit SHA (default: current branch)
+  --raw         Always output raw content (skip JSON check; for piping)
+
+EXAMPLES
+  bb source cat README.md
+  bb source cat src/main.ts --ref develop
+  bb source cat package.json --ref v1.0.0
+  bb source cat config.yml | head -20
+HELP
+        exit 0
+        ;;
+      --ref)  ref="$2"; shift 2 ;;
+      --raw)  raw=1; shift ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      path="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$path" ]]; then
+    echo >&2 "usage: bb source cat <path> [--ref <ref>] [--raw]"
+    exit 1
+  fi
+
+  [[ -z "$ref" ]] && ref="$(bb_current_ref)"
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Check if path is a directory by fetching metadata
+  local meta
+  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${ref}/${path}?format=meta")" || exit 1
+  local file_type
+  file_type="$(echo "$meta" | jq -r '.type // empty')"
+  if [[ "$file_type" == "commit_directory" ]]; then
+    echo >&2 "error: '${path}' is a directory — use 'bb source ls ${path}' instead"
+    exit 1
+  fi
+
+  local api_path="/repositories/${ws}/${repo}/src/${ref}/${path}"
+  bb_api_raw "$api_path"
+  echo  # trailing newline for terminal friendliness
+}
+
+cmd_source_branch() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+List branches in the repository.
+
+USAGE
+  bb source branch [--json]
+
+FLAGS
+  --json   Output raw JSON array
+
+EXAMPLES
+  bb source branch
+  bb source branch --json | jq '.[].name'
+HELP
+        exit 0
+        ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_paginate "/repositories/${ws}/${repo}/refs/branches")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No branches found"
+    else
+      # Detect default branch
+      local default_branch
+      default_branch="$(bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || default_branch=""
+
+      echo "NAME   TARGET   MESSAGE"
+      echo "$result" | jq -r --arg def "$default_branch" '.[] | [
+        (if .name == $def then "* " + .name else "  " + .name end),
+        (.target.hash[:12] // "?"),
+        (.target.message // "" | gsub("\n"; " ") | .[:60])
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
+cmd_source_tag() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+List tags in the repository.
+
+USAGE
+  bb source tag [--json]
+
+FLAGS
+  --json   Output raw JSON array
+
+EXAMPLES
+  bb source tag
+  bb source tag --json | jq '.[].name'
+HELP
+        exit 0
+        ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_paginate "/repositories/${ws}/${repo}/refs/tags")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No tags found"
+    else
+      echo "NAME   TARGET   DATE   MESSAGE"
+      echo "$result" | jq -r '.[] | [
+        .name,
+        (.target.hash[:12] // "?"),
+        (.target.date // "" | split("T")[0] // "?"),
+        (.target.message // "" | gsub("\n"; " ") | .[:60])
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
@@ -1121,6 +1369,12 @@ Pull Requests:
   pr close <id>       Decline a pull request
   pr tasks <id>       List, resolve, or reopen tasks
 
+Source:
+  source ls [path]    List files and directories
+  source cat <path>   Print file contents
+  source branch       List branches
+  source tag          List tags
+
 Global flags:
   -R workspace/repo   Specify repository (default: auto-detect from git remote)
   --json              Output raw JSON
@@ -1140,6 +1394,12 @@ Examples:
   bb pr tasks 42
   bb pr tasks 42 --resolve 12345
   bb pr merge 42 --squash --delete-branch
+  bb source ls
+  bb source ls src/ --ref develop
+  bb source cat README.md
+  bb source cat package.json --ref v1.0.0
+  bb source branch
+  bb source tag --json
 EOF
 }
 
@@ -1191,6 +1451,16 @@ case "${1:-help}" in
       close)   shift 2; cmd_pr_close "$@" ;;
       --help|-h) usage; exit 0 ;;
       *)       echo >&2 "unknown pr command: $2"; exit 1 ;;
+    esac
+    ;;
+  source)
+    case "${2:-ls}" in
+      ls)      shift 2; cmd_source_ls "$@" ;;
+      cat)     shift 2; cmd_source_cat "$@" ;;
+      branch)  shift 2; cmd_source_branch "$@" ;;
+      tag)     shift 2; cmd_source_tag "$@" ;;
+      --help|-h) usage; exit 0 ;;
+      *)       echo >&2 "unknown source command: $2"; exit 1 ;;
     esac
     ;;
   help|--help|-h)
