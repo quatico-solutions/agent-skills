@@ -1,8 +1,8 @@
 # Quatico Commit Notation Reference
 
-> **Source of truth:** [quatico-solutions/QuaticoCommitNotation](https://github.com/quatico-solutions/QuaticoCommitNotation)
-> This file mirrors that repo, optimized for Claude's context window.
-> **SYNC REQUIRED:** Changes here MUST also update the source README. Changes incomplete without sync.
+> **Source of truth:** [docs.example.invalid — Commit Notation](https://docs.example.invalid/internal/development-practices/commit-notation)
+> This file mirrors that page, optimized for Claude's context window.
+> **SYNC REQUIRED:** Changes here MUST stay consistent with the docs site. Changes incomplete without sync.
 
 Based on Arlo's Commit Notation v1 with Quatico extensions.
 
@@ -11,8 +11,7 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 - [The Four Risk Levels](#the-four-risk-levels)
 - [Intentions](#intentions)
   - [Feature (F)](#feature-f) | [Bugfix (B)](#bugfix-b) | [Refactoring (R)](#refactoring-r) | [Documentation (D)](#documentation-d)
-  - [Test-only (T)](#test-only-t) | [Environment (E)](#environment-e) | [Automated (A)](#automated-a)
-  - [Comment (C)](#comment-c) | [Spec (S)](#spec-s) | [Unknown (*)](#unknown-)
+  - [Test-only (T)](#test-only-t) | [Environment (E)](#environment-e) | [Unknown (WIP)](#unknown-wip)
 - [Provable Refactorings](#provable-refactorings)
 - [Test-supported Procedural Refactorings](#test-supported-procedural-refactorings)
 - [Small Features and Bug Fixes](#small-features-and-bug-fixes)
@@ -39,14 +38,11 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 |--------|------|-----------|
 | F | Feature | Change or extend one aspect of program behavior |
 | B | Bugfix | Repair one existing, undesirable program behavior |
-| R | Refactoring | Change implementation without changing program behavior |
-| D | Documentation | Change something which communicates and does not impact behavior |
+| R | Refactoring | Change implementation without changing program behavior. Includes tool-assisted changes (IDE renames, formatters, linters). |
+| D | Documentation | Change something which communicates and does not impact behavior. Includes comment-only changes and formal specifications. |
 | T | Test-only | Alter tests without altering functionality |
 | E | Environment | Non-code development setup changes |
-| A | Automated | Tool-assisted changes (IDE, formatters, linters). Deterministic tools only, no AI/LLMs. |
-| C | Comment | Changes comments only (not JSDoc/JavaDoc) |
-| S | Spec | Changes spec or design documents |
-| * | Unknown | Multiple changes, just getting it checked in |
+| WIP | Unknown | Multiple changes, just getting it checked in |
 
 ### Feature (F)
 
@@ -123,58 +119,9 @@ Based on Arlo's Commit Notation v1 with Quatico extensions.
 | `E!!` | CI/CD change, not fully tested |
 | `E**` | Experimenting with build config |
 
-### Automated (A)
+### Unknown (WIP)
 
-Tool-assisted changes where the method (automated tooling) is more significant than the underlying intention.
-
-**When to use A vs R:**
-- Use `A` when the tool execution is the primary activity
-- Use `R` when performing a specific, named refactoring that happens to use a tool
-- Use `A` when changes span multiple intentions or the tool made decisions
-
-**Known Risks**
-- Tool may have bugs
-- Search & replace may match unintended patterns
-- Bulk operations may be hard to review
-
-| Code | Known Approaches |
-|------|------------------|
-| `a` | Provable tool refactoring: IDE rename/extract with type verification |
-| `A` | Tool-assisted with test verification |
-| `A!!` | Tool-assisted without full test coverage, or bulk operations manually reviewed |
-| `A**` | Unverified bulk search/replace |
-
-**Examples**
-- `a Rename getUserData to fetchUserProfile` (IDE rename with TypeScript)
-- `A: Extract interface IUserService` (IDE extract, tests pass)
-- `A!! Format all files with prettier` (bulk format, reviewed)
-- `A** Apply regex replace across 20 files` (not fully verified)
-
-### Comment (C)
-
-| Code | Known Approaches |
-|------|------------------|
-| `c` | Comment change, verified byte-identical compilation |
-| `C` | Comment change in source file |
-| `C!!` | Large comment overhaul |
-| `C**` | Draft comments, needs review |
-
-**Alternative**: Use `D`.
-
-### Spec (S)
-
-| Code | Known Approaches |
-|------|------------------|
-| `s` | Spec update matching implemented behavior |
-| `S` | Spec change, implementation follows |
-| `S!!` | Spec change, implementation pending |
-| `S**` | Draft spec for discussion |
-
-**Alternatives**: Use `D`, keep specs outside source control, or use test suite as spec.
-
-### Unknown (*)
-
-Multiple unrelated changes, just getting it checked in. Usually `***`.
+Multiple unrelated changes, just getting it checked in.
 
 **Alternative**: Require each commit to have exactly one intention.
 
@@ -202,3 +149,13 @@ Features and bugfixes ≤8 LoC are lower risk because:
 3. Easy to code review
 
 **Approach**: Refactor until the change is easy, then add feature one piece at a time with tests.
+
+## Retired Intentions
+
+These appear in older commits but are no longer used:
+
+| Code | Was | Now use |
+|------|-----|---------|
+| A | Automated (tool-assisted changes) | R |
+| C | Comment (comment-only changes) | D |
+| S | Spec (formal specifications) | D |
