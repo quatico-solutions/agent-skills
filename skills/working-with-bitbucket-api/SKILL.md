@@ -2,9 +2,13 @@
 name: working-with-bitbucket-api
 description: >-
   Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view,
-  create, edit, comment, approve, merge) including markdown descriptions.
-  Browser only for image uploads. Triggers: bitbucket, bitbucket API, bb,
-  PR list, PR comments, create PR, merge PR, approve PR, bitbucket repo.
+  create, edit, comment, approve, merge) and source browsing (ls, cat,
+  branch, tag) including markdown descriptions. Browser only for image
+  uploads. Triggers: bitbucket, bitbucket API, bb, PR list, PR view,
+  PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR,
+  approve PR, close PR, decline PR, PR review, PR feedback, push and PR,
+  bitbucket repo, bitbucket remote, source browse, list branches, list tags,
+  file contents, browse repo.
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -16,6 +20,27 @@ metadata:
 Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX).
 
 > **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
+
+> **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
+
+---
+
+## Prerequisites
+
+Before using any `bb` command, verify it is installed:
+
+```bash
+command -v bb
+```
+
+**If `bb` is not installed:** Stop and tell the user:
+1. Run `install-dependencies.sh` from this skill directory
+2. Then run `bb auth login` to set up authentication
+3. Verify with `bb auth status`
+
+Do NOT silently fall back to `curl` or browser automation. The user must opt in to the setup.
+
+> **Exception:** If the user explicitly prefers browser automation, or if the project's CLAUDE.md says to use `working-with-bitbucket-web`, honor that preference.
 
 ---
 
@@ -75,8 +100,6 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 > **Common failure mode:** A token with only read scopes will list and view PRs successfully but fail with HTTP 400 or 401 on any write operation (commenting, approving, merging). Bitbucket error messages do not mention the missing scope — they just say "Bad Request" or "Token is not supported for this endpoint."
 
 > **App Passwords are deprecated.** New creation was disabled Sep 2025; all existing app passwords stop working Jun 2026. Use API Tokens instead.
-
-> **Agent setup:** If `bb` is not installed, tell the user to run `install-dependencies.sh`, then `bb auth login`. The interactive login opens the token page and lists required scopes. Verify with `bb auth status`.
 
 ---
 

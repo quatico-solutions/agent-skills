@@ -31,7 +31,7 @@ Reusable skills in `skills/`.
 | `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
-| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations (list, view, create, comment, approve, merge) and source browsing (ls, cat, branch, tag). Requires `install-dependencies.sh` |
+| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations (list, view, create, comment, approve, merge) and source browsing (ls, cat, branch, tag). Requires `install-dependencies.sh`. Agent must verify `bb` is installed before use and guide user through setup if missing |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |

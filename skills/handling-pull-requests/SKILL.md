@@ -83,7 +83,7 @@ Generated with Claude Code
 4. **Create PR**: `bb pr create --title "..." --body "..." --reviewer "Name"`
 5. **Verify** with `bb pr view <id>`
 
-> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, and all PR lifecycle operations. See `bb --help`. Browser is only needed for image uploads.
+> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, and all PR lifecycle operations. See `bb --help`. Browser is only needed for image uploads. If `bb` is not installed, stop and guide the user through setup (`install-dependencies.sh` + `bb auth login`) before proceeding.
 
 ---
 
