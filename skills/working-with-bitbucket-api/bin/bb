@@ -1121,6 +1121,37 @@ HELP
   fi
 }
 
+# --- Helpers: URL encoding ---------------------------------------------------
+
+bb_resolve_ref() {
+  # Resolve a branch/tag name to a commit hash for use in /src/{hash}/{path}.
+  # Bitbucket's /src/ endpoint treats slashes in branch names (e.g. feature/foo)
+  # as path separators, so we must resolve to a hash first.
+  local ref="$1" ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # If it already looks like a hex hash, use as-is
+  if [[ "$ref" =~ ^[0-9a-f]{7,40}$ ]]; then
+    echo "$ref"
+    return
+  fi
+
+  # Try branches first, then tags
+  local result hash
+  result="$(bb_api_call GET "/repositories/${ws}/${repo}/refs/branches/${ref}" 2>/dev/null)" && {
+    hash="$(echo "$result" | jq -r '.target.hash // empty')"
+    if [[ -n "$hash" ]]; then echo "$hash"; return; fi
+  }
+  result="$(bb_api_call GET "/repositories/${ws}/${repo}/refs/tags/${ref}" 2>/dev/null)" && {
+    hash="$(echo "$result" | jq -r '.target.hash // empty')"
+    if [[ -n "$hash" ]]; then echo "$hash"; return; fi
+  }
+
+  # Fallback: use ref as-is (may work for simple names without slashes)
+  echo "$ref"
+}
+
 # --- Subcommands: source -----------------------------------------------------
 
 cmd_source_ls() {
@@ -1154,12 +1185,14 @@ HELP
   done
 
   [[ -z "$ref" ]] && ref="$(bb_current_ref)"
+  local resolved_ref
+  resolved_ref="$(bb_resolve_ref "$ref")"
 
   local ws repo
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
 
-  local api_path="/repositories/${ws}/${repo}/src/${ref}/${path}"
+  local api_path="/repositories/${ws}/${repo}/src/${resolved_ref}/${path}"
   local result
   result="$(bb_paginate "$api_path")"
 
@@ -1218,6 +1251,8 @@ HELP
   fi
 
   [[ -z "$ref" ]] && ref="$(bb_current_ref)"
+  local resolved_ref
+  resolved_ref="$(bb_resolve_ref "$ref")"
 
   local ws repo
   ws="$(bb_workspace)"
@@ -1225,7 +1260,7 @@ HELP
 
   # Check if path is a directory by fetching metadata
   local meta
-  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${ref}/${path}?format=meta")" || exit 1
+  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${resolved_ref}/${path}?format=meta")" || exit 1
   local file_type
   file_type="$(echo "$meta" | jq -r '.type // empty')"
   if [[ "$file_type" == "commit_directory" ]]; then
@@ -1233,7 +1268,7 @@ HELP
     exit 1
   fi
 
-  local api_path="/repositories/${ws}/${repo}/src/${ref}/${path}"
+  local api_path="/repositories/${ws}/${repo}/src/${resolved_ref}/${path}"
   bb_api_raw "$api_path"
   echo  # trailing newline for terminal friendliness
 }
