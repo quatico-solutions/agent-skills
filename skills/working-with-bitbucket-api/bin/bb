@@ -49,7 +49,7 @@ bb_parse_remote() {
     exit 1
   fi
   local path
-  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://bitbucket\.org/)##; s/\.git$//')"
+  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://[^@]*@bitbucket\.org/|https://bitbucket\.org/)##; s/\.git$//')"
   echo "$path"
 }
 
