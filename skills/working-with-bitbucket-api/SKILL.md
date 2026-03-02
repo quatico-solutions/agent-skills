@@ -65,15 +65,18 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 | Scope | Required For |
 |-------|-------------|
 | **read:user:bitbucket** | `bb auth status` |
-| **read:repository:bitbucket** | `bb pr list`, `bb pr view` |
+| **read:repository:bitbucket** | `bb pr list`, `bb pr view`, `bb source ls/cat` |
 | **read:pullrequest:bitbucket** | `bb pr list`, `bb pr view --comments` |
 | **write:pullrequest:bitbucket** | `bb pr create`, `bb pr edit`, `bb pr comment`, `bb pr review`, `bb pr merge`, `bb pr close`, `bb pr tasks --resolve/--reopen` |
+| **write:repository:bitbucket** | `bb source ls/cat/branch/tag` (private repos) |
 
-**Minimum for full use (recommended):** All four scopes above. Scope-to-command mappings are approximate — Bitbucket may require additional scopes depending on repository permissions.
+**Minimum for full use (recommended):** All five scopes above. Scope-to-command mappings are approximate — Bitbucket may require additional scopes depending on repository permissions.
 
 > **Common failure mode:** A token with only read scopes will list and view PRs successfully but fail with HTTP 400 or 401 on any write operation (commenting, approving, merging). Bitbucket error messages do not mention the missing scope — they just say "Bad Request" or "Token is not supported for this endpoint."
 
 > **App Passwords are deprecated.** New creation was disabled Sep 2025; all existing app passwords stop working Jun 2026. Use API Tokens instead.
+
+> **Agent setup:** If `bb` is not installed, tell the user to run `install-dependencies.sh`, then `bb auth login`. The interactive login opens the token page and lists required scopes. Verify with `bb auth status`.
 
 ---
 

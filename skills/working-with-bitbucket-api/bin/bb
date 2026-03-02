@@ -332,7 +332,8 @@ HELP
     echo "Opening Atlassian API token page..."
     echo "  Select these scopes:"
     echo "    read:user:bitbucket, read:repository:bitbucket,"
-    echo "    read:pullrequest:bitbucket, write:pullrequest:bitbucket"
+    echo "    read:pullrequest:bitbucket, write:pullrequest:bitbucket,"
+    echo "    write:repository:bitbucket"
     open "https://id.atlassian.com/manage-profile/security/api-tokens"
     echo ""
     read -rsp "Paste your API token: " token
