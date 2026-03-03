@@ -126,7 +126,7 @@ bb_api_call() {
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
   local response http_code
-  response="$(curl -sS -w "\n%{http_code}" -X "$method" \
+  response="$(curl -sSL -w "\n%{http_code}" -X "$method" \
     -u "${email}:${token}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
@@ -157,7 +157,7 @@ bb_paginate() {
 
   while [[ -n "$url" && "$page" -lt 10 ]]; do
     local response http_code
-    response="$(curl -sS -w "\n%{http_code}" -X GET \
+    response="$(curl -sSL -w "\n%{http_code}" -X GET \
       -u "${email}:${token}" \
       -H "Accept: application/json" \
       "$url")"
@@ -195,7 +195,7 @@ bb_api_raw() {
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
   local response http_code
-  response="$(curl -sS -w "\n%{http_code}" -X GET \
+  response="$(curl -sSL -w "\n%{http_code}" -X GET \
     -u "${email}:${token}" \
     "$@" \
     "${BB_API}${path}")"
@@ -212,7 +212,10 @@ bb_api_raw() {
 }
 
 bb_current_ref() {
-  git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD"
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+  bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // "main"'
 }
 
 # --- Output formatting -------------------------------------------------------
@@ -253,6 +256,15 @@ bb_format_comment_list() {
     (.created_on | split("T")[0] // "?"),
     (if .inline then "inline:" + (.inline.path // "?") + ":" + ((.inline.to // .inline.from // 0) | tostring) else "general" end),
     (.content.raw // "(empty)" | gsub("\n"; " ") | .[:80])
+  ] | @tsv' | column -t -s $'\t'
+}
+
+bb_format_diffstat() {
+  jq -r '.[] | [
+    .status,
+    ("+" + (.lines_added | tostring)),
+    ("-" + (.lines_removed | tostring)),
+    (.new.path // .old.path // "?")
   ] | @tsv' | column -t -s $'\t'
 }
 
@@ -1153,6 +1165,187 @@ bb_resolve_ref() {
   echo "$ref"
 }
 
+cmd_pr_diff() {
+  local pr_id="" show_stat=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show the diff for a pull request.
+
+USAGE
+  bb pr diff <id> [--stat] [--json]
+
+FLAGS
+  --stat   Show diffstat summary instead of full diff
+  --json   Output raw JSON (only with --stat)
+
+EXAMPLES
+  bb pr diff 42
+  bb pr diff 42 | head -50
+  bb pr diff 42 --stat
+  bb pr diff 42 --stat --json
+HELP
+        exit 0
+        ;;
+      --stat) show_stat=1; shift ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr diff <id> [--stat] [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  if [[ "$show_stat" -eq 1 ]]; then
+    local result
+    result="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests/${pr_id}/diffstat")"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      local count
+      count="$(echo "$result" | jq 'length')"
+      if [[ "$count" -eq 0 ]]; then
+        echo "No changes"
+      else
+        echo "STATUS   ADDED   REMOVED   PATH"
+        echo "$result" | bb_format_diffstat
+      fi
+    fi
+  else
+    bb_api_raw "/repositories/${ws}/${repo}/pullrequests/${pr_id}/diff"
+  fi
+}
+
+cmd_pr_status() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show pull requests relevant to you (authored or reviewing).
+
+USAGE
+  bb pr status [--json]
+
+FLAGS
+  --json   Output raw JSON {authored, reviewing}
+
+EXAMPLES
+  bb pr status
+  bb pr status --json | jq '.reviewing[].title'
+HELP
+        exit 0
+        ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local my_id
+  my_id="$(bb_api_call GET /user | jq -r '.account_id')"
+
+  local prs
+  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN")"
+
+  local authored reviewing
+  authored="$(echo "$prs" | jq --arg id "$my_id" '[.[] | select(.author.account_id == $id)]')"
+  reviewing="$(echo "$prs" | jq --arg id "$my_id" '[.[] | select(.author.account_id != $id and ([.reviewers[]?.account_id] | index($id)))]')"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    jq -n --argjson a "$authored" --argjson r "$reviewing" '{authored: $a, reviewing: $r}'
+  else
+    local a_count r_count
+    a_count="$(echo "$authored" | jq 'length')"
+    r_count="$(echo "$reviewing" | jq 'length')"
+
+    echo "Authored ($a_count):"
+    if [[ "$a_count" -eq 0 ]]; then
+      echo "  (none)"
+    else
+      echo "ID   STATE   AUTHOR   BRANCH   TITLE"
+      echo "$authored" | bb_format_pr_list
+    fi
+
+    echo ""
+    echo "Reviewing ($r_count):"
+    if [[ "$r_count" -eq 0 ]]; then
+      echo "  (none)"
+    else
+      echo "ID   STATE   AUTHOR   BRANCH   TITLE"
+      echo "$reviewing" | bb_format_pr_list
+    fi
+  fi
+}
+
+cmd_pr_activity() {
+  local pr_id=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show the activity timeline for a pull request.
+
+USAGE
+  bb pr activity <id> [--json]
+
+FLAGS
+  --json   Output raw JSON array
+
+EXAMPLES
+  bb pr activity 42
+  bb pr activity 42 --json | jq '.[].update.state'
+HELP
+        exit 0
+        ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      pr_id="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$pr_id" ]]; then
+    echo >&2 "usage: bb pr activity <id> [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests/${pr_id}/activity")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No activity on PR #${pr_id}"
+    else
+      echo "DATE   TYPE   AUTHOR   SUMMARY"
+      echo "$result" | jq -r '.[] | [
+        (if .comment then .comment.created_on elif .approval then .approval.date elif .update then .update.date else "?" end | split("T")[0]),
+        (if .comment then "comment" elif .approval then "approval" elif .update then "update" else "?" end),
+        (if .comment then (.comment.user.display_name // "?") elif .approval then (.approval.user.display_name // "?") elif .update then (.update.author.display_name // "?") else "?" end),
+        (if .comment then (.comment.content.raw // "" | gsub("\n"; " ") | .[:60]) elif .approval then "approved" elif .update then .update.state else "?" end)
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
 # --- Subcommands: source -----------------------------------------------------
 
 cmd_source_ls() {
@@ -1274,7 +1467,7 @@ HELP
   echo  # trailing newline for terminal friendliness
 }
 
-cmd_source_branch() {
+cmd_source_branches() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -1282,14 +1475,14 @@ cmd_source_branch() {
 List branches in the repository.
 
 USAGE
-  bb source branch [--json]
+  bb source branches [--json]
 
 FLAGS
   --json   Output raw JSON array
 
 EXAMPLES
-  bb source branch
-  bb source branch --json | jq '.[].name'
+  bb source branches
+  bb source branches --json | jq '.[].name'
 HELP
         exit 0
         ;;
@@ -1328,7 +1521,7 @@ HELP
   fi
 }
 
-cmd_source_tag() {
+cmd_source_tags() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -1336,14 +1529,14 @@ cmd_source_tag() {
 List tags in the repository.
 
 USAGE
-  bb source tag [--json]
+  bb source tags [--json]
 
 FLAGS
   --json   Output raw JSON array
 
 EXAMPLES
-  bb source tag
-  bb source tag --json | jq '.[].name'
+  bb source tags
+  bb source tags --json | jq '.[].name'
 HELP
         exit 0
         ;;
@@ -1379,6 +1572,218 @@ HELP
   fi
 }
 
+cmd_source_search() {
+  local query="" search_all=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Search code in the repository (or entire workspace).
+
+USAGE
+  bb source search <query> [--all] [--json]
+
+FLAGS
+  --all    Search entire workspace (default: scoped to current repo)
+  --json   Output raw JSON array
+
+Supports Bitbucket search syntax (e.g., "class Foo", "lang:python TODO").
+
+EXAMPLES
+  bb source search "TODO"
+  bb source search "className" --all
+  bb source search "lang:typescript interface" --json
+HELP
+        exit 0
+        ;;
+      --all)  search_all=1; shift ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      query="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$query" ]]; then
+    echo >&2 "usage: bb source search <query> [--all] [--json]"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Scope to current repo by default
+  local search_query="$query"
+  if [[ "$search_all" -eq 0 ]]; then
+    search_query="repo:${repo} ${query}"
+  fi
+
+  local encoded_query
+  encoded_query="$(printf '%s' "$search_query" | jq -sRr @uri)"
+
+  local result
+  result="$(bb_paginate "/workspaces/${ws}/search/code?search_query=${encoded_query}")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq 'length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No results found"
+    else
+      echo "REPO   FILE   MATCHES   LINES"
+      echo "$result" | jq -r '.[] | [
+        (.file.links.self.href | split("/")[6] // "?"),
+        .file.path,
+        (.content_match_count | tostring),
+        ([.content_matches[]?.lines[]?.line] | map(tostring) | join(",") | if . == "" then "-" else . end)
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
+cmd_source_commits() {
+  local ref=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+List commits on a branch, or show a single commit by SHA.
+
+USAGE
+  bb source commits [branch] [--json]
+  bb source commits <sha> [--json]
+
+FLAGS
+  --json   Output raw JSON
+
+EXAMPLES
+  bb source commits
+  bb source commits develop
+  bb source commits abc123def4
+  bb source commits --json
+HELP
+        exit 0
+        ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      ref="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$ref" ]] && ref="$(bb_current_ref)"
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # If arg looks like a hex SHA, show single commit detail
+  if [[ "$ref" =~ ^[0-9a-f]+$ ]]; then
+    local result
+    result="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${ref}")"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      echo "$result" | jq -r '"Commit:   " + .hash[:12],
+        "Author:   " + (.author.raw // "?"),
+        "Date:     " + (.date // "?"),
+        "Parents:  " + ([.parents[].hash[:12]] | join(", ")),
+        "",
+        (.message // "(no message)")'
+    fi
+    return
+  fi
+
+  # Otherwise list recent commits on the branch (single page, no full pagination)
+  local result
+  result="$(bb_api_call GET "/repositories/${ws}/${repo}/commits/${ref}?pagelen=30")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    local count
+    count="$(echo "$result" | jq '.values | length')"
+    if [[ "$count" -eq 0 ]]; then
+      echo "No commits found"
+    else
+      echo "HASH   DATE   AUTHOR   MESSAGE"
+      echo "$result" | jq -r '.values[] | [
+        .hash[:12],
+        (.date | split("T")[0]),
+        (.author.user.display_name // .author.raw // "?"),
+        (.message // "" | split("\n")[0] | .[:60])
+      ] | @tsv' | column -t -s $'\t'
+    fi
+  fi
+}
+
+cmd_source_diff() {
+  local spec="" show_stat=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show diff between two refs.
+
+USAGE
+  bb source diff <base>..<head> [--stat] [--json]
+
+FLAGS
+  --stat   Show diffstat summary instead of full diff
+  --json   Output raw JSON (only with --stat)
+
+Uses git-style spec: base..head (e.g., main..feature/x).
+
+EXAMPLES
+  bb source diff main..feature/x
+  bb source diff main..develop --stat
+  bb source diff abc123..def456
+HELP
+        exit 0
+        ;;
+      --stat) show_stat=1; shift ;;
+      --json) JSON_OUTPUT=1; shift ;;
+      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)      spec="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$spec" || "$spec" != *..* ]]; then
+    echo >&2 "usage: bb source diff <base>..<head> [--stat] [--json]"
+    echo >&2 "  Example: bb source diff main..feature/x"
+    exit 1
+  fi
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  # Bitbucket uses {new}..{old} (opposite of git's {old}..{new})
+  local left="${spec%..*}"
+  local right="${spec##*..}"
+  local api_spec="${right}..${left}"
+
+  if [[ "$show_stat" -eq 1 ]]; then
+    local result
+    result="$(bb_paginate "/repositories/${ws}/${repo}/diffstat/${api_spec}")"
+    if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+      echo "$result" | jq .
+    else
+      local count
+      count="$(echo "$result" | jq 'length')"
+      if [[ "$count" -eq 0 ]]; then
+        echo "No changes"
+      else
+        echo "STATUS   ADDED   REMOVED   PATH"
+        echo "$result" | bb_format_diffstat
+      fi
+    fi
+  else
+    bb_api_raw "/repositories/${ws}/${repo}/diff/${api_spec}"
+  fi
+}
+
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
@@ -1404,12 +1809,18 @@ Pull Requests:
   pr merge <id>       Merge a pull request
   pr close <id>       Decline a pull request
   pr tasks <id>       List, resolve, or reopen tasks
+  pr diff <id>        Show PR diff (or --stat for summary)
+  pr status           Show PRs you authored or are reviewing
+  pr activity <id>    Show PR activity timeline
 
 Source:
   source ls [path]    List files and directories
   source cat <path>   Print file contents
-  source branch       List branches
-  source tag          List tags
+  source branches     List branches
+  source tags         List tags
+  source search <q>   Search code in the repository
+  source commits [ref] List commits (or show one by SHA)
+  source diff <spec>  Compare two refs (or --stat for summary)
 
 Global flags:
   -R workspace/repo   Specify repository (default: auto-detect from git remote)
@@ -1434,8 +1845,19 @@ Examples:
   bb source ls src/ --ref develop
   bb source cat README.md
   bb source cat package.json --ref v1.0.0
-  bb source branch
-  bb source tag --json
+  bb source branches
+  bb source tags --json
+  bb pr diff 42
+  bb pr diff 42 --stat
+  bb pr status
+  bb pr activity 42
+  bb source search "TODO"
+  bb source search "className" --all
+  bb source commits
+  bb source commits develop
+  bb source commits abc123
+  bb source diff main..feature/x
+  bb source diff main..feature/x --stat
 EOF
 }
 
@@ -1484,7 +1906,10 @@ case "${1:-help}" in
       comment) shift 2; cmd_pr_comment "$@" ;;
       review)  shift 2; cmd_pr_review "$@" ;;
       merge)   shift 2; cmd_pr_merge "$@" ;;
-      close)   shift 2; cmd_pr_close "$@" ;;
+      close)    shift 2; cmd_pr_close "$@" ;;
+      diff)     shift 2; cmd_pr_diff "$@" ;;
+      status)   shift 2; cmd_pr_status "$@" ;;
+      activity) shift 2; cmd_pr_activity "$@" ;;
       --help|-h) usage; exit 0 ;;
       *)       echo >&2 "unknown pr command: $2"; exit 1 ;;
     esac
@@ -1493,8 +1918,11 @@ case "${1:-help}" in
     case "${2:-ls}" in
       ls)      shift 2; cmd_source_ls "$@" ;;
       cat)     shift 2; cmd_source_cat "$@" ;;
-      branch)  shift 2; cmd_source_branch "$@" ;;
-      tag)     shift 2; cmd_source_tag "$@" ;;
+      branches) shift 2; cmd_source_branches "$@" ;;
+      tags)     shift 2; cmd_source_tags "$@" ;;
+      search)   shift 2; cmd_source_search "$@" ;;
+      commits)  shift 2; cmd_source_commits "$@" ;;
+      diff)     shift 2; cmd_source_diff "$@" ;;
       --help|-h) usage; exit 0 ;;
       *)       echo >&2 "unknown source command: $2"; exit 1 ;;
     esac
