@@ -69,6 +69,15 @@ bb_repo() {
   fi
 }
 
+# --- Unicode helpers ---------------------------------------------------------
+
+bb_nfc() {
+  # Normalize Unicode string to NFC (composed form).
+  # macOS terminals emit NFD (decomposed: a + combining ¨); Bitbucket API returns NFC (ä).
+  # Without normalization, byte-level == in jq fails on names like "Bänziger".
+  perl -CSA -MUnicode::Normalize -e 'print NFC(join(" ", @ARGV))' -- "$@"
+}
+
 # --- User resolution ---------------------------------------------------------
 
 bb_resolve_user() {
@@ -89,6 +98,7 @@ bb_resolve_user() {
   fi
 
   # Display name — search PR participants in the current repo
+  input="$(bb_nfc "$input")"
   local ws repo
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
@@ -439,7 +449,9 @@ HELP
   if [[ -n "$author" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
     path="/repositories/${ws}/${repo}/pullrequests?state=${state}"
     result="$(bb_paginate "$path")"
-    result="$(echo "$result" | jq --arg name "$author" '[.[] | select(.author.display_name == $name)]')"
+    local nfc_author
+    nfc_author="$(bb_nfc "$author")"
+    result="$(echo "$result" | jq --arg name "$nfc_author" '[.[] | select(.author.display_name == $name)]')"
   fi
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
@@ -712,6 +724,7 @@ HELP
 
     # Remove reviewers — match against current PR reviewers by name, UUID, or account_id
     for r in "${remove_reviewers[@]}"; do
+      r="$(bb_nfc "$r")"
       local before_count after_count
       before_count="$(echo "$current_reviewers" | jq 'length')"
       # Try matching by account_id, UUID, display_name, or nickname from the PR's reviewer data

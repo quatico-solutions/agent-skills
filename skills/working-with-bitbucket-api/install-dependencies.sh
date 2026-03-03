@@ -14,6 +14,15 @@ else
     echo "jq: already installed ($(jq --version))"
 fi
 
+# perl + Unicode::Normalize (system-provided on macOS, used for NFC normalization in bb)
+if perl -MUnicode::Normalize -e '1' 2>/dev/null; then
+    echo "perl + Unicode::Normalize: available ($(perl -v | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1))"
+else
+    echo "ERROR: perl with Unicode::Normalize is required but not available"
+    echo "  On macOS this ships with the system. Check your perl installation."
+    exit 1
+fi
+
 # Symlink bb to ~/bin/ (on PATH)
 mkdir -p ~/bin
 if [[ -e ~/bin/bb || -L ~/bin/bb ]]; then
