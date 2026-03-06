@@ -233,7 +233,7 @@ bb_current_ref() {
 bb_format_pr_list() {
   jq -r '.[] | [
     (.id | tostring),
-    (.state // "OPEN"),
+    (if .draft == true then "DRAFT" else (.state // "OPEN") end),
     (.author.display_name // .author.nickname // "unknown"),
     (.source.branch.name // "?"),
     (.title // "(no title)")
@@ -243,7 +243,7 @@ bb_format_pr_list() {
 bb_format_pr_view() {
   jq -r '
     "Title:    " + (.title // "(no title)"),
-    "State:    " + (.state // "?"),
+    "State:    " + (if .draft == true then "DRAFT" else (.state // "?") end),
     "Author:   " + (.author.display_name // .author.nickname // "?"),
     "Source:   " + (.source.branch.name // "?"),
     "Dest:     " + (.destination.branch.name // "?"),
@@ -549,7 +549,7 @@ HELP
 }
 
 cmd_pr_create() {
-  local title="" body="" head="" base="" reviewers=() close_branch=0
+  local title="" body="" head="" base="" reviewers=() close_branch=0 draft=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -558,7 +558,7 @@ Create a pull request.
 
 USAGE
   bb pr create --title "..." [--body "..."] [--head <branch>] [--base <branch>]
-               [--reviewer <user>] [--close-branch] [--json]
+               [--reviewer <user>] [--close-branch] [--draft] [--json]
 
 FLAGS
   --title <text>      PR title (required)
@@ -567,6 +567,7 @@ FLAGS
   --base <branch>     Target branch (default: main)
   --reviewer <user>   Add reviewer (repeatable; see REVIEWER RESOLUTION below)
   --close-branch      Close source branch after merge
+  --draft             Create PR in draft state
   --json              Output raw JSON
 
 REVIEWER RESOLUTION
@@ -578,6 +579,7 @@ EXAMPLES
   bb pr create --title "Add auth module"
   bb pr create --title "Fix bug" --body "Fixes #42" --reviewer "Alice Smith"
   bb pr create --title "Feature" --head feature/x --base develop --close-branch
+  bb pr create --title "WIP" --draft
 HELP
         exit 0
         ;;
@@ -587,13 +589,14 @@ HELP
       --base)         base="$2"; shift 2 ;;
       --reviewer)     reviewers+=("$2"); shift 2 ;;
       --close-branch) close_branch=1; shift ;;
+      --draft)        draft=1; shift ;;
       --json)         JSON_OUTPUT=1; shift ;;
       *)              echo >&2 "unknown flag: $1"; exit 1 ;;
     esac
   done
 
   if [[ -z "$title" ]]; then
-    echo >&2 "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch]"
+    echo >&2 "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--draft]"
     exit 1
   fi
 
@@ -625,6 +628,7 @@ HELP
     --arg head "$head" \
     --arg base "$base" \
     --argjson close "$close_branch" \
+    --argjson draft "$draft" \
     --argjson reviewers "$reviewer_json" \
     '{
       title: $title,
@@ -632,7 +636,8 @@ HELP
       destination: { branch: { name: $base } },
       close_source_branch: ($close == 1),
       reviewers: $reviewers
-    } + (if $body != "" then { description: $body } else {} end)')"
+    } + (if $body != "" then { description: $body } else {} end)
+      + (if $draft == 1 then { draft: true } else {} end)')"
 
   local result
   result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests" -d "$payload")"
@@ -643,7 +648,11 @@ HELP
     local pr_id pr_url
     pr_id="$(echo "$result" | jq -r '.id')"
     pr_url="$(echo "$result" | jq -r '.links.html.href')"
-    echo "Created PR #${pr_id}: ${pr_url}"
+    if [[ "$draft" -eq 1 ]]; then
+      echo "Created draft PR #${pr_id}: ${pr_url}"
+    else
+      echo "Created PR #${pr_id}: ${pr_url}"
+    fi
   fi
 }
 
@@ -1848,6 +1857,7 @@ Examples:
   bb pr list --state merged --json
   bb pr view 42 --comments
   bb pr create --title "Add feature" --body "Details..." --reviewer alice
+  bb pr create --title "WIP" --draft
   bb pr edit 42 --add-reviewer bob --remove-reviewer alice
   bb pr comment 42 --body "Looks good!"
   bb pr comment 42 --resolve 12345
