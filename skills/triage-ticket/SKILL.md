@@ -6,6 +6,8 @@ description: >
   Triggers: triage, ticket, bug report, feature request, JIRA, scope, assess ticket,
   ticket review, sprint planning prep.
 compatibility: claude-code, cursor
+metadata:
+  version: "1.0.0"
 ---
 
 # Triage a JIRA Ticket

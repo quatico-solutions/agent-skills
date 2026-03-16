@@ -10,6 +10,8 @@ description: >-
   Related: commit (principles), commit-notation (formatting), handling-pull-requests (PR creation).
 compatibility: claude-code
 license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Branch and Commit

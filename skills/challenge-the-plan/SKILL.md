@@ -9,6 +9,8 @@ description: >
   validate plan, review plan, interrogate plan, stress-test plan, challenge the spec,
   challenge the story, review spec, review story.
 compatibility: claude-code, cursor
+metadata:
+  version: "1.0.0"
 ---
 
 # Challenge the Plan

@@ -7,6 +7,8 @@ description: >-
   Related: commit-notation (message formatting), handling-pull-requests (PR workflow).
 compatibility: claude-code, cursor
 license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Commit

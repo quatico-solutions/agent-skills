@@ -3,6 +3,8 @@ name: markdown
 description: >-
   Use when writing or reviewing any markdown file in this workspace.
   Quick reference for supported syntax (CommonMark + Bitbucket safe).
+metadata:
+  version: "1.0.0"
 ---
 
 # Markdown

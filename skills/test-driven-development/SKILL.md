@@ -5,7 +5,7 @@ description: >-
   Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow.
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0"
+  version: "1.0.0"
   source: "Based on a colleague's Jest Guide and Double Loop presentation"
 ---
 

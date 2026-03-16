@@ -7,7 +7,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "2.1"
+  version: "2.1.0"
 ---
 
 # Working with JIRA

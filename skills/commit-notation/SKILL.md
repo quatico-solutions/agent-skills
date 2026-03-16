@@ -11,6 +11,8 @@ license: MIT
 metadata:
   source: https://docs.example.invalid/internal/development-practices/commit-notation
   version: "1.1"
+metadata:
+  version: "1.0.0"
 ---
 
 # Commit Notation

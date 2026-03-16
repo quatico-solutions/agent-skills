@@ -8,7 +8,7 @@ description: >-
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.5"
+  version: "1.5.0"
 ---
 
 # Working with Bitbucket Web

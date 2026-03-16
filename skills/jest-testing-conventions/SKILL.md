@@ -7,7 +7,7 @@ description: >-
   spy, stub, jest.fn, jest.spyOn, jest.mock.
 compatibility: claude-code, cursor
 metadata:
-  version: "1.1"
+  version: "1.1.0"
   source: "Based on a colleague's Jest Guide"
 ---
 

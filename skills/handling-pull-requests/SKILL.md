@@ -8,7 +8,7 @@ description: >-
   commit and push, push and PR.
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0"
+  version: "1.0.0"
 ---
 
 # Handling Pull Requests
