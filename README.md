@@ -35,37 +35,48 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 ## Skills
 
-Reusable skills in `skills/`.
+Skills are grouped into plugins. The table below must stay in sync with the plugin symlinks in `plugins/`.
+
+### essentials (20 skills)
 
 | Skill | Description |
 |-------|-------------|
-| `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
-| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
+| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
 | `branch-and-commit` | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
-| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work |
-| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
-| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags |
-| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
-| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
+| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
+| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
+| `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
-| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations (list, view, create, diff, status, activity, comment, approve, merge), source browsing (ls, cat, branches, tags, search, commits, diff). Requires `install-dependencies.sh`. Agent must verify `bb` is installed before use and guide user through setup if missing |
+| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
+| `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
+| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) |
+| `shared-element-development` | Patterns and decision-making for component sharing across projects |
+| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
+| `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
+| `storybook-component-docs` | Conventions for documenting components in Storybook with proper naming, descriptions, and cross-references |
+| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns |
+| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
+| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
+| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
-| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates |
-| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) |
-| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns |
-| `forms-with-wbcomponents` | Building forms: Form/Field components, validation, multi-step wizards, conditional fields |
-| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis |
-| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops |
-| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
-| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
-| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
-| `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
-| `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
-| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps |
 
-`bye` is installed from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) via the setup command.
+### bdd-methodology (3 skills)
+
+| Skill | Description |
+|-------|-------------|
+| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work |
+| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
+| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags |
+
+### agent-admin (3 skills)
+
+| Skill | Description |
+|-------|-------------|
+| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates |
+| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops |
+| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis |
 
 **Usage tips:**
 

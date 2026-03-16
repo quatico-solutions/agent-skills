@@ -10,12 +10,12 @@ Skills live flat in `skills/` and are referenced via symlinks from plugin direct
 skills/              ← actual skill sources
 commands/            ← actual command sources
 plugins/
-  essentials/        ← 19 skills + 1 command (symlinks)
+  essentials/        ← 20 skills + 1 command (symlinks)
   bdd-methodology/   ← 3 skills (symlinks)
   agent-admin/       ← 3 skills (symlinks)
 ```
 
-The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists all plugins including the external `bye` skill from `eins78/skills`.
+The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists all plugins.
 
 ## Versioning
 
@@ -41,3 +41,15 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 - Optional: `REFERENCE.md`, `install-dependencies.sh`, `diagrams/`
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
 - When adding a new skill, create the symlink in the appropriate plugin directory
+
+## Documentation Sync (CRITICAL)
+
+**Every change to skills or plugin membership MUST update `README.md`.**
+
+The skills table in README.md is grouped by plugin (essentials, bdd-methodology, agent-admin). When you:
+
+- **Add a skill**: add it to the correct plugin table and create the symlink in `plugins/{name}/skills/`
+- **Remove a skill**: remove from the table and delete the symlink
+- **Move a skill between plugins**: update both tables and move the symlink
+
+The table-to-plugin mapping must always match the actual symlinks in `plugins/`.
