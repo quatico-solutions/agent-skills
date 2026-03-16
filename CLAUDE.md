@@ -4,18 +4,15 @@ Agent instructions for the `agent-skills` repository.
 
 ## Repository Structure
 
-Skills live flat in `skills/` and are referenced via symlinks from plugin directories:
+Each plugin is a top-level directory containing its own skills and commands:
 
 ```
-skills/              ← actual skill sources
-commands/            ← actual command sources
-plugins/
-  essentials/        ← 20 skills + 1 command (symlinks)
-  bdd-methodology/   ← 3 skills (symlinks)
-  agent-admin/       ← 3 skills (symlinks)
+essentials/          ← 20 skills + 1 command
+bdd-methodology/     ← 3 skills
+agent-admin/         ← 3 skills
 ```
 
-The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists all plugins.
+The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists all plugins. No symlinks — each skill lives directly in its plugin directory.
 
 ## Versioning
 
@@ -40,7 +37,7 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 - Every skill has `SKILL.md` (frontmatter + instructions) and `README.md` (development notes)
 - Optional: `REFERENCE.md`, `install-dependencies.sh`, `diagrams/`
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
-- When adding a new skill, create the symlink in the appropriate plugin directory
+- When adding a new skill, place it in the appropriate plugin's `skills/` directory
 
 ## Documentation Sync (CRITICAL)
 
@@ -48,8 +45,8 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 
 The skills table in README.md is grouped by plugin (essentials, bdd-methodology, agent-admin). When you:
 
-- **Add a skill**: add it to the correct plugin table and create the symlink in `plugins/{name}/skills/`
-- **Remove a skill**: remove from the table and delete the symlink
-- **Move a skill between plugins**: update both tables and move the symlink
+- **Add a skill**: add it to the correct plugin's `skills/` directory and the matching README table
+- **Remove a skill**: remove from the directory and the table
+- **Move a skill between plugins**: move the directory and update both tables
 
-The table-to-plugin mapping must always match the actual symlinks in `plugins/`.
+The README tables must always match the actual contents of each plugin's `skills/` directory.
