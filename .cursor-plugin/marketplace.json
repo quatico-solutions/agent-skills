@@ -19,12 +19,6 @@
       "source": "./plugins/agent-admin",
       "description": "Agent configuration maintenance: CLAUDE.md, AGENTS.md hub-and-spoke, and rule consolidation",
       "version": "1.0.0"
-    },
-    {
-      "name": "bye",
-      "source": { "source": "github", "repo": "eins78/skills" },
-      "description": "Session wrap-up: sessionlog, commits, and next steps summary",
-      "version": "1.0.0"
     }
   ]
 }
