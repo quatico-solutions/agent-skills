@@ -1,20 +1,38 @@
-# Claude Code & Cursor Configuration
+# Agent Skills
 
 Shared skills for AI-assisted development with Claude Code and Cursor.
 
 ## Setup
 
+### Claude Code (plugin)
+
+```
+/plugin marketplace add https://github.com/quatico-solutions/agent-skills.git
+/plugin install essentials@quatico-marketplace
+```
+
+Optional plugins:
+
+```
+/plugin install bdd-methodology@quatico-marketplace
+/plugin install agent-admin@quatico-marketplace
+/plugin install bye@quatico-marketplace
+```
+
+### Cursor (team marketplace)
+
+Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `essentials` as required for the team.
+
+### Legacy (manual)
+
 ```bash
-# Claude Code
-pnpx skills add git@bitbucket.org:quatico/config.git -g -a claude-code --all -y && pnpx skills add eins78/skills -g -a claude-code -s bye -y
+pnpx skills add quatico-solutions/agent-skills -g -a claude-code --all -y && pnpx skills add eins78/skills -g -a claude-code -s bye -y
 ```
 
 ```bash
-# Cursor (run after the above — copies skills for Cursor compatibility)
+# Cursor (copies skills for Cursor compatibility)
 for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n" && cp -r "$s" ~/.cursor/skills/"$n"; done
 ```
-
-Re-run to update after pulling changes.
 
 ## Skills
 
@@ -89,7 +107,7 @@ compatibility: claude-code, cursor
 license: MIT
 metadata:
   source: https://github.com/your-org/your-repo
-  version: "1.0"
+  version: "1.0.0"
 ---
 
 # My Skill Name
