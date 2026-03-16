@@ -16,10 +16,9 @@ Optional plugins:
 ```
 /plugin install bdd-methodology@quatico-marketplace
 /plugin install agent-admin@quatico-marketplace
-/plugin install bye@quatico-marketplace
 ```
 
-### Cursor (team marketplace)
+### Cursor ([team marketplace](https://cursor.com/docs/plugins#team-marketplaces))
 
 Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `essentials` as required for the team.
 
