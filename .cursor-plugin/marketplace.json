@@ -3,9 +3,27 @@
   "owner": { "name": "Quatico Solutions AG" },
   "plugins": [
     {
-      "name": "qs-tools",
-      "source": ".",
-      "description": "Quatico development skills: commit notation, TDD, BDD, PR workflows, Bitbucket/Jira integration, and team conventions",
+      "name": "essentials",
+      "source": "./plugins/essentials",
+      "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
+      "version": "1.0.0"
+    },
+    {
+      "name": "bdd-methodology",
+      "source": "./plugins/bdd-methodology",
+      "description": "BDD methodology skills: double-loop BDD/TDD, writing Gherkin scenarios, and implementing step definitions",
+      "version": "1.0.0"
+    },
+    {
+      "name": "agent-admin",
+      "source": "./plugins/agent-admin",
+      "description": "Agent configuration maintenance: CLAUDE.md, AGENTS.md hub-and-spoke, and rule consolidation",
+      "version": "1.0.0"
+    },
+    {
+      "name": "bye",
+      "source": { "source": "github", "repo": "eins78/skills" },
+      "description": "Session wrap-up: sessionlog, commits, and next steps summary",
       "version": "1.0.0"
     }
   ]

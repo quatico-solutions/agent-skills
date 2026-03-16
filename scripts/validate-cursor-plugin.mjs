@@ -384,12 +384,17 @@ async function main() {
     }
     seenNames.add(entry.name);
 
+    // Skip external sources (object with "source" key like { source: "github", repo: "..." })
+    if (typeof entry.source === "object" && entry.source !== null) {
+      continue;
+    }
+
     const sourcePath = resolveMarketplaceSource(
       entry.source,
       pluginRoot ?? ""
     );
     if (!sourcePath) {
-      addError(`${label}.source must be a string path.`);
+      addError(`${label}.source must be a string path or external source object.`);
       continue;
     }
     if (!isSafeRelativePath(sourcePath)) {
