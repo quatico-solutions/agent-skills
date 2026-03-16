@@ -3,26 +3,26 @@
   "owner": { "name": "Quatico Solutions AG" },
   "metadata": {
     "description": "Quatico development tools and skills",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "essentials",
       "source": "./essentials",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "bdd-methodology",
       "source": "./bdd-methodology",
       "description": "BDD methodology skills: double-loop BDD/TDD, writing Gherkin scenarios, and implementing step definitions",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "agent-admin",
       "source": "./agent-admin",
       "description": "Agent configuration maintenance: CLAUDE.md, AGENTS.md hub-and-spoke, and rule consolidation",
-      "version": "1.0.0"
+      "version": "1.1.0"
     }
   ]
 }
