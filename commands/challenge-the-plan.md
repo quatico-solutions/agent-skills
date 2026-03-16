@@ -1,4 +1,5 @@
 ---
+name: challenge-the-plan
 description: Systematically interrogate implementation plans through adaptive depth interviews covering technical, domain, UX, and non-functional dimensions to uncover gaps and validate decisions
 ---
 

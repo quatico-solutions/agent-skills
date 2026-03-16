@@ -1,0 +1,9 @@
+{
+  "name": "qs-tools",
+  "description": "Quatico development skills: commit notation, TDD, BDD, PR workflows, Bitbucket/Jira integration, and team conventions",
+  "version": "1.0.0",
+  "author": { "name": "Quatico Solutions AG" },
+  "repository": "https://github.com/quatico-solutions/agent-skills",
+  "license": "UNLICENSED",
+  "keywords": ["skills", "tdd", "bdd", "commit-notation", "bitbucket", "jira", "quatico"]
+}

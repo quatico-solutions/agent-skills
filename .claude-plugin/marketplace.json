@@ -1,0 +1,16 @@
+{
+  "name": "quatico-marketplace",
+  "owner": { "name": "Quatico Solutions AG" },
+  "metadata": {
+    "description": "Quatico development tools and skills",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "qs-tools",
+      "source": ".",
+      "description": "Quatico development skills: commit notation, TDD, BDD, PR workflows, Bitbucket/Jira integration, and team conventions",
+      "version": "1.0.0"
+    }
+  ]
+}
