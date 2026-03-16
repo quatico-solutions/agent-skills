@@ -1,9 +1,6 @@
 ---
 name: bye
-description: >-
-  Use when the user says /bye, "wrap up", "end session", or similar.
-  Reconstructs full session history including compacted context,
-  creates a sessionlog, commits changes, and summarizes next steps.
+description: "Use when the user says /bye, \"wrap up\", \"end session\", or similar. Reconstructs full session history including compacted context, creates a sessionlog, commits changes, and summarizes next steps."
 globs: []
 license: MIT
 metadata:

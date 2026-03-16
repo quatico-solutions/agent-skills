@@ -1,13 +1,6 @@
 ---
 name: branch-and-commit
-description: >-
-  Intelligently groups and commits changes based on revertibility, intention, and logical
-  dependencies. Optionally creates feature branches. Orders commits for optimal review and prepares
-  for PR using Arlo's Commit Notation.
-  Use when: ready to commit multiple changes, organizing work on current or new branch, preparing for PR.
-  Triggers: branch and commit, branch-and-commit, smart commit, organize changes,
-  commit and branch, prepare branch, structure commits.
-  Related: commit (principles), commit-notation (formatting), handling-pull-requests (PR creation).
+description: "Intelligently groups and commits changes based on revertibility, intention, and logical dependencies. Optionally creates feature branches. Orders commits for optimal review and prepares for PR using Arlo's Commit Notation. Use when: ready to commit multiple changes, organizing work on current or new branch, preparing for PR. Triggers: branch and commit, branch-and-commit, smart commit, organize changes, commit and branch, prepare branch, structure commits. Related: commit (principles), commit-notation (formatting), handling-pull-requests (PR creation)."
 compatibility: claude-code
 license: MIT
 metadata:

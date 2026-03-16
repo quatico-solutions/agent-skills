@@ -1,9 +1,6 @@
 ---
 name: story-tracking
-description: >-
-  Use when user says "continue on", "work on", "create story", "new story",
-  "resume", or references a JIRA ticket for multi-session work.
-  NOT for Storybook UI component stories.
+description: "Use when user says \"continue on\", \"work on\", \"create story\", \"new story\", \"resume\", or references a JIRA ticket for multi-session work. NOT for Storybook UI component stories."
 metadata:
   version: "1.0.0"
 ---

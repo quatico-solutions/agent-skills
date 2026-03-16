@@ -1,13 +1,6 @@
 ---
 name: challenge-the-plan
-description: >
-  Systematically interrogate implementation plans through adaptive depth interviews
-  covering technical, domain, UX, and non-functional dimensions to uncover gaps and
-  validate decisions.
-  Use when: user wants to challenge, refine, or validate a plan, spec, or idea.
-  Triggers: challenge the plan, challenge me, quiz me, interview me, refine plan,
-  validate plan, review plan, interrogate plan, stress-test plan, challenge the spec,
-  challenge the story, review spec, review story.
+description: "Systematically interrogate implementation plans through adaptive depth interviews covering technical, domain, UX, and non-functional dimensions to uncover gaps and validate decisions. Use when: user wants to challenge, refine, or validate a plan, spec, or idea. Triggers: challenge the plan, challenge me, quiz me, interview me, refine plan, validate plan, review plan, interrogate plan, stress-test plan, challenge the spec, challenge the story, review spec, review story."
 compatibility: claude-code, cursor
 metadata:
   version: "1.0.0"

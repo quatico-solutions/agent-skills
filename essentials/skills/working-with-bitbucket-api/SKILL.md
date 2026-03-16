@@ -1,14 +1,6 @@
 ---
 name: working-with-bitbucket-api
-description: >-
-  Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view,
-  create, edit, comment, approve, merge) and source browsing (ls, cat,
-  branch, tag) including markdown descriptions. Browser only for image
-  uploads. Triggers: bitbucket, bitbucket API, bb, PR list, PR view,
-  PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR,
-  approve PR, close PR, decline PR, PR review, PR feedback, push and PR,
-  bitbucket repo, bitbucket remote, source browse, list branches, list tags,
-  file contents, browse repo.
+description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge) and source browsing (ls, cat, branch, tag) including markdown descriptions. Browser only for image uploads. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
 compatibility: claude-code, cursor
 license: MIT
 metadata:

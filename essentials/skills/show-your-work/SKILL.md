@@ -1,11 +1,6 @@
 ---
 name: show-your-work
-description: >-
-  Use when the user says "show your work", "make a demo", "prove it works",
-  "demonstrate the feature", "capture the evidence", "showboat", or "rodney".
-  Also triggers on: demo this, demo time, show what you built, show me the
-  results, prove your changes work, record what you did, write up what you
-  built, document the results, demonstrate the fix, demonstrate what changed.
+description: "Use when the user says \"show your work\", \"make a demo\", \"prove it works\", \"demonstrate the feature\", \"capture the evidence\", \"showboat\", or \"rodney\". Also triggers on: demo this, demo time, show what you built, show me the results, prove your changes work, record what you did, write up what you built, document the results, demonstrate the fix, demonstrate what changed."
 compatibility: claude-code, cursor
 license: MIT
 metadata:

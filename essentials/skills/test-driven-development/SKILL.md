@@ -1,8 +1,6 @@
 ---
 name: test-driven-development
-description: >-
-  Use when implementing any feature or bugfix, before writing implementation code.
-  Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow.
+description: "Use when implementing any feature or bugfix, before writing implementation code. Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow."
 compatibility: claude-code, cursor
 metadata:
   version: "1.0.0"

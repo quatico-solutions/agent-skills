@@ -1,10 +1,6 @@
 ---
 name: commit
-description: >-
-  When and what to commit. Covers timing, atomic commits, and git hooks.
-  Use when: making commits, deciding when to commit, preparing changes.
-  Triggers: commit, commit this, commit changes, git commit, make commit, should I commit.
-  Related: commit-notation (message formatting), handling-pull-requests (PR workflow).
+description: "When and what to commit. Covers timing, atomic commits, and git hooks. Use when: making commits, deciding when to commit, preparing changes. Triggers: commit, commit this, commit changes, git commit, make commit, should I commit. Related: commit-notation (message formatting), handling-pull-requests (PR workflow)."
 compatibility: claude-code, cursor
 license: MIT
 metadata:

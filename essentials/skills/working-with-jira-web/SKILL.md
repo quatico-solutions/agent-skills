@@ -1,9 +1,6 @@
 ---
 name: working-with-jira-web
-description: >-
-  Navigates JIRA for ticket operations. Primary: Atlassian MCP for CRUD.
-  Fallback: Browser for visual verification. Triggers: JIRA, create ticket,
-  edit ticket, link issues, JQL, fix version.
+description: "Navigates JIRA for ticket operations. Primary: Atlassian MCP for CRUD. Fallback: Browser for visual verification. Triggers: JIRA, create ticket, edit ticket, link issues, JQL, fix version."
 compatibility: claude-code, cursor
 license: MIT
 metadata:

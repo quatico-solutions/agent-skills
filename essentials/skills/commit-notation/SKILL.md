@@ -1,11 +1,6 @@
 ---
 name: commit-notation
-description: >-
-  Format git commit messages using Quatico's notation (Arlo's v1 with extensions).
-  Use when: committing changes, making commits, creating commits, writing commit messages,
-  reviewing commits, or analyzing git log.
-  Triggers: commit, make commit, create commit, git commit, commit this,
-  commit message, commit notation, Arlo notation.
+description: "Format git commit messages using Quatico's notation (Arlo's v1 with extensions). Use when: committing changes, making commits, creating commits, writing commit messages, reviewing commits, or analyzing git log. Triggers: commit, make commit, create commit, git commit, commit this, commit message, commit notation, Arlo notation."
 compatibility: claude-code, cursor
 license: MIT
 metadata:

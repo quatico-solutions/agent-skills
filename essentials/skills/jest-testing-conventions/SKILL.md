@@ -1,10 +1,6 @@
 ---
 name: jest-testing-conventions
-description: >-
-  Use when writing unit tests with Jest. Covers naming conventions (testObj, target,
-  mock, actual, expected), jest.fn/spyOn/mock mastery, clear/reset/restore differences,
-  module mocking, fake timers, and AAA pattern. Triggers: Jest, unit test, mock,
-  spy, stub, jest.fn, jest.spyOn, jest.mock.
+description: "Use when writing unit tests with Jest. Covers naming conventions (testObj, target, mock, actual, expected), jest.fn/spyOn/mock mastery, clear/reset/restore differences, module mocking, fake timers, and AAA pattern. Triggers: Jest, unit test, mock, spy, stub, jest.fn, jest.spyOn, jest.mock."
 compatibility: claude-code, cursor
 metadata:
   version: "1.1.0"

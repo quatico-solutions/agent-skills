@@ -1,10 +1,6 @@
 ---
 name: working-with-bitbucket-web
-description: >-
-  Last resort for Bitbucket operations that `bb` CLI cannot handle (image
-  uploads, SSO-gated pages). Prefer `working-with-bitbucket-api` for all
-  PR operations. Triggers: bitbucket UI, bitbucket web, upload image to PR,
-  bitbucket SSO.
+description: "Last resort for Bitbucket operations that `bb` CLI cannot handle (image uploads, SSO-gated pages). Prefer `working-with-bitbucket-api` for all PR operations. Triggers: bitbucket UI, bitbucket web, upload image to PR, bitbucket SSO."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
