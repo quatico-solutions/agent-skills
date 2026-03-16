@@ -39,6 +39,12 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
 - When adding a new skill, place it in the appropriate plugin's `skills/` directory
 
+### Frontmatter Rules
+
+- **Never use YAML block scalars** (`>-`, `>`, `|-`, `|`) in SKILL.md frontmatter — Cursor doesn't parse them. Use single-line quoted strings instead.
+- `description` must be a single-line `"quoted string"`
+- `metadata.version` must be 3-part semver: `"1.0.0"`
+
 ## Documentation Sync (CRITICAL)
 
 **Every change to skills or plugin membership MUST update `README.md`.**

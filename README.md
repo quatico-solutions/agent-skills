@@ -111,7 +111,7 @@ my-skill/
 ```yaml
 ---
 name: my-skill-name     # lowercase, hyphens, max 64 chars, must match directory
-description: What it does and when to use it. Include trigger keywords. (max 1024 chars)
+description: "What it does and when to use it. Include trigger keywords. (max 1024 chars)"
 # Optional fields per agentskills.io spec:
 compatibility: claude-code, cursor
 license: MIT
