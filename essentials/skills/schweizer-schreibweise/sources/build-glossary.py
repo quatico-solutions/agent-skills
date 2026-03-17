@@ -323,7 +323,10 @@ def build_core_glossary():
     # Group by category
     categories = {}
     for de_de, swiss, category in CORE_TERMS:
-        # Skip entries where DE-DE and Swiss are the same (context terms)
+        # Skip entries where DE-DE and Swiss are the same.
+        # Some CORE_TERMS intentionally list same-term pairs (e.g. "Steuererklärung")
+        # for category coverage — they document that the term is unchanged in Swiss German.
+        # They are filtered here since they carry no DE-DE→Swiss mapping value.
         if normalize(de_de) == normalize(swiss):
             continue
         categories.setdefault(category, []).append((de_de, swiss))
