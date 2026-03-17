@@ -1,37 +1,12 @@
 [
   {
-    "swiss": "ab Blatt (spielen",
-    "de_de": "spielen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "ab)serbeln",
-    "de_de": "ab",
-    "category": "Menschliches Verhalten"
-  },
-  {
     "swiss": "Abdankung",
     "de_de": "Trauerfeier",
     "category": "Gesellschaft, Volkskultur"
   },
   {
-    "swiss": "Abdankung",
-    "de_de": "Trauerfeier",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Abgeben",
-    "de_de": "Entlassung aus der Dienstpflicht",
-    "category": "Militär"
-  },
-  {
     "swiss": "Ablage",
-    "de_de": "(Hut",
-    "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Ablegen",
-    "de_de": "Kleider ausziehen",
+    "de_de": "Garderobe",
     "category": "Haus, Haushalt"
   },
   {
@@ -40,13 +15,8 @@
     "category": "Anderes"
   },
   {
-    "swiss": "Ablöscher",
-    "de_de": "ugs.: ''[übertragen]'' Enttäuschung",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Abostopp",
-    "de_de": "Unterbrechung einer Mitgliedschaft",
+    "de_de": "Ruhezeit",
     "category": "Handel, Gewerbe"
   },
   {
@@ -55,9 +25,9 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Absenz",
-    "de_de": "Fernbleiben",
-    "category": "Politik, Staat, Recht"
+    "swiss": "abserbeln",
+    "de_de": "dahinsiechen",
+    "category": "Menschliches Verhalten"
   },
   {
     "swiss": "Abwart",
@@ -66,7 +36,7 @@
   },
   {
     "swiss": "Abzweigbahnhof",
-    "de_de": "auch österr.",
+    "de_de": "Trennungsbahnhof",
     "category": "Schienenverkehr"
   },
   {
@@ -76,22 +46,17 @@
   },
   {
     "swiss": "Aktion",
-    "de_de": "auch österr.",
+    "de_de": "Sonderangebot",
     "category": "Anderes"
   },
   {
-    "swiss": "Aktivbürger",
-    "de_de": "volljähriger Staatsbürger",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "allenfalls",
-    "de_de": "auch süddt.",
+    "de_de": "eventuell",
     "category": "Anderes"
   },
   {
     "swiss": "allfällig",
-    "de_de": "auch im österr.",
+    "de_de": "etwaig",
     "category": "Anderes"
   },
   {
@@ -105,33 +70,13 @@
     "category": "Gesellschaft, Volkskultur"
   },
   {
-    "swiss": "am Radio",
-    "de_de": "im Radio",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "am Ranzen hangen",
-    "de_de": "am Arsch lecken",
-    "category": "Anderes"
-  },
-  {
     "swiss": "amten",
-    "de_de": "Amt ausüben",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "an",
-    "de_de": "auch in Vorsilben wie ''Andenken''",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Andacht, brachte, gebracht, gedacht/dachte, Nachbar, Rache",
-    "de_de": "je mit /aː/",
+    "de_de": "amtieren",
     "category": "Anderes"
   },
   {
     "swiss": "anfangs",
-    "de_de": "bundesdeutsch: Anfang des Jahres",
+    "de_de": "Anfang",
     "category": "Anderes"
   },
   {
@@ -143,11 +88,6 @@
     "swiss": "Anhängerzug",
     "de_de": "Lastzug",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Anlegen",
-    "de_de": "Kleider",
-    "category": "Haus, Haushalt"
   },
   {
     "swiss": "antönen",
@@ -166,12 +106,7 @@
   },
   {
     "swiss": "Argumentarium",
-    "de_de": "auch im österr.",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Ast",
-    "de_de": "",
+    "de_de": "Argumentenliste",
     "category": "Anderes"
   },
   {
@@ -180,33 +115,18 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "Auditor",
-    "de_de": "Staatsanwalt/Ankläger bei Militärgericht",
-    "category": "Militär"
-  },
-  {
-    "swiss": "auf etwas eintreten",
-    "de_de": "auf etwas eingehen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Auffahrt",
     "de_de": "Christi Himmelfahrt",
     "category": "Gesellschaft, Volkskultur"
   },
   {
     "swiss": "aufgestellt",
-    "de_de": "gut drauf",
+    "de_de": "gut gelaunt",
     "category": "Menschliches Verhalten"
   },
   {
-    "swiss": "aufgestellt",
-    "de_de": "umgänglich",
-    "category": "Anderes"
-  },
-  {
     "swiss": "aufgleisen",
-    "de_de": "Projekt auf den Weg bringen",
+    "de_de": "in die Wege leiten",
     "category": "Anderes"
   },
   {
@@ -216,23 +136,13 @@
   },
   {
     "swiss": "Aufrichte",
-    "de_de": "D: Richtfest",
+    "de_de": "Richtfest",
     "category": "Haus, Haushalt"
   },
   {
     "swiss": "Aufsteller",
-    "de_de": "gute Nachricht oder positives Ereignis",
+    "de_de": "positive Nachricht",
     "category": "Menschliches Verhalten"
-  },
-  {
-    "swiss": "aus Abschied und Traktanden fallen",
-    "de_de": "ausser Betracht fallen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Ausgang",
-    "de_de": "Substantiv zu ''ausgehen'' am Abend",
-    "category": "Gesellschaft, Volkskultur"
   },
   {
     "swiss": "Aushebung",
@@ -240,48 +150,28 @@
     "category": "Militär"
   },
   {
-    "swiss": "ausjassen",
-    "de_de": "aushandeln",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Auslegeordnung",
-    "de_de": "ursprünglich aus dem Schweizer Militär kommend: Übersicht",
+    "de_de": "Übersicht",
     "category": "Handel, Gewerbe"
   },
   {
     "swiss": "Ausläufer",
-    "de_de": "Bote",
+    "de_de": "Laufbursche",
     "category": "Anderes"
   },
   {
-    "swiss": "ausmarchen",
-    "de_de": "abgrenzen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "ausmehren",
-    "de_de": "bei einer Landsgemeinde die Mehrheit ermitteln",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "ausrangieren",
-    "de_de": "auch gemeindt. ugs.",
+    "de_de": "ausmustern",
     "category": "Schienenverkehr"
   },
   {
     "swiss": "ausschaffen",
-    "de_de": "abschieben (Asylbewerber",
+    "de_de": "abschieben",
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "Ausstich",
-    "de_de": "Stechen",
-    "category": "Sport"
-  },
-  {
     "swiss": "Autocar",
-    "de_de": "Reisebus im Charter- oder Fernverkehr",
+    "de_de": "Reisebus",
     "category": "Strassenverkehr"
   },
   {
@@ -291,18 +181,8 @@
   },
   {
     "swiss": "Autoverlad",
-    "de_de": "Huckepackverkehr für PW",
+    "de_de": "Huckepackverkehr",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Autoverlad",
-    "de_de": "auch österr.",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "bachab schicken",
-    "de_de": "etw. verwerfen",
-    "category": "Anderes"
   },
   {
     "swiss": "Bahnhofbuffet",
@@ -315,11 +195,6 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Bandenergie",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Barrierenwärter",
     "de_de": "Schrankenwärter",
     "category": "Schienenverkehr"
@@ -330,34 +205,14 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "bedingt",
-    "de_de": "auch österreichisch",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "behaften",
-    "de_de": "verantwortlich machen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Beilage",
-    "de_de": "Anlage eines Briefes oder einer E-Mail",
+    "de_de": "Anlage",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Beitrag à fonds perdu",
-    "de_de": "staatliche Subvention u.&nbsp",
-    "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Beiz",
     "de_de": "Kneipe",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Besammlung",
-    "de_de": "Sich-Versammeln",
-    "category": "Gesellschaft, Volkskultur"
   },
   {
     "swiss": "Beschrieb",
@@ -368,11 +223,6 @@
     "swiss": "Betreibung",
     "de_de": "Zwangsvollstreckung",
     "category": "Handel, Gewerbe"
-  },
-  {
-    "swiss": "Bett",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "Bettmümpfeli",
@@ -390,13 +240,13 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Billet(t",
-    "de_de": "gemeindt. veraltet",
+    "swiss": "Billeteur",
+    "de_de": "Schaffner",
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Billeteur",
-    "de_de": "Schaffner",
+    "swiss": "Billett",
+    "de_de": "Fahrkarte",
     "category": "Schienenverkehr"
   },
   {
@@ -405,29 +255,14 @@
     "category": "Anderes"
   },
   {
-    "swiss": "bis und mit",
-    "de_de": "bis einschliesslich",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Bise",
-    "de_de": "kalter",
+    "de_de": "Nordostwind",
     "category": "Natur/Geographie"
-  },
-  {
-    "swiss": "Bise",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "Blache",
     "de_de": "Plane",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Bremsgewichtshundertstel",
-    "de_de": "Bremshundertstel",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Brockenhaus",
@@ -450,21 +285,6 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Bündnerfleisch",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Büro aufmachen",
-    "de_de": "etwas unnötig als wichtig erscheinen lassen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "büssen",
-    "de_de": "mit einem Bußgeld belegen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Camion",
     "de_de": "Lastkraftwagen",
     "category": "Strassenverkehr"
@@ -481,17 +301,12 @@
   },
   {
     "swiss": "Cervelat",
-    "de_de": "auch: die",
+    "de_de": "kurze, dicke Brühwurst",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Cervelatprominenz",
-    "de_de": "Lokalprominenz",
-    "category": "Gesellschaft, Volkskultur"
-  },
-  {
     "swiss": "Chauffeur",
-    "de_de": "auch süddt.",
+    "de_de": "Fahrer",
     "category": "Strassenverkehr"
   },
   {
@@ -505,7 +320,7 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "Chilbi/Kilbi",
+    "swiss": "Chilbi",
     "de_de": "Kirchweih",
     "category": "Gesellschaft, Volkskultur"
   },
@@ -515,28 +330,13 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "China",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Classe politique",
-    "de_de": "oft abschätzig",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Coiffeur",
     "de_de": "Friseur",
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Cordon bleu",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Corner",
-    "de_de": "auch österr.",
+    "de_de": "Eckball",
     "category": "Sport"
   },
   {
@@ -550,11 +350,6 @@
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "crawlen",
-    "de_de": "''Crawl'' = Kraulschwimmen",
-    "category": "Sport"
-  },
-  {
     "swiss": "Cup",
     "de_de": "Pokal",
     "category": "Sport"
@@ -563,26 +358,6 @@
     "swiss": "Cüpli",
     "de_de": "Glas Champagner",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Dachs",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "das",
-    "de_de": "Kader",
-    "category": "Militär"
-  },
-  {
-    "swiss": "dastehen wie der Esel am Berg",
-    "de_de": "dastehen wie der Ochse vorm Berg",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "decken",
-    "de_de": "schützen",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "degustieren",
@@ -595,34 +370,9 @@
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "Depot",
-    "de_de": "Pfand bei Mehrwegverpackungen",
-    "category": "Handel, Gewerbe"
-  },
-  {
-    "swiss": "Depot",
-    "de_de": "Bahnbetriebswerk",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Der schweizerische Wortschatz des Deutschen",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Detailhandel",
     "de_de": "Einzelhandel",
     "category": "Handel, Gewerbe"
-  },
-  {
-    "swiss": "Die Besonderheiten der deutschen Schriftsprache in der Schweiz.",
-    "de_de": "= ''Duden-Beiträge.'' Hefte 30a und 30b",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Die deutsche Sprache in Deutschland, Österreich und der Schweiz. Das Problem der nationalen Varietäten.",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "Dienstbahnhof",
@@ -635,24 +385,9 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Dienstverweigerer",
-    "de_de": "Wehrdienstverweigerer",
-    "category": "Militär"
-  },
-  {
-    "swiss": "Dienstzug",
-    "de_de": "früher gemeindt.",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Distanzbake",
     "de_de": "Entfernungsbake",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Doppelpendelzug",
-    "de_de": "Zug mit Sandwich-Traktion",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Egli",
@@ -665,24 +400,9 @@
     "category": "Menschliches Verhalten"
   },
   {
-    "swiss": "einladen (+ Inf.",
-    "de_de": "+ Inf.",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Einlösung",
-    "de_de": "Versicherung zum Strassenverkehr",
+    "de_de": "Kfz-Versicherung",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "einnachten",
-    "de_de": "Nacht werden",
-    "category": "Natur/Geographie"
-  },
-  {
-    "swiss": "Einsitz nehmen",
-    "de_de": "Mitglied in einem Gremium werden",
-    "category": "Anderes"
   },
   {
     "swiss": "einspuren",
@@ -690,13 +410,13 @@
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "einspurig, doppelspurig, mehrspurig",
+    "swiss": "einspurig",
     "de_de": "eingleisig",
     "category": "Schienenverkehr"
   },
   {
     "swiss": "Einstellhalle",
-    "de_de": "überdachter Abstellplatz für Fahrzeuge",
+    "de_de": "Tiefgarage",
     "category": "Strassenverkehr"
   },
   {
@@ -715,68 +435,18 @@
     "category": "Militär"
   },
   {
-    "swiss": "Ende Woche",
-    "de_de": "Ende der Woche / des Monats / des Jahres",
-    "category": "Anderes"
-  },
-  {
     "swiss": "ennet",
     "de_de": "jenseits",
     "category": "Anderes"
   },
   {
     "swiss": "Entscheid",
-    "de_de": "amtliche Entscheidung",
+    "de_de": "Beschluss",
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "er",
-    "de_de": "hierzu im Kapitel über die Orthographie",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "ersten",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es hat noch Bier (Kartoffeln etc.) im Keller",
-    "de_de": "Kartoffeln etc.",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es hat, solang es hat",
-    "de_de": "es gibt etwas",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es macht den Anschein",
-    "de_de": "es hat den Anschein",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es nimmt jemanden wunder, ob",
-    "de_de": "es interessiert jemanden",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es streng haben",
-    "de_de": "viel zu tun haben",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es wird sich weisen",
-    "de_de": "auch österr.",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "es) sich gewohnt sein",
-    "de_de": "es",
-    "category": "Menschliches Verhalten"
-  },
-  {
     "swiss": "Estrich",
-    "de_de": "auch süddt.",
+    "de_de": "Dachboden",
     "category": "Haus, Haushalt"
   },
   {
@@ -785,13 +455,8 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "f",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Fahrhabe",
-    "de_de": "Fahrnisse",
+    "de_de": "bewegliche Güter",
     "category": "Handel, Gewerbe"
   },
   {
@@ -800,34 +465,14 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Fahrplanfeld",
-    "de_de": "Kursbuchstrecke",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Fahrtstellungsmelder",
-    "de_de": "Fahrtanzeiger",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Fahrzeugausweis",
-    "de_de": "Fahrzeugschein/-brief",
+    "de_de": "Fahrzeugschein",
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "Familiengarten",
-    "de_de": "neben Schrebergarten",
-    "category": "Gesellschaft, Volkskultur"
-  },
-  {
     "swiss": "Fasnacht",
-    "de_de": "Fastnacht",
+    "de_de": "Karneval",
     "category": "Gesellschaft, Volkskultur"
-  },
-  {
-    "swiss": "Faust im Sack machen",
-    "de_de": "Faust in der Tasche ballen",
-    "category": "Anderes"
   },
   {
     "swiss": "FDA",
@@ -835,19 +480,9 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "fehlbar",
-    "de_de": "schuldig",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Feldweibel",
     "de_de": "Feldwebel",
     "category": "Militär"
-  },
-  {
-    "swiss": "Ferien",
-    "de_de": "bezahlte freie Tage von Arbeitnehmern",
-    "category": "Handel, Gewerbe"
   },
   {
     "swiss": "Final",
@@ -865,43 +500,23 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Flysch",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Fondue",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Fuder überladen",
-    "de_de": "Guten zu viel tun",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Fuhrhalter",
     "de_de": "Transportunternehmer",
     "category": "Strassenverkehr"
   },
   {
     "swiss": "Föhn",
-    "de_de": "Wind über die Alpen",
+    "de_de": "Südwind über die Alpen",
     "category": "Natur/Geographie"
   },
   {
-    "swiss": "Führerausweis, FahrausweisHans Bickel, Christoph Landolt",
+    "swiss": "Führerausweis",
     "de_de": "Führerschein",
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "Fünfer zweimal drehen",
-    "de_de": "aufs Geld achten",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Fürsprecher",
-    "de_de": "",
+    "de_de": "Anwalt",
     "category": "Politik, Staat, Recht"
   },
   {
@@ -911,53 +526,13 @@
   },
   {
     "swiss": "Garagist",
-    "de_de": "Autohaus- bzw. Autowerkstatteigentümer",
+    "de_de": "Autohauseigentümer",
     "category": "Strassenverkehr"
   },
   {
     "swiss": "Gebärsaal",
-    "de_de": "Kreißsaal",
+    "de_de": "Kreissaal",
     "category": "Gesundheitswesen"
-  },
-  {
-    "swiss": "Gedanke",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Gegenmehr",
-    "de_de": "Gegenstimmen bei offener Abstimmung",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Gehilfenschaft",
-    "de_de": "Beihilfe zu einem Delikt",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "geht",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Geld(er) sprechen",
-    "de_de": "er",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Gemeindeammann",
-    "de_de": "",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Gemeindepräsident",
-    "de_de": "",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Gemeindeversammlung",
-    "de_de": "Versammlung der Stimmbürger einer Gemeinde",
-    "category": "Anderes"
   },
   {
     "swiss": "Generalabonnement",
@@ -980,11 +555,6 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Gletscher",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "gluschtig",
     "de_de": "lecker",
     "category": "Küche, Nahrung, Restaurant"
@@ -996,13 +566,8 @@
   },
   {
     "swiss": "Goalie",
-    "de_de": "auch österr.",
+    "de_de": "Torhüter",
     "category": "Sport"
-  },
-  {
-    "swiss": "Gondelbahn",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "grillieren",
@@ -1015,28 +580,18 @@
     "category": "Gesellschaft, Volkskultur"
   },
   {
-    "swiss": "grossmehrheitlich",
-    "de_de": "mit grosser Mehrheit",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Grossverteiler",
     "de_de": "Handelskette",
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Guetsli, Guetzli",
-    "de_de": "",
+    "swiss": "Guetsli",
+    "de_de": "Plätzchen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Gut, gibt es Schweizer Bauern.",
-    "de_de": "Es ist",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Gymi",
-    "de_de": "ausgesprochen: []",
+    "de_de": "Gymnasium",
     "category": "Bildungswesen"
   },
   {
@@ -1061,7 +616,7 @@
   },
   {
     "swiss": "Hahnenwasser",
-    "de_de": "auch süddt.",
+    "de_de": "Leitungswasser",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
@@ -1075,34 +630,9 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Hamolstellung",
-    "de_de": "Sitzposition beim Sonnenbaden",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Handgelenk mal Pi",
-    "de_de": "so in etwa&nbsp",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "handkehrum",
-    "de_de": "plötzlich",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Handmehr",
-    "de_de": "durch erhobene Hände bezeugte Stimmenmehrheit",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Hands",
-    "de_de": "auch österr.",
+    "de_de": "Handspiel",
     "category": "Sport"
-  },
-  {
-    "swiss": "Hans was Heiri",
-    "de_de": "Jacke wie Hose",
-    "category": "Anderes"
   },
   {
     "swiss": "Harass",
@@ -1111,18 +641,8 @@
   },
   {
     "swiss": "harzig",
-    "de_de": "zäh",
+    "de_de": "mühsam",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Hauptlehrer",
-    "de_de": "unbefristet angestellter Lehrer mit zugesichertem Pensum",
-    "category": "Bildungswesen"
-  },
-  {
-    "swiss": "Hauptleitung",
-    "de_de": "Hauptluftleitung",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Hauptrevision",
@@ -1131,18 +651,8 @@
   },
   {
     "swiss": "Hauptwerkstätte",
-    "de_de": "auch österr.",
+    "de_de": "Ausbesserungswerk",
     "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Heimet",
-    "de_de": "kleines Bauerngut",
-    "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Heimweh",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "Hektare",
@@ -1155,18 +665,8 @@
     "category": "Bildungswesen"
   },
   {
-    "swiss": "Helvetismen. Deutsches Kulturwörterbuch der Schweizerischen Eidgenossenschaft.",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Herr und Frau Schweizer",
-    "de_de": "Durchschnittsschweizer",
-    "category": "Anderes"
-  },
-  {
     "swiss": "herzig",
-    "de_de": "auch süddt.",
+    "de_de": "niedlich",
     "category": "Menschliches Verhalten"
   },
   {
@@ -1180,28 +680,8 @@
     "category": "Gesellschaft, Volkskultur"
   },
   {
-    "swiss": "hospitalisiert",
-    "de_de": "ins Krankenhaus [''Spital''] eingewiesen werden",
-    "category": "Gesundheitswesen"
-  },
-  {
     "swiss": "Hühnerhaut",
-    "de_de": "Gänsehaut im Sinne des Hautphänomens",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Hündeler",
-    "de_de": "leicht abwertend für Hundehalter",
-    "category": "Menschliches Verhalten"
-  },
-  {
-    "swiss": "Ich bin froh, sind Sie noch da.",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "ich habe kalt",
-    "de_de": "mir ist kalt",
+    "de_de": "Gänsehaut",
     "category": "Anderes"
   },
   {
@@ -1210,53 +690,13 @@
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "immer",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "in den Ausgang gehen",
-    "de_de": "ausgehen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "in die Schuhe blasen",
-    "de_de": "Buckel hinunterrutschen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "in Tat und Wahrheit",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "innert",
-    "de_de": "binnen/innerhalb",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "innert nützlicher Frist",
-    "de_de": "angemessen schnell",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "jeden Abend",
-    "de_de": "[ʔ]",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "jemandem geht der Knopf auf",
-    "de_de": "auch österr.",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Jetzt ist genug Heu unten!",
-    "de_de": "Jetzt reicht es!",
+    "de_de": "innerhalb",
     "category": "Anderes"
   },
   {
     "swiss": "Jupe",
-    "de_de": "franz.",
+    "de_de": "Rock",
     "category": "Anderes"
   },
   {
@@ -1271,7 +711,7 @@
   },
   {
     "swiss": "Kantonsschule",
-    "de_de": "kantonale Mittelschule",
+    "de_de": "Mittelschule",
     "category": "Bildungswesen"
   },
   {
@@ -1280,24 +720,14 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "kehren",
-    "de_de": "wenden",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Kehricht",
-    "de_de": "mdal.: ''Güsel/Ghüder",
+    "de_de": "Müll",
     "category": "Haus, Haushalt"
   },
   {
     "swiss": "Kehrplatz",
     "de_de": "Wendeplatz",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "keinen Wank tun/machen",
-    "de_de": "sich nicht rühren",
-    "category": "Anderes"
   },
   {
     "swiss": "Kessel",
@@ -1331,12 +761,12 @@
   },
   {
     "swiss": "Kompaniekommandant",
-    "de_de": "Slang: ''Kadi'' von arab. القاضي für Richter",
+    "de_de": "Kompaniechef",
     "category": "Militär"
   },
   {
     "swiss": "Kondukteur",
-    "de_de": "auch süddt. veraltet",
+    "de_de": "Schaffner",
     "category": "Schienenverkehr"
   },
   {
@@ -1351,52 +781,27 @@
   },
   {
     "swiss": "Konti",
-    "de_de": "im Deutschen: Konten",
+    "de_de": "Konten",
     "category": "Handel, Gewerbe"
   },
   {
     "swiss": "Kontrollschild",
-    "de_de": "Kraftfahrzeugkennzeichen",
+    "de_de": "Nummernschild",
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "Kronfavorit",
-    "de_de": "Spitzenkandidat",
-    "category": "Gesellschaft, Volkskultur"
-  },
-  {
-    "swiss": "Kunst",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "KV",
-    "de_de": "Lehrberufsbezeichnung für die Ausbildung Kauffrau/Kaufmann",
+    "de_de": "Kaufmannslehre",
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "König",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Kübel",
-    "de_de": "halber Liter Bier in einem Glashumpen",
-    "category": "Anderes"
-  },
-  {
     "swiss": "lancieren",
-    "de_de": "etwas auslösen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Landammann",
-    "de_de": "Ministerpräsident in einigen Kantonen",
+    "de_de": "ins Leben rufen",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Laube",
-    "de_de": "Balkon über einer Treppe",
+    "de_de": "Balkon",
     "category": "Anderes"
   },
   {
@@ -1408,11 +813,6 @@
     "swiss": "Lavabo",
     "de_de": "Handwaschbecken",
     "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Lawine",
-    "de_de": "Re-Romanisierung des in den Schweizer Alpen gebräuchlichen ''Láui",
-    "category": "Anderes"
   },
   {
     "swiss": "Leerschlag",
@@ -1430,16 +830,6 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Leidzirkular",
-    "de_de": "gedruckte Todesanzeige",
-    "category": "Gesellschaft, Volkskultur"
-  },
-  {
-    "swiss": "letzten",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Limite",
     "de_de": "Obergrenze",
     "category": "Handel, Gewerbe"
@@ -1450,38 +840,13 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Lohn",
-    "de_de": "",
-    "category": "Handel, Gewerbe"
-  },
-  {
-    "swiss": "Lärche",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Maibummel",
-    "de_de": "Maiwanderung",
-    "category": "Bildungswesen"
-  },
-  {
-    "swiss": "Mais",
-    "de_de": "Ärger",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Man kann nicht den Fünfer und das Weggli haben.",
-    "de_de": "selbsterklärend: ''Fünfer'' = Fünfrappenstück / ''Weggli'' = Brötchen",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Match",
-    "de_de": "mit männlichem grammatischem Geschlecht",
+    "de_de": "Spiel",
     "category": "Sport"
   },
   {
-    "swiss": "Matur, Matura",
-    "de_de": "''Matura'' auch österr.",
+    "swiss": "Matura",
+    "de_de": "Abitur",
     "category": "Bildungswesen"
   },
   {
@@ -1490,29 +855,14 @@
     "category": "Bildungswesen"
   },
   {
-    "swiss": "Mehr",
-    "de_de": "Mehrheit bzw. die Zahl der Stimmen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "merci",
-    "de_de": "«danke!»",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Mesmer",
-    "de_de": "auch süddt.",
+    "de_de": "Küster",
     "category": "Gesellschaft, Volkskultur"
   },
   {
     "swiss": "Metzgete",
-    "de_de": "Schlachtung",
+    "de_de": "Schlachtfest",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Michael vón Grünigen",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "minim",
@@ -1520,17 +870,7 @@
     "category": "Anderes"
   },
   {
-    "swiss": "mit abgesägten Hosen dastehen",
-    "de_de": "Kürzeren gezogen haben",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Mittelschule",
-    "de_de": "auch österr.",
-    "category": "Bildungswesen"
-  },
-  {
-    "swiss": "Morgenessen/Zmorgen",
+    "swiss": "Morgenessen",
     "de_de": "Frühstück",
     "category": "Küche, Nahrung, Restaurant"
   },
@@ -1540,38 +880,18 @@
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "Murmeltier",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Mutation",
-    "de_de": "Veränderungen im Mitgliederbestand",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "mutieren",
-    "de_de": "im Sinne von Änderung",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Müesli",
-    "de_de": "nach Maximilian Oskar Bircher-Benner",
+    "de_de": "Müsli",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Müsli",
-    "de_de": "eingedeutschte Form zur leichteren Aussprache",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Nachtessen, der/das Znacht",
+    "swiss": "Nachtessen",
     "de_de": "Abendessen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Nastuch",
-    "de_de": "auch süddt.",
+    "de_de": "Taschentuch",
     "category": "Haus, Haushalt"
   },
   {
@@ -1586,32 +906,17 @@
   },
   {
     "swiss": "Nationalrat",
-    "de_de": "Abgeordneter der Volkskammer des Parlamentes",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "neben den Schuhen stehen",
-    "de_de": "falschliegen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "nicht",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "nicht gross genug",
-    "de_de": "",
+    "de_de": "Abgeordneter",
     "category": "Anderes"
   },
   {
     "swiss": "Nomination",
-    "de_de": "Aufstellung eines Kandidaten",
+    "de_de": "Nominierung",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Notfall",
-    "de_de": "Unfallstation",
+    "de_de": "Notaufnahme",
     "category": "Anderes"
   },
   {
@@ -1625,23 +930,13 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "obenaus schwingen",
-    "de_de": "Spitzenplatz einnehmen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Obligatorische",
-    "de_de": "Abk. für das ''Obligatorische Schiessen",
-    "category": "Militär"
-  },
-  {
     "swiss": "Obligatorium",
-    "de_de": "Pflichtfach",
+    "de_de": "Pflicht",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Occasion",
-    "de_de": "Ware aus zweiter Hand",
+    "de_de": "Gebrauchtwagen",
     "category": "Strassenverkehr"
   },
   {
@@ -1663,11 +958,6 @@
     "swiss": "Papeterie",
     "de_de": "Schreibwarenhandlung",
     "category": "Handel, Gewerbe"
-  },
-  {
-    "swiss": "Paprika",
-    "de_de": "v. a. als getrocknetes und gemahlenes Gewürz",
-    "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "parkieren",
@@ -1696,32 +986,27 @@
   },
   {
     "swiss": "Pendenz",
-    "de_de": "noch unerledigter Vorgang",
+    "de_de": "offener Punkt",
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Peperoncino/i",
-    "de_de": "sing.",
+    "swiss": "Peperoncino",
+    "de_de": "Chilischote",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Peperoni",
-    "de_de": "rote",
+    "de_de": "Paprika",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Perron",
-    "de_de": "auch: das",
+    "de_de": "Bahnsteig",
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Personalausweis",
-    "de_de": "Mitarbeiterausweis",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Pfadi",
-    "de_de": "Pfadfinderbewegung",
+    "de_de": "Pfadfinder",
     "category": "Gesellschaft, Volkskultur"
   },
   {
@@ -1736,7 +1021,7 @@
   },
   {
     "swiss": "Plafond",
-    "de_de": "auch süddt. und österr.",
+    "de_de": "Zimmerdecke",
     "category": "Haus, Haushalt"
   },
   {
@@ -1756,7 +1041,7 @@
   },
   {
     "swiss": "Postauto",
-    "de_de": "auch süddt. veraltet",
+    "de_de": "Postbus",
     "category": "Strassenverkehr"
   },
   {
@@ -1771,43 +1056,18 @@
   },
   {
     "swiss": "Poulet",
-    "de_de": "Huhn als Speise",
+    "de_de": "Hähnchen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Praliné",
-    "de_de": "Betonung auf dem a",
+    "de_de": "Praline",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Privatbahn",
-    "de_de": "nichtbundeseigene Eisenbahn",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Profitieren Sie!",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Promotion",
-    "de_de": "auch österr.",
-    "category": "Bildungswesen"
-  },
-  {
-    "swiss": "Puff",
-    "de_de": "Unordnung",
-    "category": "Anderes"
   },
   {
     "swiss": "Pult",
     "de_de": "Schreibtisch",
     "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Putsch",
-    "de_de": "le putsch''",
-    "category": "Anderes"
   },
   {
     "swiss": "PW",
@@ -1816,17 +1076,12 @@
   },
   {
     "swiss": "Pyjama",
-    "de_de": "''der'' Pyjama",
+    "de_de": "Schlafanzug",
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "Pärke",
-    "de_de": "im Deutschen: Parks",
-    "category": "Natur/Geographie"
-  },
-  {
     "swiss": "Pöstler",
-    "de_de": "auch süddt. veraltet",
+    "de_de": "Postbote",
     "category": "Strassenverkehr"
   },
   {
@@ -1840,38 +1095,18 @@
     "category": "Anderes"
   },
   {
-    "swiss": "Raclette",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Rad",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Rahm",
     "de_de": "Sahne",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Rande",
-    "de_de": "meist Plur.",
+    "de_de": "rote Bete",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Rangierbremse",
-    "de_de": "auf das Triebfahrzeug direkt wirkende Druckluftbremse",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Rangiergleis",
     "de_de": "Nebengleis",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Rangiersignal",
-    "de_de": "Eisenbahnsignal zu Regelung von Rangierfahrten",
     "category": "Schienenverkehr"
   },
   {
@@ -1880,13 +1115,8 @@
     "category": "Sport"
   },
   {
-    "swiss": "Rank finden",
-    "de_de": "doch noch den richtigen Weg finden",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Rappenspalter",
-    "de_de": "Knauser",
+    "de_de": "Geizkragen",
     "category": "Menschliches Verhalten"
   },
   {
@@ -1896,17 +1126,17 @@
   },
   {
     "swiss": "Redaktor",
-    "de_de": "auf der zweiten Silbe betont",
+    "de_de": "Redakteur",
     "category": "Handel, Gewerbe"
   },
   {
     "swiss": "Regierungsrat",
-    "de_de": "",
+    "de_de": "Landesregierung",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Regio",
-    "de_de": "Regionalzug auch österr.",
+    "de_de": "Regionalzug",
     "category": "Schienenverkehr"
   },
   {
@@ -1920,23 +1150,13 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Regulierbremse",
-    "de_de": "auf den ganzen Zug direkt wirkende Druckluftbremse",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Reichsdeutsche",
-    "de_de": "nach 1871 von Deutschschweizern geprägt",
-    "category": "Anderes"
-  },
-  {
     "swiss": "rekognoszieren",
     "de_de": "erkunden",
     "category": "Anderes"
   },
   {
     "swiss": "Rekrutenschule",
-    "de_de": "D: militärische Grundausbildung",
+    "de_de": "Grundausbildung",
     "category": "Militär"
   },
   {
@@ -1950,13 +1170,13 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "Retourbillet(t",
+    "swiss": "Retourbillett",
     "de_de": "Rückfahrkarte",
     "category": "Schienenverkehr"
   },
   {
     "swiss": "rezyklieren",
-    "de_de": "wiederverwerten",
+    "de_de": "recyceln",
     "category": "Anderes"
   },
   {
@@ -1965,23 +1185,8 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "ringhörig",
-    "de_de": "leicht schalldurchlässig",
-    "category": "Haus, Haushalt"
-  },
-  {
     "swiss": "Rock",
-    "de_de": "einteiliges Kleid",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Rollende Autobahn",
-    "de_de": "Rollende Landstraße",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Romanische Elemente im Schweizerhochdeutschen",
-    "de_de": "= ''Duden-Beiträge.'' Heft 38",
+    "de_de": "Kleid",
     "category": "Anderes"
   },
   {
@@ -1990,23 +1195,13 @@
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "ruch",
-    "de_de": "",
-    "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Rösti",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Rüebli",
-    "de_de": "sonst: Karotte",
+    "de_de": "Karotte",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Rüfe",
-    "de_de": "Mure",
+    "de_de": "Murgang",
     "category": "Natur/Geographie"
   },
   {
@@ -2021,18 +1216,13 @@
   },
   {
     "swiss": "Sackgeld",
-    "de_de": "auch süddt.",
+    "de_de": "Taschengeld",
     "category": "Handel, Gewerbe"
   },
   {
     "swiss": "Sackmesser",
-    "de_de": "auch süddt.",
+    "de_de": "Taschenmesser",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Sackmesser",
-    "de_de": "auch süddt.",
-    "category": "Haus, Haushalt"
   },
   {
     "swiss": "Samichlaus",
@@ -2045,29 +1235,9 @@
     "category": "Gesundheitswesen"
   },
   {
-    "swiss": "Sanitätsnotrufzentrale",
-    "de_de": "Rettungsleitstelle",
-    "category": "Gesundheitswesen"
-  },
-  {
-    "swiss": "Sans papiers",
-    "de_de": "Ausländer ohne gültige Papiere",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Schade, bist du gestern nicht hier gewesen.",
-    "de_de": "Es ist",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Schale",
-    "de_de": "heller Milchkaffee",
+    "de_de": "Milchkaffee",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "Schifflände",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "schlitteln",
@@ -2076,7 +1246,7 @@
   },
   {
     "swiss": "schlussendlich",
-    "de_de": "auch süddt.",
+    "de_de": "letztendlich",
     "category": "Anderes"
   },
   {
@@ -2085,89 +1255,24 @@
     "category": "Gesellschaft, Volkskultur"
   },
   {
-    "swiss": "Schriften",
-    "de_de": "Ausweispapiere",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Schuldenbremse",
-    "de_de": "Deutschland",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Schulreise",
     "de_de": "Klassenfahrt",
     "category": "Bildungswesen"
   },
   {
-    "swiss": "Schulthek/Thek/Schulsack",
+    "swiss": "Schulthek",
     "de_de": "Schulranzen",
     "category": "Bildungswesen"
   },
   {
-    "swiss": "Schweizer Standarddeutsch: Beiträge zur Varietätenlinguistik.",
-    "de_de": "Hrsg.",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizer Wörterbuch. So sagen wir in der Schweiz.",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizer Wörterbuch. So sagen wir in der Schweiz.",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizerhochdeutsch. Wörterbuch der Standardsprache in der deutschen Schweiz.",
-    "de_de": "wie auch in Süddeutschland und Österreich",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizerhochdeutsch. Wörterbuch der Standardsprache in der deutschen Schweiz.",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizerische und österreichische Besonderheiten in deutschen Wörterbüchern",
-    "de_de": "= ''Institut für deutsche Sprache. Forschungsberichte.'' Band 10",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schweizerisches Wortgut im Duden.",
-    "de_de": "[https://www.e-periodica.ch/digbib/view?pid=jds-002:1941:37#68 Digitalisat]",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Schwellentelle",
-    "de_de": "",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Schwingbesen",
-    "de_de": "dt.: Schneebesen",
+    "de_de": "Schneebesen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Schön, haben Sie heute Zeit.",
-    "de_de": "Es ist",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Schüttstein",
-    "de_de": "auch süddt.",
+    "de_de": "Spüle",
     "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Secondo",
-    "de_de": "Einwandererssohn",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "sein Heu nicht auf derselben Bühne haben mit/wie",
-    "de_de": "nicht dieselben Ansichten haben wie",
-    "category": "Anderes"
   },
   {
     "swiss": "Selbstunfall",
@@ -2175,44 +1280,14 @@
     "category": "Strassenverkehr"
   },
   {
-    "swiss": "selbständigerwerbend",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "senkrecht",
     "de_de": "aufrichtig",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Senn",
-    "de_de": "",
     "category": "Anderes"
   },
   {
     "swiss": "Serviertochter",
     "de_de": "Kellnerin",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "sich auffangen",
-    "de_de": "sein seelisches Gleichgewicht wiederfinden",
-    "category": "Menschliches Verhalten"
-  },
-  {
-    "swiss": "sich foutieren",
-    "de_de": "von französisch ''se foutre",
-    "category": "Menschliches Verhalten"
-  },
-  {
-    "swiss": "Sicherheitssteuerung",
-    "de_de": "Sicherheitsfahrschaltung",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Signalement",
-    "de_de": "Personenbeschreibung",
-    "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Sigrist",
@@ -2225,19 +1300,9 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "snowboarden",
-    "de_de": "Snowboard fahren",
-    "category": "Sport"
-  },
-  {
     "swiss": "Sonnerie",
-    "de_de": "Klingel[anlage]",
+    "de_de": "Klingelanlage",
     "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "Sorge tragen zu jemandem/etwas",
-    "de_de": "sich kümmern um jemanden/etwas",
-    "category": "Anderes"
   },
   {
     "swiss": "Spannteppich",
@@ -2246,57 +1311,27 @@
   },
   {
     "swiss": "speditiv",
-    "de_de": "rasch",
+    "de_de": "zügig",
     "category": "Menschliches Verhalten"
   },
   {
     "swiss": "Spital",
-    "de_de": "auch bair.",
-    "category": "Gesundheitswesen"
-  },
-  {
-    "swiss": "Spitalauto",
-    "de_de": "Krankentransportwagen",
+    "de_de": "Krankenhaus",
     "category": "Gesundheitswesen"
   },
   {
     "swiss": "Spitex",
-    "de_de": "''Spit''al-''ex''terne Pflege",
+    "de_de": "ambulante Krankenpflege",
     "category": "Gesundheitswesen"
   },
   {
-    "swiss": "Sporttag",
-    "de_de": "Schulsportfest",
-    "category": "Bildungswesen"
-  },
-  {
     "swiss": "sprechen",
-    "de_de": "[Gelder",
+    "de_de": "bewilligen",
     "category": "Anderes"
   },
   {
-    "swiss": "Staatsrat",
-    "de_de": "",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Stadtammann",
-    "de_de": "Oberbürgermeister in einigen Kantonen",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Stadtpräsident",
-    "de_de": "Oberbürgermeister",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Standeskommission",
-    "de_de": "Appenzell Innerrhoden: Regierung",
-    "category": "Politik, Staat, Recht"
-  },
-  {
     "swiss": "Stange",
-    "de_de": "Glas Bier von 3 dl",
+    "de_de": "grosses Bierglas",
     "category": "Anderes"
   },
   {
@@ -2305,24 +1340,14 @@
     "category": "Politik, Staat, Recht"
   },
   {
-    "swiss": "Stillhaltebremsgewicht",
-    "de_de": "Festhaltebremsgewicht",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Stimmbürger",
     "de_de": "Wahlberechtigter",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "stimmen",
-    "de_de": "seine Stimme abgeben",
+    "de_de": "abstimmen",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Stockschiene",
-    "de_de": "Backenschiene",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Storen",
@@ -2330,24 +1355,9 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "stossen",
-    "de_de": "drücken (an Türen",
-    "category": "Anderes"
-  },
-  {
     "swiss": "stossend",
     "de_de": "anstössig",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Strahler",
-    "de_de": "Kristall-/Mineraliensucher",
-    "category": "Gesellschaft, Volkskultur"
-  },
-  {
-    "swiss": "Strecke mit starkem Gefälle",
-    "de_de": "Steilstrecke",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Streckentabelle",
@@ -2381,28 +1391,18 @@
   },
   {
     "swiss": "Thon",
-    "de_de": "verarbeiteter",
+    "de_de": "Thunfisch",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "tiefe Preise/Steuern",
-    "de_de": "niedrige Preise/Steuern",
-    "category": "Anderes"
-  },
-  {
     "swiss": "tischen",
-    "de_de": "Tisch decken",
+    "de_de": "den Tisch decken",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Tobel",
     "de_de": "Schlucht",
     "category": "Natur/Geographie"
-  },
-  {
-    "swiss": "Trainer",
-    "de_de": "auch Trainingsanzug",
-    "category": "Sport"
   },
   {
     "swiss": "Trainer",
@@ -2416,7 +1416,7 @@
   },
   {
     "swiss": "Traktandum",
-    "de_de": "Themenpunkt der Tagesordnung",
+    "de_de": "Tagesordnungspunkt",
     "category": "Handel, Gewerbe"
   },
   {
@@ -2431,23 +1431,8 @@
   },
   {
     "swiss": "Trassee",
-    "de_de": "''die'' Trasse",
+    "de_de": "Trasse",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Trassee",
-    "de_de": "''die'' Trasse",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Treuhänder",
-    "de_de": "u.&nbsp",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "Triebachse",
-    "de_de": "Treibachse",
-    "category": "Schienenverkehr"
   },
   {
     "swiss": "Trolleybus",
@@ -2461,7 +1446,7 @@
   },
   {
     "swiss": "Trottoir",
-    "de_de": "auf der ersten Silbe betont",
+    "de_de": "Bürgersteig",
     "category": "Strassenverkehr"
   },
   {
@@ -2475,13 +1460,8 @@
     "category": "Sport"
   },
   {
-    "swiss": "Tschüss",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Tumbler",
-    "de_de": "(Wäsche",
+    "de_de": "Wäschetrockner",
     "category": "Haus, Haushalt"
   },
   {
@@ -2491,12 +1471,12 @@
   },
   {
     "swiss": "Töff",
-    "de_de": "auch süddt.",
+    "de_de": "Motorrad",
     "category": "Strassenverkehr"
   },
   {
     "swiss": "Töffli",
-    "de_de": "Fahrrad mit Hilfsmotor",
+    "de_de": "Mofa",
     "category": "Strassenverkehr"
   },
   {
@@ -2506,28 +1486,13 @@
   },
   {
     "swiss": "Türfalle",
-    "de_de": "auch süddt.",
+    "de_de": "Türklinke",
     "category": "Haus, Haushalt"
   },
   {
     "swiss": "Umfahrungsstrasse",
     "de_de": "Umgehungsstrasse",
     "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Umschwung",
-    "de_de": "Hofstatt",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Umtrieb",
-    "de_de": "Aufwand",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "unbedingt, unbedingte Strafe",
-    "de_de": "auch österr.",
-    "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "unentwegt",
@@ -2560,53 +1525,38 @@
     "category": "Anderes"
   },
   {
-    "swiss": "Vakuumbremse",
-    "de_de": "gemeindt. veraltet",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Vater",
-    "de_de": "entsprechend dialektal []",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Velo",
-    "de_de": "von Veloziped",
+    "de_de": "Fahrrad",
     "category": "Strassenverkehr"
   },
   {
     "swiss": "verdanken",
-    "de_de": "",
+    "de_de": "förmlich danken",
     "category": "Anderes"
   },
   {
     "swiss": "Vernehmlassung",
-    "de_de": "Umfrage bei Parteien und Verbänden über ein Gesetzesprojekt",
+    "de_de": "Konsultationsverfahren",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "verrechnen",
-    "de_de": "",
+    "de_de": "in Rechnung stellen",
     "category": "Handel, Gewerbe"
   },
   {
     "swiss": "versorgen",
-    "de_de": "auch österr. militärisch",
+    "de_de": "wegräumen",
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "versteilte Doppelkreuzungsweiche",
-    "de_de": "Doppelkreuzungsweiche mit Bogeneinlauf",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Verwaltungsrat",
-    "de_de": "ausser bei Körperschaften des öffentlichen Rechts: Aufsichtsrat",
+    "de_de": "Aufsichtsrat",
     "category": "Anderes"
   },
   {
     "swiss": "verzeigen",
-    "de_de": "jemanden anzeigen",
+    "de_de": "anzeigen",
     "category": "Politik, Staat, Recht"
   },
   {
@@ -2615,23 +1565,8 @@
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Vignette",
-    "de_de": "Aufkleber",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "von Auge",
-    "de_de": "mit blossem Auge",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "von Beginn weg",
-    "de_de": "von Beginn an",
-    "category": "Anderes"
-  },
-  {
     "swiss": "vorab",
-    "de_de": "adv.",
+    "de_de": "vorwiegend",
     "category": "Anderes"
   },
   {
@@ -2646,23 +1581,8 @@
   },
   {
     "swiss": "Vortritt",
-    "de_de": "auch süddt. veraltet",
-    "category": "Strassenverkehr"
-  },
-  {
-    "swiss": "Vortritt",
     "de_de": "Vorfahrt",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Wachsamkeitskontrolle",
-    "de_de": "Fachbegriff für Totmanneinrichtung bei Schienenfahrzeugen",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Wacht",
-    "de_de": "Bewachung",
-    "category": "Militär"
+    "category": "Strassenverkehr"
   },
   {
     "swiss": "Waffenplatz",
@@ -2670,29 +1590,9 @@
     "category": "Militär"
   },
   {
-    "swiss": "weder Fisch noch Vogel",
-    "de_de": "weder Fisch noch Fleisch",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Wegfahrt",
-    "de_de": "als Hinweisschild für Ausfahrt auf einem Parkplatz o.&nbsp",
-    "category": "Strassenverkehr"
-  },
-  {
     "swiss": "Wegleitung",
-    "de_de": "Beschreibung",
+    "de_de": "Leitfaden",
     "category": "Anderes"
-  },
-  {
-    "swiss": "Weibel",
-    "de_de": "Staatsdiener auf verschiedenen Ebenen mit überwiegend zeremoniellen Aufgaben",
-    "category": "Politik, Staat, Recht"
-  },
-  {
-    "swiss": "weibeln",
-    "de_de": "werbend",
-    "category": "Gesellschaft, Volkskultur"
   },
   {
     "swiss": "werweissen",
@@ -2706,7 +1606,7 @@
   },
   {
     "swiss": "Wiederholungskurs",
-    "de_de": "entfernt vergleichbar: Reservistenübung",
+    "de_de": "Reservistenübung",
     "category": "Militär"
   },
   {
@@ -2715,23 +1615,13 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "wischen",
-    "de_de": "kehren",
-    "category": "Haus, Haushalt"
-  },
-  {
-    "swiss": "wischen",
-    "de_de": "mit einem Besen putzen",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Wissenschafter",
     "de_de": "Wissenschaftler",
     "category": "Politik, Staat, Recht"
   },
   {
     "swiss": "Wähe",
-    "de_de": "Blechkuchen mit Obst- oder Gemüsebelag",
+    "de_de": "Blechkuchen mit Belag",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
@@ -2745,44 +1635,24 @@
     "category": "Handel, Gewerbe"
   },
   {
-    "swiss": "zentral",
-    "de_de": "von zentraler",
-    "category": "Menschliches Verhalten"
-  },
-  {
     "swiss": "Zmittag",
     "de_de": "Mittagessen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Zmorge(n",
+    "swiss": "Zmorgen",
     "de_de": "Frühstück",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Znacht / das Nachtessen",
+    "swiss": "Znacht",
     "de_de": "Abendessen",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
     "swiss": "Znüni",
-    "de_de": "Zwischenmahlzeit am Vormittag um ~9 Uhr",
+    "de_de": "Zwischenmahlzeit am Vormittag",
     "category": "Küche, Nahrung, Restaurant"
-  },
-  {
-    "swiss": "zu Boden reden",
-    "de_de": "1. [etwas] ausdiskutieren",
-    "category": "Menschliches Verhalten"
-  },
-  {
-    "swiss": "zu reden geben",
-    "de_de": "für Gesprächsstoff sorgen",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "zu wenig weit",
-    "de_de": "",
-    "category": "Anderes"
   },
   {
     "swiss": "Zucchetti",
@@ -2790,43 +1660,18 @@
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Zugsicherungssystem",
-    "de_de": "Zugbeeinflussung",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Zugskomposition",
     "de_de": "Zugverband",
     "category": "Schienenverkehr"
   },
   {
-    "swiss": "Zugverband",
-    "de_de": "im Folgezugbetrieb verkehrender Zug",
-    "category": "Schienenverkehr"
-  },
-  {
     "swiss": "Zvieri",
-    "de_de": "Zwischenmahlzeit am Nachmittag um ~16 Uhr",
+    "de_de": "Zwischenmahlzeit am Nachmittag",
     "category": "Küche, Nahrung, Restaurant"
   },
   {
-    "swiss": "Zwanziger ist gefallen",
-    "de_de": "verstanden haben",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Zwergsignal",
-    "de_de": "Schutzsignal",
-    "category": "Schienenverkehr"
-  },
-  {
-    "swiss": "Zwiebelfisch",
-    "de_de": "",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Zwängerei",
-    "de_de": "Drängerei",
+    "de_de": "unnachgiebiges Beharren",
     "category": "Menschliches Verhalten"
   },
   {
@@ -2835,18 +1680,8 @@
     "category": "Haus, Haushalt"
   },
   {
-    "swiss": "Älplermagronen",
-    "de_de": "Gericht mit geschnittenen Kartoffeln",
-    "category": "Anderes"
-  },
-  {
     "swiss": "Ökonomiegebäude",
     "de_de": "Wirtschaftsgebäude",
-    "category": "Anderes"
-  },
-  {
-    "swiss": "Überfremdung",
-    "de_de": "im Schweizer Einwanderungsdiskurs seit den 1920er Jahren verbreitet",
     "category": "Anderes"
   }
 ]

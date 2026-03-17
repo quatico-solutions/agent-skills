@@ -1,9 +1,42 @@
 #!/usr/bin/env python3
-"""Extract Helvetismen from the Wikipedia wikitext dump.
+"""Document and validate the LLM-assisted Helvetismen extraction from Wikipedia.
 
-Reads wikipedia-helvetismen.json (MediaWiki API parse output), extracts
-Swiss-German terms with their Standard German equivalents from the bullet-list
-format, and writes wikipedia-helvetismen-extract.json.
+The wikipedia-helvetismen-extract.json was produced by LLM subagents reading the
+raw Wikipedia wikitext (wikipedia-helvetismen.json) and extracting structured data.
+Regex-based extraction was abandoned because distinguishing "DE-DE equivalent" from
+"description", "Austrian term", or "etymology note" in free-form prose requires
+semantic comprehension, not pattern matching.
+
+--- HOW THE JSON WAS PRODUCED ---
+
+The raw wikitext (~78K chars, 14 sections, ~593 bullets) was split by ==== headers
+and dispatched to four parallel LLM subagents, each handling 3-4 categories:
+
+  Group 1: Küche, Nahrung, Restaurant / Haus, Haushalt / Handel, Gewerbe
+  Group 2: Strassenverkehr / Schienenverkehr / Militär / Bildungswesen
+  Group 3: Politik, Staat, Recht / Gesellschaft, Volkskultur / Natur/Geographie / Sport / Menschliches Verhalten / Gesundheitswesen
+  Group 4: Anderes (the longest section, ~200 bullets of mixed content)
+
+Each subagent was instructed to:
+  - Extract the Swiss term from the first ''italic'' markup on each bullet
+  - Identify the DE-DE equivalent from the parenthetical — NOT descriptions,
+    NOT Austrian terms (Marille, Obers, Kren…), NOT etymologies, NOT examples
+  - Resolve optional-letter notation: Billet(t) → Billett
+  - Skip bibliography lines, phonology notes, and multi-term combined entries
+  - Output JSON: [{"swiss": "...", "de_de": "...", "category": "..."}]
+
+The four outputs were merged, deduplicated, and sorted alphabetically to produce
+wikipedia-helvetismen-extract.json (337 entries).
+
+--- TO REGENERATE ---
+
+If the source Wikipedia article changes (update-sources.sh fetches fresh data):
+1. Run update-sources.sh to refresh wikipedia-helvetismen.json
+2. Split wikitext by ==== headers (see split_sections() below)
+3. Feed each group to an LLM with the extraction prompt above
+4. Merge the outputs and write wikipedia-helvetismen-extract.json
+
+This script validates the existing JSON and shows extraction stats.
 
 Usage: python3 extract-wikipedia.py
 """
@@ -17,126 +50,72 @@ IN_FILE = os.path.join(SCRIPT_DIR, "wikipedia-helvetismen.json")
 OUT_FILE = os.path.join(SCRIPT_DIR, "wikipedia-helvetismen-extract.json")
 
 
-def strip_wikitext(text):
-    """Remove wikitext markup, returning plain text."""
-    # Remove <ref>...</ref> and <ref ... />
-    text = re.sub(r"<ref[^>]*>.*?</ref>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<ref[^>]*/\s*>", "", text)
-    # Remove <nowiki /> and other HTML tags
-    text = re.sub(r"<[^>]+>", "", text)
-    # Resolve [[link|display]] → display, [[link]] → link
-    text = re.sub(r"\[\[([^|\]]*\|)?([^\]]*)\]\]", r"\2", text)
-    # Remove remaining {{ }} templates
-    text = re.sub(r"\{\{[^}]*\}\}", "", text)
-    # Clean up whitespace
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+def split_sections(wikitext):
+    """Split wikitext into (category, content) pairs by ==== headers."""
+    parts = re.split(r"====\s*(.*?)\s*====", wikitext)
+    sections = []
+    for i in range(1, len(parts), 2):
+        header = parts[i].strip()
+        content = parts[i + 1] if i + 1 < len(parts) else ""
+        bullet_count = sum(1 for line in content.split("\n") if line.strip().startswith("* "))
+        sections.append((header, bullet_count))
+    return sections
 
 
-def extract_swiss_term(line):
-    """Extract the Swiss term from a bullet line.
-
-    Patterns handled:
-    - ''term'' (standard italic)
-    - ''[[term]]'' (linked italic)
-    - der/die/das ''term'' (with article)
-    """
-    # Match the first italic term: ''...''
-    m = re.search(r"''([^']+)''", line)
-    if not m:
-        return None
-    term = m.group(1)
-    term = strip_wikitext(term)
-    # Strip leading articles
-    term = re.sub(r"^(der|die|das|den|dem|des|ein|eine|einen|einem|eines)\s+", "", term)
-    # Strip leading/trailing punctuation
-    term = term.strip(" ,;:-–()")
-    return term if term else None
-
-
-def extract_de_de(line, swiss_term):
-    """Extract the DE-DE equivalent from the parenthetical explanation.
-
-    Typical patterns:
-    - (DE-DE term)
-    - (DE-DE term, other info)
-    - ([[DE-DE term]])
-    """
-    # Remove the Swiss term part (everything up to and including the first parenthesis)
-    # Look for parenthetical after the italic term
-    cleaned = strip_wikitext(line)
-
-    # Try to find text in parentheses
-    paren_matches = re.findall(r"\(([^)]+)\)", cleaned)
-    if paren_matches:
-        # Take the first parenthetical that looks like a DE-DE equivalent
-        for paren in paren_matches:
-            # Skip parentheticals that are just clarifications
-            paren_clean = paren.strip()
-            if paren_clean and not paren_clean.startswith("Pl") and len(paren_clean) < 200:
-                # Take the first comma-separated item as the main equivalent
-                first_item = paren_clean.split(",")[0].split(";")[0].strip()
-                # Strip articles
-                first_item = re.sub(
-                    r"^(der|die|das|den|dem|des|ein|eine|einen|einem|eines)\s+",
-                    "",
-                    first_item,
-                )
-                # Skip if it's just a description
-                if len(first_item) > 1 and not first_item.startswith("in ") and not first_item.startswith("z."):
-                    return first_item.strip(" ,;:-–")
-    return ""
+def validate_extract(entries):
+    """Check the extracted JSON for obvious issues."""
+    issues = []
+    for i, e in enumerate(entries):
+        if not e.get("swiss"):
+            issues.append(f"Entry {i}: missing swiss term")
+        if not e.get("category"):
+            issues.append(f"Entry {i} ({e.get('swiss', '?')}): missing category")
+        swiss = (e.get("swiss") or "").lower().strip()
+        de_de = (e.get("de_de") or "").lower().strip()
+        if swiss and de_de and swiss == de_de:
+            issues.append(f"Entry {i}: same-term entry ({e['swiss']})")
+        if de_de and ("&nbsp" in de_de or "''" in de_de or "[[" in de_de):
+            issues.append(f"Entry {i} ({e.get('swiss', '?')}): wikitext debris in de_de: {de_de!r}")
+    return issues
 
 
 def main():
     if not os.path.exists(IN_FILE):
-        print(f"Error: {IN_FILE} not found. Run update-sources.sh first.", file=sys.stderr)
+        print(f"Note: {IN_FILE} not found — run update-sources.sh to fetch raw Wikipedia data.")
+    else:
+        with open(IN_FILE) as f:
+            data = json.load(f)
+        wikitext = data["parse"]["wikitext"]["*"]
+        sections = split_sections(wikitext)
+        print(f"Source: {len(sections)} sections in wikipedia-helvetismen.json")
+        for header, count in sections:
+            print(f"  {header}: {count} bullets")
+
+    if not os.path.exists(OUT_FILE):
+        print(f"\nError: {OUT_FILE} not found.", file=sys.stderr)
+        print("To regenerate: split wikitext by ==== headers and feed each group to an LLM.", file=sys.stderr)
         sys.exit(1)
 
-    with open(IN_FILE) as f:
-        data = json.load(f)
+    with open(OUT_FILE) as f:
+        entries = json.load(f)
 
-    wikitext = data["parse"]["wikitext"]["*"]
+    print(f"\nExtract: {len(entries)} entries in wikipedia-helvetismen-extract.json")
 
-    # Split into sections by ==== headers ====
-    sections = re.split(r"====\s*(.*?)\s*====", wikitext)
-    # sections alternates: [preamble, header1, content1, header2, content2, ...]
-
-    results = []
-    current_category = "Allgemein"
-
-    for i in range(1, len(sections), 2):
-        current_category = sections[i].strip()
-        content = sections[i + 1] if i + 1 < len(sections) else ""
-
-        for line in content.split("\n"):
-            line = line.strip()
-            if not line.startswith("* "):
-                continue
-
-            swiss = extract_swiss_term(line)
-            if not swiss:
-                continue
-
-            de_de = extract_de_de(line, swiss)
-            results.append(
-                {"swiss": swiss, "de_de": de_de, "category": current_category}
-            )
-
-    results.sort(key=lambda x: x["swiss"].lower())
-
-    with open(OUT_FILE, "w") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    # Stats
     categories = {}
-    for r in results:
-        categories[r["category"]] = categories.get(r["category"], 0) + 1
-
-    print(f"Extracted {len(results)} entries → {OUT_FILE}")
-    print(f"Categories:")
+    for e in entries:
+        cat = e.get("category", "?")
+        categories[cat] = categories.get(cat, 0) + 1
+    print(f"Categories ({len(categories)}):")
     for cat, count in sorted(categories.items(), key=lambda x: -x[1]):
         print(f"  {cat}: {count}")
+
+    issues = validate_extract(entries)
+    if issues:
+        print(f"\nValidation issues ({len(issues)}):")
+        for issue in issues:
+            print(f"  {issue}")
+    else:
+        print(f"\nValidation: OK — no issues found")
 
 
 if __name__ == "__main__":

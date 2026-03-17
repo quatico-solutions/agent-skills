@@ -210,6 +210,36 @@ CORE_TERMS = [
 ]
 
 
+# ── Blocklist ────────────────────────────────────────────────────────────────
+# Swiss terms to skip in the full glossary (source data errors, Austrian-only
+# terms picked by OpenThesaurus, wrong synset linkages, slurs, or abbreviations
+# with no useful DE-DE mapping).
+BLOCKLIST = {
+    # Austrian-first-equivalent (OT picks Marille/Schwammerl/etc. as first eq)
+    "barille", "baringel",           # obscure Swiss variants → OT gives Marille
+    "schwämmli", "schwümm",          # → OT gives Schwammerl (Austrian)
+    "schlips",                       # → OT gives Mascherl (Austrian)
+    "flädlisuppe",                   # → OT gives Flädlesuppe (S-German dialect)
+    "ländi", "ländte", "schifflände",  # → OT gives Lände (Austrian)
+    "erdapfel", "erdbirne",          # → OT gives Potacken (archaic)
+    # Wrong synset linkages in OT
+    "gnagi", "wädli",                # → OT gives Haspel (completely wrong)
+    "zimmermann",                    # → OT gives Schuster (completely wrong)
+    "faktura",                       # → OT gives Prozentrechnung (wrong)
+    # Abbreviations / dialect markers not useful as glossary entries
+    "i",                             # just the letter "i" (dialect pronunciation marker)
+    "rag",                           # company abbreviation
+}
+
+# ── DE-DE overrides ──────────────────────────────────────────────────────────
+# For Swiss terms where OpenThesaurus picks an Austrian or wrong DE-DE equivalent
+# as its first entry, we force the correct standard German term here.
+# Key: normalize(swiss_term), Value: correct DE-DE string
+DE_DE_OVERRIDES = {
+    "aprikose": "Aprikose",         # OT picks Marille (Austrian) as first equiv
+}
+
+
 def normalize(term):
     """Normalize a term for deduplication: lowercase, strip articles and parens."""
     t = term.lower().strip()
@@ -247,6 +277,12 @@ def load_openthesaurus():
             # Use first equivalent as primary DE-DE term
             de_de = equivalents[0]
             key = normalize(swiss)
+            # Apply blocklist
+            if key in BLOCKLIST:
+                continue
+            # Apply DE-DE overrides
+            if key in DE_DE_OVERRIDES:
+                de_de = DE_DE_OVERRIDES[key]
             if key not in entries:
                 entries[key] = {
                     "swiss": swiss,
@@ -296,32 +332,8 @@ def build_core_glossary():
 
 
 def is_valid_de_de(de_de):
-    """Return True if the de_de field looks like a real German equivalent (not clarification text)."""
-    if not de_de:
-        return False
-    # Skip entries that are clearly clarification text, not DE-DE equivalents
-    noise_patterns = [
-        r"^auch\s",           # "auch süddt.", "auch österr."
-        r"^im\s",             # "im Deutschen: ..."
-        r"^in\s[A-Z]",       # "in Deutschland: ..."
-        r"^auf\s",            # "auf der ersten Silbe..."
-        r"^Betonung\s",       # "Betonung auf..."
-        r"^ursprünglich",     # "ursprünglich aus..."
-        r"^dt\.\s*:",         # "dt.: ..."
-        r"österr\.\s*:",      # "österr.: ..."
-        r"^süddt\.",          # "süddt. auch"
-        r"\bnicht:\s",        # "nicht: Flaschenpfand"
-        r"^z\.\s*B\.",        # "z. B. ..."
-        r"^Abk\.\s",          # abbreviation hints
-        r"^Pl\.",              # plural forms
-    ]
-    for pattern in noise_patterns:
-        if re.search(pattern, de_de):
-            return False
-    # Skip very long de_de (over 60 chars is likely a description, not a term)
-    if len(de_de) > 60:
-        return False
-    return True
+    """Return True if de_de is a non-empty string of reasonable length."""
+    return bool(de_de and len(de_de.strip()) > 0 and len(de_de) < 100)
 
 
 def build_full_glossary(ot_entries, wp_entries, wk_titles):
@@ -370,8 +382,26 @@ def build_full_glossary(ot_entries, wp_entries, wk_titles):
     for entry in merged.values():
         if not entry["de_de"]:
             continue
+        # Skip same-term entries (DE-DE same as Swiss — no useful mapping)
+        if normalize(entry["de_de"]) == normalize(entry["swiss"]):
+            continue
         cat = entry["category"]
         categories.setdefault(cat, []).append((entry["de_de"], entry["swiss"]))
+
+    # Normalize duplicate category names
+    CAT_ALIASES = {
+        "Küche, Nahrung, Restaurant": "Küche, Nahrung",
+        "Natur/Geographie": "Natur, Geographie",
+        "Gesellschaft, Volkskultur": "Gesellschaft",
+    }
+    normalized_categories = {}
+    for cat, entries in categories.items():
+        canonical = CAT_ALIASES.get(cat, cat)
+        if canonical in normalized_categories:
+            normalized_categories[canonical].extend(entries)
+        else:
+            normalized_categories[canonical] = list(entries)
+    categories = normalized_categories
 
     return categories, len(merged)
 
@@ -390,15 +420,12 @@ def write_glossary(categories, filepath, title_suffix=""):
         "Arbeit, Beruf",
         "Verwaltung",
         "Küche, Nahrung",
-        "Küche, Nahrung, Restaurant",
         "Haus, Haushalt",
         "Gesellschaft",
-        "Gesellschaft, Volkskultur",
         "Gesundheitswesen",
         "Militär",
         "IT, Technik",
         "Natur, Geographie",
-        "Natur/Geographie",
         "Sport",
         "Menschliches Verhalten",
         "Anderes",
