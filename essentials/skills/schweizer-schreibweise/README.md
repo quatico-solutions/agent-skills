@@ -88,12 +88,13 @@ The core glossary (~200 terms) stays in the sweet spot. The full glossary (~1,20
 
 ### Processing Pipeline
 
-1. **Extract** OpenThesaurus Swiss-tagged pairs (968 entries, already done → `openthesaurus-swiss-extract.json`)
-2. **Extract** Wikipedia Helvetismen via MediaWiki API (~603 entries, already downloaded)
-3. **Extract** Wiktionary Schweizer Hochdeutsch entries (765 entries, already downloaded)
-4. **Deduplicate and merge** → ~1,200–1,400 unique pairs
-5. **Curate a core glossary** of ~150–200 business-relevant terms (Hauswart, parkieren, Offerte, Traktandum, Betreibung, etc.)
-6. **Keep the full glossary** as a separate reference file for on-demand loading
+1. **OpenThesaurus** (`extract-openthesaurus.py`): SQL dump → 936 Swiss-tagged pairs
+2. **Wikipedia** (LLM subagents + `extract-wikipedia.py`): wikitext → 337 clean entries across 14 categories
+3. **Wiktionary**: 763 title entries (term names only, no DE-DE equivalent)
+4. **Merge + filter** (`build-glossary.py`): deduplicate, apply blocklist, normalize categories → **1,113 full glossary entries**
+5. **Core glossary**: 80 curated business-relevant Helvetismen
+
+**Why LLM for Wikipedia extraction?** Regex can parse structure but can't distinguish "DE-DE equivalent" from "Austrian synonym", "description", or "etymology note" in free-form prose parentheticals. Four parallel LLM subagents reading the 14 wikitext sections achieved near-zero error rate vs ~135 errors from the regex approach.
 
 ## Sources
 
@@ -124,8 +125,20 @@ After downloading, run `sources/extract-openthesaurus.py` to extract Swiss-tagge
 
 | File | Description |
 |------|-------------|
-| `update-sources.sh` | Re-downloads all source files into `update/` subdirectory |
+| `update-sources.sh` | Re-downloads all source files |
 | `extract-openthesaurus.py` | Extracts Swiss-tagged terms from the SQL dump → `openthesaurus-swiss-extract.json` |
+| `extract-wikipedia.py` | Documents the LLM-based extraction approach; validates `wikipedia-helvetismen-extract.json` |
+| `build-glossary.py` | Merges all sources → `references/glossary.md` and `references/glossary-full.md` |
+
+**To regenerate glossaries from scratch:**
+
+```bash
+# From the skill root:
+python3 sources/extract-openthesaurus.py   # → openthesaurus-swiss-extract.json
+# Re-extract Wikipedia: split wikitext by ==== headers, feed groups to LLM subagents
+# (see sources/extract-wikipedia.py for the documented approach)
+python3 sources/build-glossary.py          # → references/glossary.md + glossary-full.md
+```
 
 ### License Files
 
@@ -136,10 +149,9 @@ After downloading, run `sources/extract-openthesaurus.py` to extract Swiss-tagge
 
 ## Next Steps
 
-1. **TDD verification** — test retrieval, application, and gap coverage with subagents (see plan Step 5)
-2. **Expand core glossary** to ~200 terms (currently 80 genuine Helvetismen pairs)
-3. **Improve Wikipedia parser** — some DE-DE fields are still empty or imperfect for edge-case bullet formats
-4. **Full glossary quality pass** — filter remaining same-term entries (e.g., "Liegenschaft → Liegenschaft")
+1. **TDD verification** — test retrieval, application, and gap coverage with subagents
+2. **Expand core glossary** — currently 80 entries; could grow to ~150 with more domain-specific curation
+3. **Wikipedia re-extract trigger** — if `update-sources.sh` fetches a newer Wikipedia revision, re-run LLM extraction (see `extract-wikipedia.py` for the documented prompt approach)
 
 ## Version History
 
@@ -147,4 +159,5 @@ After downloading, run `sources/extract-openthesaurus.py` to extract Swiss-tagge
 |---------|------|---------|
 | — | 2026-03-17 | Initial setup: sources downloaded, update script created |
 | — | 2026-03-17 | README updated with research findings: architecture, rules, glossary strategy |
-| 1.0.0 | 2026-03-17 | SKILL.md written; glossary pipeline built; `references/glossary.md` (80 terms) and `references/glossary-full.md` (1,265 terms) generated |
+| 1.0.0 | 2026-03-17 | SKILL.md written; glossary pipeline built; `references/glossary.md` (80 terms) and `references/glossary-full.md` (1,265 terms, regex extraction) |
+| 1.0.1 | 2026-03-17 | Glossary quality overhaul: LLM-based Wikipedia extraction (337 clean entries replacing 557 noisy ones), BLOCKLIST + DE_DE_OVERRIDES for OpenThesaurus source errors, same-term filter, category normalization. Full glossary: 1,265 → 1,113 clean entries. |
