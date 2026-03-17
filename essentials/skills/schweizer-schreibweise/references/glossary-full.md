@@ -1,0 +1,1331 @@
+# Helvetismen-Glossar (Vollständig)
+
+DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verwenden.
+
+## Handel, Gewerbe
+
+- Angebot → Offerte
+- Arbeit → Büez
+- Auszubildende → Lehrtochter
+- bewegliche Güter → Fahrhabe
+- Biergrosshandel → Bierdepot
+- Eimer → Kessel
+- einkaufen gehen → posten
+- Einzelhandel → Detailhandel
+- Friseur → Coiffeur
+- Gebrauchtwarenladen → Brockenhaus
+- Handelskette → Grossverteiler
+- Kaufmannslehre → KV
+- Nepp → Abriss
+- Obergrenze → Limite
+- offener Punkt → Pendenz
+- Pfand → Depot
+- Redakteur → Redaktor
+- Reservierung → Reservation
+- Scheck → Check
+- Schreibwarenhandlung → Papeterie
+- Tagesordnungspunkt → Traktandum
+- Tarifvertrag → Gesamtarbeitsvertrag
+- Taschengeld → Sackgeld
+- Telefongesellschaft → Fernmeldedienstanbieter
+- Telefongesellschaft → FDA
+- Unterbrechung einer Mitgliedschaft → Abostopp
+- Urlaub → Ferien
+- wettstreiten → konkurrenzieren
+- Zeitungsausträger → Zeitungsverträger
+- Zwangsvollstreckung → Betreibung
+- Überweisung → Einzahlungsschein
+
+## Finanzen
+
+- Gehalt → Salär
+
+## Immobilien
+
+- Dachboden → Estrich
+- Liegenschaft → Liegenschaft
+
+## Strassenverkehr
+
+- Alleinunfall → Selbstunfall
+- als Hinweisschild für Ausfahrt auf einem Parkplatz o.&nbsp → Wegfahrt
+- Ampelanlage → Rotlicht
+- Autofahrer → Automobilist
+- Autohaus → Garage
+- Autohaus- bzw. Autowerkstatteigentümer → Garagist
+- Autoreifen → Pneu
+- Briefträger → Pöstler
+- Bürgersteig → Trottoir
+- einordnen → einspuren
+- Entfernungsbake → Distanzbake
+- Fahrrad → Velo
+- Fahrrad mit Hilfsmotor → Töffli
+- Fahrzeugschein/-brief → Fahrzeugausweis
+- Fuhrunternehmer → Camionneur
+- Fussgängerbrücke → Passerelle
+- Führerhaus → Kabine
+- Führerschein → Führerausweis
+- Führerschein → Führerausweis, FahrausweisHans Bickel, Christoph Landolt
+- Kraftfahrzeug → Motorfahrzeug
+- Kraftrad → Töff
+- Lastkraftwagen → Camion
+- Lastzug → Anhängerzug
+- Nummernschild → Kontrollschild
+- Oberleitungsbus → Trolleybus
+- parken → parkieren
+- PKW → PW
+- Reisebus im Charter- oder Fernverkehr → Autocar
+- Transportunternehmer → Fuhrhalter
+- Tretroller → Trottinett
+- Umgehungsstrasse → Umfahrungsstrasse
+- Versicherung zum Strassenverkehr → Einlösung
+- Ware aus zweiter Hand → Occasion
+- Wendeplatz → Kehrplatz
+- überdachter Abstellplatz für Fahrzeuge → Einstellhalle
+
+## Schienenverkehr
+
+- ''die'' Trasse → Trassee
+- Backenschiene → Stockschiene
+- Bahncard 100 → Generalabonnement
+- Bahnsteig → Perron
+- Bedarfshalt → Halt auf Verlangen
+- Betriebsbahnhof → Dienstbahnhof
+- Betriebsstrecke → Dienststrecke
+- Bremshundertstel → Bremsgewichtshundertstel
+- Buchfahrplan → Streckentabelle
+- Doppelkreuzungsweiche mit Bogeneinlauf → versteilte Doppelkreuzungsweiche
+- eingleisig → einspurig, doppelspurig, mehrspurig
+- Eisenbahnsignal zu Regelung von Rangierfahrten → Rangiersignal
+- Eisenbahnstrecke → Linie
+- Empfangsgebäude → Aufnahmegebäude
+- Ersatzsignal → Hilfssignal
+- Fachbegriff für Totmanneinrichtung bei Schienenfahrzeugen → Wachsamkeitskontrolle
+- Fahrkarte → Billett
+- Fahrtanzeiger → Fahrtstellungsmelder
+- Festhaltebremsgewicht → Stillhaltebremsgewicht
+- früher gemeindt. → Dienstzug
+- gemeindt. veraltet → Billet(t
+- gemeindt. veraltet → Vakuumbremse
+- Gleiswechselbetrieb → banalisierter Verkehr
+- Halbtax → Halbtax
+- Hauptluftleitung → Hauptleitung
+- Hauptuntersuchung → Hauptrevision
+- Kleinlokomotive → Traktor
+- Kursbuchstrecke → Fahrplanfeld
+- Nebengleis → Rangiergleis
+- nichtbundeseigene Eisenbahn → Privatbahn
+- Oberleitung → Fahrleitung
+- Regional-Express → RegioExpress
+- Regionalzug auch österr. → Regio
+- Rollende Landstraße → Rollende Autobahn
+- Rückfahrkarte → Retourbillet(t
+- Schaffner → Kondukteur
+- Schaffner → Billeteur
+- Schaffnerin → Kondukteuse
+- Schlusslokomotive → Q-Lok
+- Schrankenwärter → Barrierenwärter
+- Schutzsignal → Zwergsignal
+- schützen → decken
+- Sicherheitsfahrschaltung → Sicherheitssteuerung
+- Sonderzug → Extrazug
+- Steilstrecke → Strecke mit starkem Gefälle
+- Strassenbahn → Tram
+- Treibachse → Triebachse
+- Umspannwerk → Unterwerk
+- Vorsignalwiederholer → Wiederholsignal
+- Wendezug → Pendelzug
+- Wendezugsteuerung → Vielfachsteuerung
+- Zug mit Sandwich-Traktion → Doppelpendelzug
+- Zugbeeinflussung → Zugsicherungssystem
+- Zugverband → Zugskomposition
+
+## Politik, Staat, Recht
+
+- abgrenzen → ausmarchen
+- abschieben (Asylbewerber → ausschaffen
+- amtliche Entscheidung → Entscheid
+- Appenzell Innerrhoden: Regierung → Standeskommission
+- Aufstellung eines Kandidaten → Nomination
+- Aufwand → Umtrieb
+- Ausländer ohne gültige Papiere → Sans papiers
+- Ausweispapiere → Schriften
+- bei einer Landsgemeinde die Mehrheit ermitteln → ausmehren
+- Beihilfe zu einem Delikt → Gehilfenschaft
+- Bezieher → Bezüger
+- durch erhobene Hände bezeugte Stimmenmehrheit → Handmehr
+- Einsprache → Einsprache
+- Einwandererssohn → Secondo
+- Einwohnermeldeamt → Einwohnerkontrolle
+- etwas auslösen → lancieren
+- Fernbleiben → Absenz
+- Finanzamt → Steueramt
+- Gegenstimmen bei offener Abstimmung → Gegenmehr
+- jemanden anzeigen → verzeigen
+- Mehrheit bzw. die Zahl der Stimmen → Mehr
+- Ministerium → Departement
+- Ministerpräsident in einigen Kantonen → Landammann
+- mit einem Bußgeld belegen → büssen
+- mit grosser Mehrheit → grossmehrheitlich
+- Mitarbeiterausweis → Personalausweis
+- Nationalrat → Nationalrat
+- normale Tagesgeschäfte → Courant normal
+- Oberbürgermeister → Stadtpräsident
+- Oberbürgermeister in einigen Kantonen → Stadtammann
+- Obligatorium → Obligatorium
+- oft abschätzig → Classe politique
+- Personalausweis → Identitätskarte
+- Personenbeschreibung → Signalement
+- Regierungsrat → Regierungsrat
+- schuldig → fehlbar
+- staatliche Subvention u.&nbsp → Beitrag à fonds perdu
+- Ständerat → Ständerat
+- Tagesordnung → Traktandenliste
+- u.&nbsp → Treuhänder
+- verantwortlich machen → behaften
+- Verordnung → Reglement
+- Veränderungen im Mitgliederbestand → Mutation
+- volljähriger Staatsbürger → Aktivbürger
+- Wahlberechtigter → Stimmbürger
+- Wissenschaftler → Wissenschafter
+
+## Bildungswesen
+
+- ''Matura'' auch österr. → Matur, Matura
+- Abiturient → Maturand
+- ausgesprochen: [] → Gymi
+- Grundschule → Primarschule
+- kantonale Mittelschule → Kantonsschule
+- Klassenfahrt → Schulreise
+- Maiwanderung → Maibummel
+- Schulranzen → Schulthek/Thek/Schulsack
+- Schulsportfest → Sporttag
+- Studentenausweis → Legitimationskarte
+- Tageslichtprojektor → Hellraumprojektor
+- unbefristet angestellter Lehrer mit zugesichertem Pensum → Hauptlehrer
+- Versetzung → Promotion
+
+## Arbeit, Beruf
+
+- Bereitschaftsdienst → Pikettdienst
+- Überstunden → Überzeit
+
+## Verwaltung
+
+- Anhang → Beilage
+- Vernehmlassung → Vernehmlassung
+
+## Küche, Nahrung
+
+- Gulasch → Voressen
+- Kellnerin → Serviertochter
+- Kneipe → Beiz
+- Müll → Kehricht
+- Nudeln → Teigwaren
+- Sahne → Rahm
+- Schneebesen → Schwingbesen
+- Speiseeis → Glace
+
+## Küche, Nahrung, Restaurant
+
+- Abendessen → Nachtessen, der/das Znacht
+- Abendessen → Znacht / das Nachtessen
+- Aperitif → Apéro
+- auch: die → Cervelat
+- Bahnhofsrestaurant → Bahnhofbuffet
+- Blechkuchen mit Obst- oder Gemüsebelag → Wähe
+- Chilischote → Chili
+- Eisbecher → Coupe
+- Feldsalat → Nüsslisalat
+- Frikadelle → Hacktätschli
+- Frühstück → Zmorge(n
+- Frühstück → Morgenessen/Zmorgen
+- Glas Champagner → Cüpli
+- grillen → grillieren
+- Grillhähnchen → Güggeli
+- heller Milchkaffee → Schale
+- Huhn als Speise → Poulet
+- Hörnchen → Gipfel
+- Kartoffelpüree → Kartoffelstock
+- Kirschwasser → Kirsch
+- kleines Küchenmesser → Rüstmesser
+- Laugenbrötchen → Silserli
+- lecker → gluschtig
+- meist Plur. → Rande
+- Mittagessen → Zmittag
+- nach Maximilian Oskar Bircher-Benner → Müesli
+- offenes Buffet ohne Nachzahlen → Buffet à discrétion
+- Radler → Panaché
+- Rinderroulade → Fleischvogel
+- rote → Peperoni
+- Schlachtung → Metzgete
+- Schokoladengebäck → Brunsli
+- sing. → Peperoncino/i
+- sonst: Karotte → Rüebli
+- Süssigkeit vor dem Schlafengehen → Bettmümpfeli
+- Tisch decken → tischen
+- v. a. als getrocknetes und gemahlenes Gewürz → Paprika
+- verarbeiteter → Thon
+- Walnuss → Baumnuss
+- Zucchini → Zucchetti
+- Zwischenmahlzeit am Nachmittag um ~16 Uhr → Zvieri
+- Zwischenmahlzeit am Vormittag um ~9 Uhr → Znüni
+
+## Haus, Haushalt
+
+- ''der'' Pyjama → Pyjama
+- (Hut → Ablage
+- (Wäsche → Tumbler
+- Abfalleimer → Kehrichtsack
+- Altenteil → Stöckli
+- Besen → Besen
+- D: Richtfest → Aufrichte
+- Dachboden → Winde
+- einsortieren → versorgen
+- Fachwerkhaus → Riegelhaus
+- Getränkekiste → Harass
+- Handwaschbecken → Lavabo
+- Hausmeister → Abwart
+- Hausschuhe → Finken
+- Jalousie → Storen
+- Kleider → Anlegen
+- Kleider ausziehen → Ablegen
+- kleines Bauerngut → Heimet
+- Klingel[anlage] → Sonnerie
+- Kochtopf → Pfanne
+- leicht schalldurchlässig → ringhörig
+- offener Kamin → Cheminée
+- Penthouse → Attikawohnung
+- Renovierung → Renovation
+- Schreibtisch → Pult
+- Spülbecken → Schüttstein
+- Stehlampe → Ständerlampe
+- Taschenmesser → Sackmesser
+- Taschentuch → Nastuch
+- Teelicht → Rechaudkerze
+- Teppichboden → Spannteppich
+- umziehen → zügeln
+- Zaun → Hag
+
+## Gesellschaft, Volkskultur
+
+- Almauftrieb → Alpaufzug
+- Christi Himmelfahrt → Auffahrt
+- Enkelkind → Grosskind
+- Fastnacht → Fasnacht
+- Freund → Kollege
+- gedruckte Todesanzeige → Leidzirkular
+- Kirchweih → Chilbi/Kilbi
+- Knecht Ruprecht → Schmutzli
+- Kristall-/Mineraliensucher → Strahler
+- Küster → Sigrist
+- Lokalprominenz → Cervelatprominenz
+- neben Schrebergarten → Familiengarten
+- Nikolaus → Samichlaus
+- Pate → Götti
+- Pfadfinderbewegung → Pfadi
+- Sich-Versammeln → Besammlung
+- Spitzenkandidat → Kronfavorit
+- Substantiv zu ''ausgehen'' am Abend → Ausgang
+- Tod → Hinschied
+- urig → urchig
+- werbend → weibeln
+
+## Gesundheitswesen
+
+- ''Spit''al-''ex''terne Pflege → Spitex
+- Arztzeugnis → Arztzeugnis
+- ins Krankenhaus [''Spital''] eingewiesen werden → hospitalisiert
+- Krankentransportwagen → Spitalauto
+- Kreißsaal → Gebärsaal
+- Notaufnahme → Notfallstation
+- Rettungsleitstelle → Sanitätsnotrufzentrale
+- Sanitätsdienst → Sanität
+- Spital → Spital
+
+## Militär
+
+- Bewachung → Wacht
+- D: militärische Grundausbildung → Rekrutenschule
+- entfernt vergleichbar: Reservistenübung → Wiederholungskurs
+- Entlassung aus der Dienstpflicht → Abgeben
+- Entwarnung → Endalarm
+- Feldwebel → Feldweibel
+- Kader → das
+- Musterung → Aushebung
+- Slang: ''Kadi'' von arab. القاضي für Richter → Kompaniekommandant
+- Staatsanwalt/Ankläger bei Militärgericht → Auditor
+- Truppenunterkunft → Kantonnement
+- Truppenübungsplatz → Waffenplatz
+- Wehrdienstverweigerer → Dienstverweigerer
+
+## Natur, Geographie
+
+- Bise → Bise
+- Föhn → Föhn
+- Gletscher → Gletscher
+
+## Natur/Geographie
+
+- Alm → Alp
+- Flussbarsch → Egli
+- Mure → Rüfe
+- Nacht werden → einnachten
+- Pute → Trute
+- Schlucht → Tobel
+
+## Sport
+
+- ''Crawl'' = Kraulschwimmen → crawlen
+- Abseits → Offside
+- Eckstoß → Corner
+- Elfmeter → Penalty
+- Finale → Final
+- Fussball spielen → tschuten
+- Kapitän → Captain
+- mit männlichem grammatischem Geschlecht → Match
+- Nationalmannschaft → Nati
+- Pokal → Cup
+- Schlitten fahren → schlitteln
+- Siegerehrung → Rangverkündigung
+- Snowboard fahren → snowboarden
+- Stechen → Ausstich
+- Tor → Goal
+- Torwart → Goalie
+
+## Menschliches Verhalten
+
+- 1. [etwas] ausdiskutieren → zu Boden reden
+- ab → ab)serbeln
+- andeuten → antönen
+- angriffslustig → angriffig
+- Drängerei → Zwängerei
+- eindrucksvoll → eindrücklich
+- es → es) sich gewohnt sein
+- gute Nachricht oder positives Ereignis → Aufsteller
+- hin und her raten → werweissen
+- Knauser → Rappenspalter
+- leicht abwertend für Hundehalter → Hündeler
+- prahlen → plagieren
+- rasch → speditiv
+- sein seelisches Gleichgewicht wiederfinden → sich auffangen
+- von französisch ''se foutre → sich foutieren
+- von zentraler → zentral
+
+## Anderes
+
+- + Inf. → einladen (+ Inf.
+- = ''Duden-Beiträge.'' Heft 38 → Romanische Elemente im Schweizerhochdeutschen
+- = ''Duden-Beiträge.'' Hefte 30a und 30b → Die Besonderheiten der deutschen Schriftsprache in der Schweiz.
+- [Gelder → sprechen
+- [ʔ] → jeden Abend
+- Abstimmung → Urnengang
+- adv. → vorab
+- am Arsch lecken → am Ranzen hangen
+- Amt ausüben → amten
+- angemessen schnell → innert nützlicher Frist
+- anstössig → stossend
+- Ar → Are
+- Aufkleber → Vignette
+- aufrichtig → senkrecht
+- aufs Geld achten → Fünfer zweimal drehen
+- ausgehen → in den Ausgang gehen
+- aushandeln → ausjassen
+- ausser Betracht fallen → aus Abschied und Traktanden fallen
+- Balkon über einer Treppe → Laube
+- Beschreibung → Beschrieb
+- Beschreibung → Wegleitung
+- binnen/innerhalb → innert
+- bis einschliesslich → bis und mit
+- bisher → bis anhin
+- Bote → Ausläufer
+- Buckel hinunterrutschen → in die Schuhe blasen
+- bundesdeutsch: Anfang des Jahres → anfangs
+- dastehen wie der Ochse vorm Berg → dastehen wie der Esel am Berg
+- Deutschland → Schuldenbremse
+- doch noch den richtigen Weg finden → Rank finden
+- drücken (an Türen → stossen
+- Durchschnittsschweizer → Herr und Frau Schweizer
+- eingedeutschte Form zur leichteren Aussprache → Müsli
+- einteiliges Kleid → Rock
+- Ende der Woche / des Monats / des Jahres → Ende Woche
+- entsprechend dialektal [] → Vater
+- er → Geld(er) sprechen
+- erkunden → rekognoszieren
+- es gibt etwas → es hat, solang es hat
+- es hat den Anschein → es macht den Anschein
+- es interessiert jemanden → es nimmt jemanden wunder, ob
+- Es ist → Schade, bist du gestern nicht hier gewesen.
+- Es ist → Gut, gibt es Schweizer Bauern.
+- Es ist → Schön, haben Sie heute Zeit.
+- etw. verwerfen → bachab schicken
+- etwas unnötig als wichtig erscheinen lassen → Büro aufmachen
+- eventuell → allfällig
+- falschliegen → neben den Schuhen stehen
+- Faust in der Tasche ballen → Faust im Sack machen
+- Filiale → Ableger
+- Fliesstext → Lauftext
+- franz. → Jupe
+- für Gesprächsstoff sorgen → zu reden geben
+- Gericht mit geschnittenen Kartoffeln → Älplermagronen
+- geringfügig → minim
+- Glas Bier von 3 dl → Stange
+- Guten zu viel tun → Fuder überladen
+- Gänsehaut im Sinne des Hautphänomens → Hühnerhaut
+- halber Liter Bier in einem Glashumpen → Kübel
+- Hektar → Hektare
+- hierzu im Kapitel über die Orthographie → er
+- Hofstatt → Umschwung
+- Hrsg. → Schweizer Standarddeutsch: Beiträge zur Varietätenlinguistik.
+- Jacke wie Hose → Hans was Heiri
+- je mit /aː/ → Andacht, brachte, gebracht, gedacht/dachte, Nachbar, Rache
+- jenseits → ennet
+- Jetzt reicht es! → Jetzt ist genug Heu unten!
+- Junge → Knabe
+- Kartoffeln etc. → es hat noch Bier (Kartoffeln etc.) im Keller
+- klingen → tönen
+- Kommissar → Kommissär
+- Kürzeren gezogen haben → mit abgesägten Hosen dastehen
+- le putsch'' → Putsch
+- Leerzeichen → Leerschlag
+- leichter Schlaganfall → Streifung
+- Lände → Schifflände
+- mir ist kalt → ich habe kalt
+- mit blossem Auge → von Auge
+- mit einem Besen putzen → wischen
+- Mitglied in einem Gremium werden → Einsitz nehmen
+- Mobiltelefon → Natel
+- nach 1871 von Deutschschweizern geprägt → Reichsdeutsche
+- nicht dieselben Ansichten haben wie → sein Heu nicht auf derselben Bühne haben mit/wie
+- niedrige Preise/Steuern → tiefe Preise/Steuern
+- Organisator → Tätschmeister
+- Plane → Blache
+- plötzlich → handkehrum
+- Projekt auf den Weg bringen → aufgleisen
+- Rechtsanwalt → Advokat
+- Regencape → Pelerine
+- schwierige Aufgabe → Knacknuss
+- seine Stimme abgeben → stimmen
+- sich kümmern um jemanden/etwas → Sorge tragen zu jemandem/etwas
+- sich nicht rühren → keinen Wank tun/machen
+- Sitzposition beim Sonnenbaden → Hamolstellung
+- so in etwa&nbsp → Handgelenk mal Pi
+- solide → währschaft
+- spielen → ab Blatt (spielen
+- Spitzenplatz einnehmen → obenaus schwingen
+- Stadtviertel → Quartier
+- Statur → Postur
+- ständig → unentwegt
+- Telefonat → Telefon
+- Trainingsanzug → Trainer
+- Trauerfeier → Abdankung
+- Tüte → Sack
+- ugs.: ''[übertragen]'' Enttäuschung → Ablöscher
+- umgänglich → aufgestellt
+- Unfallstation → Notfall
+- Unordnung → Puff
+- Unterbrechung → Unterbruch
+- Vergnügen → Plausch
+- verkosten → degustieren
+- Versammlung der Stimmbürger einer Gemeinde → Gemeindeversammlung
+- verstanden haben → Zwanziger ist gefallen
+- viel zu tun haben → es streng haben
+- von Beginn an → von Beginn weg
+- Vorfahrt → Vortritt
+- weder Fisch noch Fleisch → weder Fisch noch Vogel
+- wenden → kehren
+- wiederverwerten → rezyklieren
+- Wirtschaftsgebäude → Ökonomiegebäude
+- zuvor → vorgängig
+- zäh → harzig
+- «danke!» → merci
+- Ärger → Mais
+
+## Allgemein
+
+- (Außen-)Jalousie → Store
+- (dann) prost (Mahlzeit)! → Proscht Nägeli!
+- (das) Aufgebot (bestellen) → Eheverkünd(ig)ung
+- (das) Aufgebot (bestellen) → (Gesuch um) Durchführung des Vorbereitungsverfahrens
+- (das) Personalkarussell (dreht sich) → Sesselrücken
+- (die) Brezn → Bretzel
+- (ein) Ei am Wandern haben → nicht ganz hundert sein
+- (ein) Ei am Wandern haben → einen Ecken abhaben
+- (eine) Strafe zur Bewährung aussetzen → (jemanden) zu einer bedingten Strafe verurteilen
+- (etwas) verkleinern → (etwas) redimensionieren
+- (Geld) sparen → äufnen
+- (ihre) Kräfte bündeln (um etwas zu tun) → zusammenspannen
+- (im Fernsehen) übertragen → televisionieren
+- (irgendwo) ansässig → domiziliert
+- (jemandem etwas) vererben → (jemandem etwas) vergaben
+- (jemandes) Strafregister → Strafregisterauszug
+- (kleiner) Topf → Töpfli
+- (kleines) Fenster → Scheibe
+- (seinen) Abschied nehmen → künden
+- (sich) aufhalten → domiziliert sein
+- (sich) einen Dreck scheren (um) → (sich) futieren (sich foutieren)
+- (sich) erschöpft haben → fertig sein
+- (soziale) Randgruppe → Randständige
+- ...chen → ...li
+- 2CV → Döschwo
+- 31. Dezember → Altjahrstag
+- 31. Dezember → Altjahrabend
+- 31. Dezember → Altjahrsabend
+- Abendbrot → Znacht
+- Abendbrot → Nachtessen
+- Abi → Maturität
+- Abi → Matura
+- Abschiebehaft → Ausschaffungshaft
+- Abschiebung → Ausschaffung
+- Abschiebung → Rückschaffung
+- Abschlagszahlung → Akonto
+- abservieren → abtischen
+- Ackersalat → Nüssler
+- Agraralkohol → Trinksprit
+- Airport → Flugfeld
+- Alkoholgegner → Abstinent
+- alles zusammen (Geld) → total
+- Almabtrieb → Alpabzug
+- Almhirte → Älpler
+- Almhirte → Küher
+- Alpen-Soldanelle → Grosses Alpenglöckchen
+- Alster → Panasch
+- Altersrente → gesetzliche Rente
+- Altersrente → staatliche Rente
+- Altersrente → AHV-Rente
+- Altkatholische Kirche → Christkatholische Kirche
+- Amerikanischer Seesaibling → Kanadische Seeforelle
+- Amt → Amtei
+- Amt → Amtsstelle
+- amtlicher Gemeindeschlüssel → Gemeindenummer
+- anfordern → einverlangen
+- anhängig (Verfahren) → hängig
+- Anhörung → Einvernahme
+- Anhörung → Einvernehmung
+- Ankleideraum → Garderobe
+- Anlieger → Anstösser
+- Anliegerverkehr → Zubringerdienst
+- Anrufbeantworter → Telefonbeantworter
+- anstößige Stellen entfernen → (etwas) zensieren
+- anstößige Stellen entfernen → (etwas) zensurieren
+- Antiblockiersystem → Automatischer Blockierverhinderer
+- Antiblockiersystem → ABV
+- Antrag → Ansuchen
+- Antragsteller → Gesuchsteller
+- Aprikosenschnaps → Abricotine
+- Apéritif → Apero
+- Arme Ritter → Fotzelschnitten
+- Arsch → Füdli
+- Arsch → Fudi
+- Artilleristischer Strich → Artilleriepromille
+- auf Wiedersehen → salü
+- aufklären → orientieren
+- aufwachsen → heranblühen
+- Auslöser → Initiant
+- Ausrufungszeichen → Ausrufzeichen
+- Auto → Motorwagen
+- Autobahndreieck → Verzweigung
+- Autobusfahrer → Buschauffeur
+- Autobusfahrer → Autobuschauffeur
+- Autofahrer → Autolenker
+- Autofahrer → Wagenlenker
+- Autofahrer → Fahrzeuglenker
+- Autoscooter → Putschauto
+- Autostraße → Hauptstrasse
+- Außengrenze → Landesgrenze
+- Außenleiter → Polleiter
+- Backenzahn → Stockzahn
+- Bad → Badi
+- Baguette → Parisette
+- Bahnsteigdach → Perrondach
+- Bahnsteigkante → Perronkante
+- Bandmaß → Rollmeter
+- Bandschnalle → Ribbon
+- Bankautomat → Bancomat
+- Bankautomat → Postomat
+- Barett → Béret
+- Bau → Kiste
+- Bemessungsgrundlage → steuerbares Einkommen
+- Bemühen → Effort
+- Bereich → Rayon
+- bereit → fixfertig
+- Bereitschaftsdienst → Pikett
+- Berggasthaus → Berghaus
+- Berufsausbildung → Berufslehre
+- Berufskraftfahrer → Lastwagenchauffeur
+- Berufsreifeprüfung → Berufsmatura
+- Berufsreifeprüfung → Berufsmaturität
+- Berufsreifeprüfung → Berufsmatur
+- Besenwirtschaft → Besenbeiz
+- Besenwirtschaft → Buschenschenke
+- besolden → entlöhnen
+- Betreuung → Beistandschaft
+- Bewährungsstrafe → bedingte Strafe
+- Bienlein → Bienle
+- Bienlein → Bienli
+- Biestmilch → Brieschmilch
+- Biker → Velofahrer
+- Bildschirmtext → Videotex
+- BIP → Bruttoinlandprodukt
+- bis jetzt → (bis) anhin
+- Blaukraut → Rotkabis
+- Blaukraut → Kabis
+- Blinkleuchte → Richtungsanzeiger
+- Boche → Gummihals
+- Bodenkohlrabi → gelbe Rübe
+- Bonbon → Zältli
+- Bonbon → Täfeli
+- Briefkuvert → Couvert
+- Brühe → Bouillon
+- Buchecker → Buchennüsschen
+- buffen → tschutten
+- Bulle → Muni
+- Bundestagswahl → Nationalsratswahl
+- Bus → Autobus
+- Butter → Anken
+- Butterschmalz → Bratbutter
+- Börsennotierung → Kotierung
+- Bügeleisen → Glätteisen
+- Campingbus → Wohnmotorwagen
+- Chefredakteur → Chefredaktor
+- Chemikant → Chemie- und Pharmatechnologe
+- Chips → Pommes-Chips
+- Comer See → Comersee
+- Computer-Nutzer → Benützer
+- D'Hondt-Verfahren → Hagenbach-Bischoff-Verfahren
+- Dachgaube → Dachlukarne
+- Dachrinne → Dachhengel
+- Damennachthemd → Nachtgewand
+- Damennachthemd → Négligé
+- Daseinsvorsorge → öffentliche Infrastruktur
+- Dekolletee → Décolleté
+- diesjährig → heuer
+- diplomiert → dipl.
+- Disco → Dancing
+- Distinktion → Gradabzeichen
+- Doktorand → Doktorierender
+- Doktorand → Dissertant
+- Doktorgrad (erlangen) → doktorieren
+- Dorfschule → Gesamtschule
+- Dosenpfand → Flaschendepot
+- Drucker → Drucktechnologe
+- Druckraum → Gassenstübli
+- Druckraum → Fixerstübli
+- Druckraum → Gassenzimmer
+- durchboxen → durchstieren
+- durchrufen → (jemanden / bei jemandem) antelefonieren
+- durchrufen → ein Telefon geben
+- durchwachsen → durchzogen
+- Echter Eibisch → Eibschen
+- Echter Eibisch → Ibsche
+- Echter Eibisch → Ibschge
+- Echter Kerbel → Chörblichrut
+- Echter Kerbel → Körblinkraut
+- Echter Pfifferling → Eierschwämmli
+- Eckkneipe → Quartierbeiz
+- einige → etwelche
+- Einlassbeginn → Türöffnung
+- Einwohnermeldeamt → Personenmeldeamt
+- Einzelhandelsgeschäft → Detailgeschäft
+- einäschern → kremieren
+- Eisbecher → Glace-Töpfli
+- Eiskarte → Coupekarte
+- Eissalon → Gelateria
+- Elektorat → Stimmvolk
+- Elektrifizierung → Elektrifikation
+- Entbindungsraum → Gebärzimmer
+- Entthronung → Amtsentsetzung
+- Erbe → Erbteil
+- Erbnachweis → Erbenbescheinigung
+- Erfinder → Mächler
+- erschöpft → abgeschlagen
+- Erschöpfung → Abgeschlagenheit
+- erwachsen werden → handlungsfähig werden
+- erzeugen → fabrizieren
+- Estrich → Unterlagsboden
+- ETCS-Fahrterlaubnis → ETCS-Fahrerlaubnis
+- Evakuierung → Evakuation
+- evtl. → eventualiter
+- Facharzt → Spezialarzt
+- Fahrausweisautomat → Billettautomat
+- Fahrausweiskontrolle → Billettkontrolle
+- Fahrausweisverkauf → Billettverkauf
+- Fahrkartenkontrolleur → Billettkontrolleur
+- Fahrrad-Stellplatz → Velostand
+- Fahrrad-Stellplatz → Velostellplatz
+- Fahrrad-Stellplatz → Velo-Stellplatz
+- Fahrrad-Stellplatz → Velo-Abstellplatz
+- Fahrrad-Stellplatz → Veloparkplatz
+- Fahrraddraisine → Velodraisine
+- Fahrraddraisine → Schienenvelo
+- Fahrradkurier → Velokurier
+- Fahrradlenker → Guidon
+- Fahrradproduzent → Velohersteller
+- Fahrradrikscha → Velorikscha
+- Fahrradrikscha → Velotaxi
+- Fahrradsattel → Velosattel
+- Fahrradstation → Velostation
+- Fahrradständer → Velohalter
+- Fahrradständer → Veloständer
+- Fahrradunfall → Velounfall
+- Fahrscheinverkäufer → Billetverkäufer
+- Fahrzeugkran → Pneukran
+- Familienname → Geschlechtsname
+- Feier → Anlass
+- Feinbäcker → Confiseur
+- Feinoptiker → Feinwerkoptiker
+- Fenchel → Enis
+- Fensterladen → Drehladen
+- Fernmeldetruppe → Übermittlungstruppe
+- Feuerwehrwache → Brandwache
+- Firn → Sulzschnee
+- Fiskaljahr → Steuerperiode
+- Flaschner → Spengler
+- Fleischbeschau → Fleischschau
+- Fleischhauer → Metzger
+- Fleischkloß → Fleischtätschli
+- Flotte Lotte → Passevite
+- Fluppe → Zigi
+- Flurstück → Parzelle
+- Flussaue → Aue
+- Flädlesuppe → Flädlisuppe
+- flöten gehen → bachab gehen
+- Franken → Stutz
+- Frauenrad → Damenvelo
+- Freiwilligendienst → Freiwilligenarbeit
+- Friseurin → Coiffeurin
+- Friseurin → Coiffeuse
+- frostig → zapfig (kalt)
+- Frühstück → Zmorge(n)
+- Frühstück → Morgenessen
+- Fundament → Fundation
+- Färse → Guschti
+- Färse → Galtlig
+- Führerausweis für Staplerfahrer → Staplerausweis
+- Führerscheinprüfung → Führerprüfung
+- Führerscheinprüfung → Autoprüfung
+- Gastronomie → Gastgewerbe
+- Gebirgskamm → Krete
+- gebrauchsfertig → pfannenfertig
+- Gebrauchtwarenhandel → Brockenstube
+- Gefangengenommener → Zuchthäusler
+- Geheimratsecken → Ratsherrenecken
+- Geldwäsche → Geldwäscherei
+- Gemeindeflur → Allmein
+- Gemeindeflur → Allmeind
+- Gemeindeflur → Allmend
+- Gendarm → Tschugger
+- Generalüberholung → Totalrevision
+- Genf → Gämf
+- Genf → Gänf
+- Gerner → Kerchel
+- gescheit → gefitzt
+- Gewaltenteilung → Gewaltentrennung
+- Gewinnverwendungsrechnung → Erfolgsrechnung
+- GIS → Billag
+- Gleis → Geleise
+- Gleiswechsel → Spurwechselstelle
+- Gliedermaßstab → Doppelmeter
+- Gliedermaßstab → Meter (Mosel-Main-Region)
+- granteln → reklamieren
+- Grenzposten → Grenzwächter
+- Grenzschutz → Grenzwache
+- griesgrämig → hässig
+- grillen → bräteln
+- groggy → nüntig
+- Grundschule → Volksschule
+- Grundschullehrer → Primarlehrer
+- Grundschüler → Primarschüler
+- gründen (auf) → abhangen (von)
+- Guckerschecken → Märzenflecken
+- Gugelhupf → Gugelhopf
+- gut betucht → vermöglich
+- Gürtel → Gurt
+- Haberkornhütchen → Verkehrstöggel
+- Halt → Haltestelle
+- Handelspapier → Wertschrift
+- Handwerker → Büezer
+- Handynummer → Natelnummer
+- harken → rechen
+- Hartkeks → Militärbiskuit
+- Haspel → Gnagi
+- Haspel → Wädli
+- Hbf → HB
+- hemdsärmelig → hemdärmlig
+- hemdsärmelig → hemdärmelig
+- Herlitze → Tierlibaum
+- Heuwender → Heuzettler
+- hi! → Salü!
+- hi! → hoi!
+- hi! → Sali!
+- hierbei → dannzumal
+- historische Hilfswissenschaft → Historische Spezialwissenschaft
+- Hochdeutsch → Schriftdeutsch
+- hochdeutsch reden → Schriftdeutsch sprechen
+- Hochrippe → Hohrücken
+- hohes Tier → Oberjuhee
+- Hosentasche → Hosensack
+- Hufe → Hubel
+- Hund → Hundsvieh
+- Hundeblume → Saublume
+- Hyperaktivitätsstörung → Psychoorganisches Syndrom
+- Hypothekenbank → Hypothekarbank
+- ich → i
+- in kurzer Zeit → innert Kürze
+- Internationaler Pakt über bürgerliche und politische Rechte → UNO-Pakt II
+- Itaker → Tschingg
+- Jagdhund → Jaghund
+- Jahrgangsstufe → Schulstufe
+- Jersey → Tricot
+- Johannisbeere → Meertrübeli
+- Josefstag → Seppitag
+- Juristik → Jus
+- Juwelier → Bijoutier
+- kacheln → plätteln
+- Kaffee mit Schuss → Kafi fertig
+- Kai → Quai
+- Kammerjäger → Desinfektor
+- Kampfkandidatur → Sprengkandidatur
+- Kanten → Mürggel(i)
+- Kanten → Bödeli
+- Kanten → Gupf
+- Kantine → Personalrestaurant
+- Kassenführer → Säckelmeister
+- Kassenführer → Kassier
+- Kassenführer → Inkassant
+- Kassenprüfer → Revisor
+- Katzentoilette → Katzenkiste
+- Kautabak → Snüs
+- Kehrseite → Schattseite
+- Kennzeichen → Autonummer
+- Kennzeichenbeleuchtung → Kontrollschildbeleuchtung
+- Kerosin → Flugpetrol
+- Keule → Stotzen
+- Kfz-Haftpflichtversicherung → Motorfahrzeughaftpflichtversicherung
+- Kfz-Werkstatt → Carrosserie
+- Kiefer → Dähle
+- Kinderlätzchen → Essmantel
+- Kinderlätzchen → Essmäntelchen
+- Kinderlätzchen → Musueli
+- Kinderrad → Kindervelo
+- Kirchendiener → Siegrist
+- Kirchenmatrikel → Rodel
+- Kirchenmatrikel → Rödel
+- Klassentreffen → Klassenzusammenkunft
+- Klecks → Tolggen
+- Kleinbürger → Bünzli
+- Klima → Ambiance
+- Klubobmann → Fraktionspräsident
+- Kläranlage → Abwasserreinigungsanlage
+- Knoblauch → Chnöbli
+- Kochsalat → Lattich
+- Kochtopf → Hafen
+- Koje → Nest
+- Konzipient → Substitut
+- Korkengeld → Zapfengeld
+- Kostbarkeit → Bijou
+- Kraftfahrzeug → Mfz
+- Kraftfahrzeugmechaniker → Automobil-Mechatroniker
+- Kraftrad → Moto
+- Krampe → Agraffe
+- krankenhausreif → spitalreif
+- Krawallmacher → Krawallant
+- Krämerseele → Tüpflischisser
+- Kuhkaff → Hinterpfupfikon
+- Kuhkaff → Hinterduggigen
+- Kuhkaff → Hinterlupfigen
+- Kuhkaff → Hinterpfupfike
+- Käsekuchen → Quarktorte
+- Küchengehilfe → Aide
+- Kühltruhe → Tiefkühler
+- Küken → Bibeli
+- Label → Etikette
+- lagern → campieren
+- Land der Dichter und Denker → grosser Kanton (der grosse Kanton)
+- langsam eingehen → abserbeln
+- Lappen → Fahrausweis
+- Laugengebäck → Silserbrot
+- Lebensjahr → Altersjahr
+- Lebensverneinung → Defaitismus
+- Leichenschau → Legalinspektion
+- Leichenschmaus → Grebt
+- Leichenschmaus → Gräbt
+- Leiden → Gebresten
+- Leihrad → Leihvelo
+- Lichtzeichenanlage → Lichtsignalanlage
+- Liegerad → Liegevelo
+- Liegewagen → Couchette
+- Lohn → Entlöhnung
+- Lolli → Schleckstängel
+- Luftstreitmacht → Flugwaffe
+- Lände → Ländi
+- Lände → Ländte
+- Lüsterklemme → Leuchterklemme
+- mangeln → happern
+- Mankei → Munggen
+- Manövermunition → Markiermunition
+- Marille → Baringel
+- Marille → Aprikose
+- Marille → Barille
+- Markise → Sonnenstoren
+- Markise → Sonnenstore
+- Markung → Gemarchen
+- Mascherl → Schlips
+- Mauspad → Mausmatte
+- Medizinische(r) Fachangestellte(r) → Medizinischer Praxis-Assistent
+- Mehrheitswahl → Majorzwahl
+- Meldebestätigung → Niederlassungsausweis
+- Meldebestätigung → Schriftenempfangsschein
+- Messe → Salon
+- Meterkonvention → Metervertrag
+- Metropolregion → Metropolitanraum
+- Miezekatze → Büsi
+- Milchkanne → Milchkessel
+- Milchkasten → Milchchäschtli
+- Milchkasten → Milchkästli
+- missglücken → fallieren
+- mit Haut und Haaren → gesamthaft
+- Moldau → Republik Moldova
+- Mopp → Flaumer
+- Männerrad → Herrenvelo
+- Mücke → Staunse
+- Mücke → Stanze
+- Mücke → Schnake
+- Mühle → Nünistei
+- Müllbeseitigung → Kehrichtabfuhr
+- Müllverbrennung → Kehrichtverbrennung
+- Müllverbrennung → Kehrichtverwertung
+- nach Fisch riechen → fischeln
+- nach hinten → retour
+- Nachsorge → Nachfürsorge
+- Nagelsperre → Nagelgurt
+- Namensaktie → Namenaktie
+- neidvoll → neidhaft
+- Neugeborenes → Bébé
+- Neugeborenes → Buschi
+- Nießbrauch → Nutzniessung
+- Nuckel → Nuggi
+- Oberzentrum → Hauptzentrum
+- Ochsenziemer → Munifisel
+- Offiziersschüler → Aspirant
+- Ortsvorsteher → Ammann
+- Overhead-Projektor → Prokischreiber
+- Parlament → Grosse Kammer
+- Paspel → Passepoil
+- Passe → Göller
+- Pennant → Fanion
+- Pensionistenheim → Betagtenheim
+- Peperoni → Peperoncini
+- Perlwein → Sternliwein
+- Perlwein → Sternwein
+- Personenstand → Zivilstand
+- Pferdebahn → Rösslitram
+- Pferdewirt → Pferdefachmann
+- Pferdewirt → Pferdewart
+- Pflaume → Zwetschge
+- Pfründe → Pfrund
+- Pharmareferent → Ärztebesucher
+- Piepen → Räppli
+- Piepen → Chlübis
+- pikant → rezent
+- Pillenbox → Medikamentendosierbehälter
+- Pilotenschein → Pilotenbrevet
+- Pilsner → Spezialbier
+- Pionierpanzer → Geniepanzer
+- Plattform (für jemanden/etwas) → Gefäss (für jemanden/etwas)
+- pläsierlich → gefreut
+- Plätzchen → Guezli
+- Portepee → Schlagband
+- POS-Terminal → EFT/POS-Terminal
+- Postscheck → Postcheque
+- Potacken → Erdapfel
+- Potacken → Erdbirne
+- Praktikum → Stage
+- Preisaufschlag → Aufzahlung
+- Pressemitteilung → Communiqué
+- Pressemitteilung → Medienmitteilung
+- Presskopf → Schwartenmagen
+- Presskopf → Schwartemagen
+- Proppen → Zapfen (Flasche)
+- Prozentrechnung → Faktura
+- Pulswärmer → Amadisli
+- Pumpspeicherkraftwerk → Umwälzwerk
+- Puschen → Schlappen
+- Pyrosis → Magenbrennen
+- Pölzung → Spriessung
+- Querdenker (in Sachen Corona) → Freiheitstrychler
+- Rad fahren → Velo fahren
+- Radfahrstreifen → Radstreifen
+- Radfahrstreifen → Velostreifen
+- Radlader → Trax
+- Radrennen → Velorennen
+- Radschnellweg → Veloschnellweg
+- Radschnellweg → Velobahn
+- Radverleih → Veloverleih
+- Radweg → Veloweg
+- Rauhnächte → Altjahrswoche
+- Rechtsbehelf → Rechtsmittel
+- Rechtsvorrang → Rechtsvortritt
+- Reff → Räf
+- Reifeprüfung (südtirol.) → Maturitätsprüfung
+- Reifeprüfung (südtirol.) → Matur
+- Reifeprüfung (südtirol.) → Maturitätsexamen
+- Reifezeugnis → Maturitätszeugnis
+- Reihenhaus → Reiheneinfamilienhaus
+- Reisebus → Car
+- Reisebus → Reisecar
+- reizend → anmächelig
+- Reservereifen → Notrad
+- resignativ → defaitistisch
+- Rettungsdienst → Schutz und Rettung
+- Richtfest → Aufrichtfest
+- Ringelspiel → Rösslispiel
+- Ringelspiel → Reitschule
+- Ringelspiel → Rösslibahn
+- Rolle vorwärts → Heubürzli
+- Ross → Rössli
+- rumgammeln → flohnen
+- Rutte → Trische
+- Rutte → Treische
+- Römisches Licht → Römische Kerze
+- Rückfahrkarte → Retourbillett
+- Sacco → Tschoope
+- Sacco → Veston
+- Sacco → Kittel
+- Sahnesteif → Rahmhalter
+- Sammler → Kollektioneur
+- Sattelzug → Sattelmotorfahrzeug
+- Schaffnerkabine → Billeteurkabine
+- Schaffnerkabine → Kondukteurkabine
+- Schaffnersitz → Billeteursitz
+- Schaffnersitz → Kondukteursitz
+- Schankerlaubnis → Wirtepatent
+- Scheidebecher → Herrgöttli
+- Schein → Nötli
+- Schirmherr → Patron
+- Schlacht → Werche
+- Schlacht → Wuhr
+- Schlampermäppchen → Etui
+- Schlauchschelle → Schlauchbriden
+- Schlauchschelle → Briden
+- Schlotfeger → Kaminfeger
+- Schluckauf → Glucksi
+- Schluckauf → Hitzgi
+- Schluckauf → Hicki
+- Schluckauf → Higgis
+- Schlussbetrachtung → Résumé
+- Schmelzkäse → Schachtelkäse
+- schmotziger Donnerstag → schmutziger Donnerstag
+- Schneewehe → Wechte
+- Schneewehe → Schneewechte
+- Schnellkochtopf → Duromatic
+- Schnellrestaurant → Take-away
+- Schnitzel → Plätzli
+- Schober → Stadel
+- Schrank → Schaft
+- Schranke → Barriere
+- Schriftführer → Aktuar
+- Schubkarre → Karette
+- Schubkarre → Garette
+- Schulaufgabe → Husi
+- Schulaufgabe → Ufzgi
+- Schuldrecht → Obligationenrecht
+- Schulranzen → Thek
+- Schulranzen → Schulthek
+- Schulranzen → Schulsack
+- Schurke → Fötzel
+- Schuster → Zimmermann
+- Schutzhütte → Hospiz
+- Schwabenland → Schwabenländle
+- Schwammerl → Schwämmli
+- Schwammerl → Schwümm
+- Schweinebraten → Schweinsbraten
+- Schweizerhaus → Chalet
+- Schwelbrand → Mottbrand
+- Schwimmmeister → Badmeister
+- Schwimmvergnügen → Schwumm
+- Schöftland → Schöftle
+- Schützenfest → Freischiessen
+- Secondhandshop → Brocki
+- Seeschifffahrt → Hochseeschifffahrt
+- Seilrutsche → Tirolienne
+- Seilrutsche → Tyrolienne
+- Seitengleitflug → Glissade
+- Seitenstreifen → Abstellstreifen
+- Semmel → Weggli
+- Serviererin → Saaltochter
+- Servierkraft → Restaurationsfachfrau EFZ
+- Servierkraft → Restaurationsfachmann EFZ
+- Servierkraft → Restaurationsangestellte/r
+- sich melden → aufstrecken
+- sich schleichen → die Finken klopfen
+- sich schleichen → Leine ziehen
+- sich schleichen → abschleichen
+- sich schleichen → abfahren
+- sich schleichen → sich verkrümeln
+- sich setzen → abhocken
+- Skeptiker → Defaitist
+- so gesehen → aus dieser Optik
+- Solstitium → Sonnwende
+- Sorten → Noten
+- Sperrfrist → Embargo
+- Spezlwirtschaft → Vetterliwirtschaft
+- Springerle → Anisbrötli
+- Springerle → Springerli
+- Sprudel → Mineral
+- Spülbecken → Abwaschbecken
+- Spülmaschine → Abwaschmaschine
+- spülmaschinenfest → abwaschmaschinenfest
+- Staatsangehörigkeitsausweis → Bürgerrechtsnachweis
+- Stadtparlament → Gemeindeparlament
+- Staffel → Stafette
+- Standstreifen → Pannenstreifen
+- Stato Pontificio → Staat Vatikanstadt
+- Stellung → Rekrutierung
+- Stift → Lernender
+- Stockbrot → Schlangenbrot
+- Stoffel → Löli (Lööli, Lööl, Löu)
+- Stopfbuchse → Packung
+- Strafzettel → Bussenzettel
+- Strammstehen → Achtungstellung
+- Straßenablauf → Dole
+- Straßenbahnfahrer → Trampilot
+- Straßenmeisterei → Werkhof
+- Stumpfgleis → Stumpengleis
+- Stumpfgleis → Kopfgleis
+- Stutenkerl → Grittibänz
+- Stutenkerl → Grättimann
+- Stückzins → Marchzins
+- Subvention → Zustupf
+- Suppenküche → Gassenküche
+- Sägemühle → Sagi
+- Sägemühle → Sägerei
+- Süßholz → Bärendreck
+- Tablett → Tableau
+- Tacker → Bostitch
+- Tag zusammen! → Grüezi mitenand!
+- Tag zusammen! → Hoi zäme!
+- tagsüber → untertags
+- Taschenmesser → Schweizermesser
+- Taschenmesser → Schweizer Offiziersmesser
+- Taschentuch → Schnuderlumpen
+- Tausendschönchen → Margritli
+- Taverne → Beize
+- technische Truppe → Genietruppe
+- Tenne → Tenn
+- Tenor → Dispositiv
+- thermische Abfallbehandlungsanlage → KVA
+- thermische Abfallbehandlungsanlage → Kehrichtverbrennungsanlage
+- Tischfußball → Töggele
+- Tischfußball → Jöggeli
+- Torr → Millimeter Quecksilbersäule
+- Totenschrein → Totenbaum
+- touristische Unterrichtungstafel → touristische Signalisation
+- Tramway → Nebenbahn
+- trauernde(r) Angehörige(r) → Hinterlassene(r)
+- Trauersalamander → Totensalamander
+- Treideln → Recken
+- Treppenhaus → Hausflur
+- Treppenhaus → Treppenflur
+- Tretboot → Pedalo
+- Trägerbohlwand → Rühlwand
+- Trüffel-Praline → Truffes
+- Tschechenigel → Stahlspinne
+- Tunnel → Tunell
+- Turron → Torrone
+- UDS → Restwegaufzeichnungsgerät
+- UDS → RAG
+- Umzug → Züglete
+- Umzugswagen → Zügelauto
+- unerledigt → pendent
+- Unfallflucht → Führerflucht
+- Universitätsklinikum → Universitätsspital
+- unschwer → gäbig
+- Unternehmensberater → Konsulent
+- Urkunde → Dossier
+- Usus → Usanz
+- Vagabund → Fecker
+- verblüffen → (jemanden) wundernehmen
+- Verbotsirrtum → Rechtsirrtum
+- Verbraucherinsolvenz → Privatkonkurs
+- Verbraucherschutz → Konsumentenschutz
+- Verdauungsschnaps → Verdauerli
+- Verdichtungsraum → (urbane) Agglomeration
+- verdonnern (zu) → verknurren (zu)
+- Verdunkelungsgefahr → Kollusionsgefahr
+- vereinigte Kammern → Bundesversammlung
+- Verhältniswahl → Proporzwahl
+- Verkehrsschild → Strassensignal
+- Vermessungsingenieur → Geometer
+- Verschlankung (der Firma / der Organisation) → Redimensionierung
+- versetzen → belehnen
+- Vertretung der Gliedstaaten → Kleine Kammer
+- Verzehr → Konsumation
+- Viehgitter → Bovi-Stop
+- viertel (eins) → viertel ab (zwölf)
+- Vorfahrtsregel → Vortrittsregel
+- vorgeschobener Beobachter → Schiesskommandant
+- Vorrangverletzung → Vortrittsverletzung
+- Vorsaal → Entrée
+- Vorsaal → Vorplatz
+- vorstehen → präsidieren
+- Völkerball → Völk
+- Waffenschein → Waffentragbewilligung
+- Wagen → Wägeli
+- Waldmeister → Herfreudeli
+- Waldmeister → Theekraut
+- Waldmeister → Sternleberkraut
+- Wandelobligation → Wandler
+- Wanderarbeiter → Saisonier
+- Wanderarbeiter → Saisonnier
+- Wanderhändler → Marktfahrer
+- Warentrennstab → Kassentoblerone
+- wassergebundene Decke → Chaussierung
+- Wechselaufbau → Wechselladebehälter
+- Wegstock → Helgenstöckli
+- Weihnachts... → weihnächtlich
+- Weinberg → Wingert
+- Weingut → Rebgut
+- Weingärtner → Rebhauer
+- Weinregion → Rebbauzone
+- Wellholz → Wallholz
+- Wendeltreppe → Schnecke
+- Wendeltreppe → Schnegge
+- Wendeschleife → Wendeschlaufe
+- Wertstoffhof → Entsorgungshof
+- Widerspruch → Rekurs
+- Widerspruch → Appellation
+- Wiedergutmachung → Genugtuung
+- Windbeutel → Ofenküchlein
+- Wirsingkohl → Wirz
+- Wirt → Restaurateur
+- wohlgesonnen → wohlsinnig
+- Wohngegend → Wohnquartier
+- Wohnstraße → Begegnungszone
+- wählerisch (beim Essen) → (g)schnädderfräsig
+- Wäschespinne → Stewi
+- Zahnmedizinischer Fachangestellter → Dentalassistent
+- Zebrastreifen → Fussgängerstreifen
+- Zeitrelais → Minuterie
+- Zeitungsausträger → Verträger
+- Zibarte → Zyberli
+- Zibarte → Zibelle
+- Zibarte → Ziberli
+- Zicklein → Gitzi
+- Zuckerhut → Zuckerstock
+- Zugkreuzung → Zugskreuzung
+- Zugverkehr → Zugsverkehr
+- zuhören → losen
+- zukünftig → dereinst
+- Zusammenlegung → Güterregulierung
+- Zusammenlegung → Güterzusammenlegung
+- Zusammenlegung → Landumlegung
+- Zusammenlegung → Arrondierung
+- zusätzliche Altersversorgung → Zusatzrente
+- Zuwanderer → Zuzüger
+- Zuwanderer → Neuzuzüger
+- Zwangsräumung → Exmission
+- zweisprachiges Wörterbuch → Dictionnaire
+- übersiedeln → dislozieren
+- übertrieben → überrissen
+- überwältigend → bäumig

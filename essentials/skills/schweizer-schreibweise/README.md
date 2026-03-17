@@ -4,7 +4,96 @@ Development notes for the Swiss Standard German (Schweizer Hochdeutsch) writing 
 
 ## Goal
 
-Enforce Swiss writing conventions — orthography, typography, vocabulary (Helvetismen), and business terminology — when producing German-language content. Based on the research report at `qubert-config/docs/research/report-swiss-german-skill.md`.
+Enforce Swiss writing conventions — orthography, typography, vocabulary (Helvetismen), and business terminology — when producing German-language content.
+
+**No comparable tool exists.** No Claude Code skill, no open-source prompt, no npm/PyPI package for Swiss Standard German as a writing style. The NLP community has focused on Swiss German *dialect* (speech recognition, dialect classification) — Swiss Standard German as a written standard is uncharted territory.
+
+Based on the research report at `qubert-config/docs/research/report-swiss-german-skill.md`.
+
+## Target Architecture
+
+```
+skills/schweizer-schreibweise/
+  SKILL.md                # Process rules (orthography, typography, grammar)
+  references/
+    glossary.md           # ~200 core business terms, categorized Markdown
+    glossary-full.md      # Complete ~1,200 entries (loaded on demand)
+  sources/                # Raw data and extraction scripts (not shipped)
+```
+
+**Why separate reference files?** Reference files don't consume context tokens until explicitly read, the glossary will grow independently of the skill logic, and mixing instructions with data causes "attention dilution" — the model confuses instructions with data.
+
+## Rules to Codify
+
+### Orthography
+
+- **ss replaces ß everywhere** — Reformed Orthography §25 E2, mandated by Bundeskanzlei. No exceptions.
+
+### Typography
+
+| Rule | Swiss (DE-CH) | German (DE-DE) |
+|------|---------------|----------------|
+| Quotation marks | «Guillemets» (no space) | „Gänsefüsschen" |
+| Nested quotes | «Er sagte ‹Nein›» | „Er sagte ‚Nein'" |
+| Thousands separator | 1'000 (apostrophe) or 1 000 (official) | 1.000 |
+| Decimal: general | 4,6 km (comma) | 4,6 km (same) |
+| Decimal: currency | CHF 99.95 (point!) | 99,95 € |
+| Currency position | CHF 100.00 (prefix) | 100,00 € (suffix) |
+| Time | 13.30 Uhr (period) | 13:30 Uhr (colon) |
+| Date (long) | 1. Januar 2025 | 1. Januar 2025 (same) |
+
+### Grammar
+
+| Feature | Swiss preference | Standard German |
+|---------|-----------------|-----------------|
+| Past tense | Perfekt preferred | Präteritum common |
+| Date preposition | «per 1. Januar» | «zum 1. Januar» |
+| Dative with prepositions | «trotz dem Regen» | «trotz des Regens» |
+| Auxiliary for position verbs | «ich bin gesessen» | «ich habe gesessen» |
+
+### Primary Rule Sources
+
+The **Bundeskanzlei** (Federal Chancellery) is the highest authority. When sources contradict each other, the Bundeskanzlei rules win.
+
+| Document | Content |
+|----------|---------|
+| **Bundeskanzlei Schreibweisungen** (2nd ed.) | Typography, punctuation, numbers, dates, currency, abbreviations |
+| **Bundeskanzlei Rechtschreibleitfaden** (4th ed., 2017) | Orthography, ss rule, word list, spelling choices |
+
+## Glossary Strategy
+
+### Format: Categorized Markdown with Arrow Notation
+
+```markdown
+## Liegenschaftsverwaltung
+- Hausmeister → Hauswart
+- Erdgeschoss → Erdgeschoss (EG; Parterre is also common)
+
+## Abrechnungswesen
+- Vorauszahlung → Akontozahlung
+- Zwangsvollstreckung → Betreibung
+```
+
+**Why this format?** Benchmarks (ImprovingAgents, 2025) show Markdown-KV outperforms CSV and JSONL by 16+ percentage points for LLM accuracy. Headers provide domain categorization (proven to help retrieval), arrow notation is token-compact (~1.1x baseline), and Markdown is native to Claude Code skills.
+
+### Size Limits
+
+| Size | Zone | Recommendation |
+|------|------|----------------|
+| 50–200 terms | Sweet spot | Reliable accuracy, low token cost |
+| 200–500 terms | Caution | Benefits from categorization |
+| 500+ terms | Danger | Use selective loading per domain |
+
+The core glossary (~200 terms) stays in the sweet spot. The full glossary (~1,200 terms) should be split by domain or loaded selectively.
+
+### Processing Pipeline
+
+1. **Extract** OpenThesaurus Swiss-tagged pairs (968 entries, already done → `openthesaurus-swiss-extract.json`)
+2. **Extract** Wikipedia Helvetismen via MediaWiki API (~603 entries, already downloaded)
+3. **Extract** Wiktionary Schweizer Hochdeutsch entries (765 entries, already downloaded)
+4. **Deduplicate and merge** → ~1,200–1,400 unique pairs
+5. **Curate a core glossary** of ~150–200 business-relevant terms (Hauswart, parkieren, Offerte, Traktandum, Betreibung, etc.)
+6. **Keep the full glossary** as a separate reference file for on-demand loading
 
 ## Sources
 
@@ -45,8 +134,17 @@ After downloading, run `sources/extract-openthesaurus.py` to extract Swiss-tagge
 | `COPYING` | OpenThesaurus license (LGPL) |
 | `DATABASE-README.txt` | OpenThesaurus database readme |
 
+## Next Steps
+
+1. **TDD verification** — test retrieval, application, and gap coverage with subagents (see plan Step 5)
+2. **Expand core glossary** to ~200 terms (currently 80 genuine Helvetismen pairs)
+3. **Improve Wikipedia parser** — some DE-DE fields are still empty or imperfect for edge-case bullet formats
+4. **Full glossary quality pass** — filter remaining same-term entries (e.g., "Liegenschaft → Liegenschaft")
+
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | — | 2026-03-17 | Initial setup: sources downloaded, update script created |
+| — | 2026-03-17 | README updated with research findings: architecture, rules, glossary strategy |
+| 1.0.0 | 2026-03-17 | SKILL.md written; glossary pipeline built; `references/glossary.md` (80 terms) and `references/glossary-full.md` (1,265 terms) generated |

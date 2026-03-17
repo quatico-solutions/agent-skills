@@ -37,7 +37,7 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 Skills are grouped into plugins. The table below must stay in sync with the plugin symlinks in `plugins/`.
 
-### essentials (20 skills)
+### essentials (21 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -60,6 +60,7 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 | `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
 | `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
+| `schweizer-schreibweise` | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
 
 ### bdd-methodology (3 skills)
