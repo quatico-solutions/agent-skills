@@ -37,7 +37,7 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 Skills are grouped into plugins. The table below must stay in sync with the plugin symlinks in `plugins/`.
 
-### essentials (21 skills)
+### essentials (22 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -47,6 +47,7 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 | `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
+| `java-development` | Java coding conventions: vavr functional style (Try, Option, List), named constants, JUnit 5 patterns (DisplayName, AssertJ, Nested), security patterns |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
 | `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) |
