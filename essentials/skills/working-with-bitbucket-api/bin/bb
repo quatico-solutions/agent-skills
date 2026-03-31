@@ -564,7 +564,7 @@ FLAGS
   --title <text>      PR title (required)
   --body <text>       PR description (CommonMark markdown — no GFM extensions)
   --head <branch>     Source branch (default: current branch)
-  --base <branch>     Target branch (default: main)
+  --base <branch>     Target branch (default: repo's default branch via API)
   --reviewer <user>   Add reviewer (repeatable; see REVIEWER RESOLUTION below)
   --close-branch      Close source branch after merge
   --draft             Create PR in draft state
@@ -603,8 +603,15 @@ HELP
   # Default head to current branch
   [[ -z "$head" ]] && head="$(git branch --show-current 2>/dev/null || echo "")"
   [[ -z "$head" ]] && { echo >&2 "error: cannot detect current branch — use --head"; exit 1; }
-  # Default base to main
-  [[ -z "$base" ]] && base="main"
+  # Default base to the repo's default branch (Bitbucket API → git fallback → "main")
+  if [[ -z "$base" ]]; then
+    local ws_tmp repo_tmp
+    ws_tmp="$(bb_workspace)" 2>/dev/null
+    repo_tmp="$(bb_repo)" 2>/dev/null
+    base="$(bb_api_call GET "/repositories/${ws_tmp}/${repo_tmp}" 2>/dev/null | jq -r '.mainbranch.name // empty')"
+    [[ -z "$base" ]] && base="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')"
+    [[ -z "$base" ]] && base="main"
+  fi
 
   local ws repo
   ws="$(bb_workspace)"
@@ -657,20 +664,21 @@ HELP
 }
 
 cmd_pr_edit() {
-  local pr_id="" title="" body="" add_reviewers=() remove_reviewers=()
+  local pr_id="" title="" body="" base="" add_reviewers=() remove_reviewers=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
         cat <<'HELP'
-Edit a pull request. Update title, description, or reviewers.
+Edit a pull request. Update title, description, target branch, or reviewers.
 
 USAGE
-  bb pr edit <id> [--title "..."] [--body "..."] [--add-reviewer <user>]
-             [--remove-reviewer <user>] [--json]
+  bb pr edit <id> [--title "..."] [--body "..."] [--base <branch>]
+             [--add-reviewer <user>] [--remove-reviewer <user>] [--json]
 
 FLAGS
   --title <text>            New PR title
   --body <text>             New PR description (CommonMark markdown — no GFM extensions)
+  --base <branch>           Change target/destination branch
   --add-reviewer <user>     Add reviewer (repeatable; see REVIEWER RESOLUTION below)
   --remove-reviewer <user>  Remove reviewer (repeatable)
   --json                    Output raw JSON
@@ -682,6 +690,7 @@ REVIEWER RESOLUTION
 
 EXAMPLES
   bb pr edit 42 --title "New title"
+  bb pr edit 42 --base develop
   bb pr edit 42 --add-reviewer "Alice Smith"
   bb pr edit 42 --remove-reviewer alice --add-reviewer bob
 HELP
@@ -689,6 +698,7 @@ HELP
         ;;
       --title)           title="$2"; shift 2 ;;
       --body)            body="$2"; shift 2 ;;
+      --base)            base="$2"; shift 2 ;;
       --add-reviewer)    add_reviewers+=("$2"); shift 2 ;;
       --remove-reviewer) remove_reviewers+=("$2"); shift 2 ;;
       --json)            JSON_OUTPUT=1; shift ;;
@@ -698,7 +708,7 @@ HELP
   done
 
   if [[ -z "$pr_id" ]]; then
-    echo >&2 "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--add-reviewer user] [--remove-reviewer user]"
+    echo >&2 "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--base branch] [--add-reviewer user] [--remove-reviewer user]"
     exit 1
   fi
 
@@ -721,6 +731,11 @@ HELP
   # Body/description
   if [[ -n "$body" ]]; then
     payload="$(echo "$payload" | jq --arg b "$body" '. + {description: $b}')"
+  fi
+
+  # Destination/base branch
+  if [[ -n "$base" ]]; then
+    payload="$(echo "$payload" | jq --arg b "$base" '. + {destination: {branch: {name: $b}}}')"
   fi
 
   # Reviewer changes
@@ -766,7 +781,7 @@ HELP
   fi
 
   if [[ "$payload" == "{}" ]]; then
-    echo >&2 "error: nothing to update — specify --title, --body, --add-reviewer, or --remove-reviewer"
+    echo >&2 "error: nothing to update — specify --title, --body, --base, --add-reviewer, or --remove-reviewer"
     exit 1
   fi
 
@@ -779,6 +794,7 @@ HELP
     echo "Updated PR #${pr_id}"
     # Show what changed
     [[ -n "$title" ]] && echo "  Title: $(echo "$result" | jq -r '.title')"
+    [[ -n "$base" ]] && echo "  Target: $(echo "$result" | jq -r '.destination.branch.name')"
     if [[ ${#add_reviewers[@]} -gt 0 || ${#remove_reviewers[@]} -gt 0 ]]; then
       echo "  Reviewers: $(echo "$result" | jq -r '[.reviewers[].display_name] | join(", ") // "(none)"')"
     fi

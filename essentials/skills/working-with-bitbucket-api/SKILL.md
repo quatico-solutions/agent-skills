@@ -44,7 +44,7 @@ Need to interact with Bitbucket?
 ├── Read PR comments? → bb pr view <id> --comments
 ├── Post comment? → bb pr comment
 ├── Create PR? → bb pr create
-├── Edit PR (reviewers, title, description)? → bb pr edit
+├── Edit PR (reviewers, title, description, target branch)? → bb pr edit
 ├── Approve PR? → bb pr review --approve
 ├── Merge PR? → bb pr merge
 ├── Close/decline PR? → bb pr close

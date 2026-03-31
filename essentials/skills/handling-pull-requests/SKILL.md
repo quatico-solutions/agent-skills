@@ -73,12 +73,15 @@ Generated with Claude Code
 ### Steps
 
 1. **Push branch** if not already pushed
-2. **Fill description** using template above
-3. **Add reviewers** as identified
-4. **Create PR**: `bb pr create --title "..." --body "..." --reviewer "Name"`
-5. **Verify** with `bb pr view <id>`
+2. **Determine target branch** — check the repo's default branch (usually `develop` for Quatico repos). Use `--base` if it differs from the repo default.
+3. **Fill description** using template above
+4. **Add reviewers** as identified
+5. **Create PR**: `bb pr create --title "..." --body "..." --base develop --reviewer "Name"`
+6. **Verify** with `bb pr view <id>` — **check the `Dest:` line** to confirm the target branch is correct
 
 > **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, and all PR lifecycle operations. See `bb --help`. Browser is only needed for image uploads. If `bb` is not installed, stop and guide the user through setup (`install-dependencies.sh` + `bb auth login`) before proceeding.
+
+> **Target branch matters.** `bb pr create` auto-detects the repo's default branch via the Bitbucket API. If auto-detection fails, it falls back to `main`. For repos that use `develop` (all Quatico repos), always pass `--base develop` explicitly to be safe. If a PR was created with the wrong target, fix it with `bb pr edit <id> --base develop`.
 
 ---
 
@@ -161,3 +164,5 @@ Example: *🤖 – Claude*
 | Forgetting AI signature | Always add `🤖 – Claude` to AI comments |
 | Using markdown bullets in rich text | Use toolbar buttons or platform skill guidance |
 | Not pushing after replying | Push after all replies done |
+| PR targeting wrong branch | Always verify `Dest:` in `bb pr view` output. Fix with `bb pr edit <id> --base develop` |
+| Assuming `main` is the target | Quatico repos use `develop`. Always pass `--base develop` or verify auto-detection |
