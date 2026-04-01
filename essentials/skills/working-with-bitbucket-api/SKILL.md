@@ -44,11 +44,13 @@ Need to interact with Bitbucket?
 ├── Read PR comments? → bb pr view <id> --comments
 ├── Post comment? → bb pr comment
 ├── Create PR? → bb pr create
-├── Edit PR (reviewers, title, description)? → bb pr edit
+├── Edit PR (reviewers, title, description, target branch)? → bb pr edit
+├── Mark draft PR as ready? → bb pr edit <id> --ready
 ├── Approve PR? → bb pr review --approve
 ├── Merge PR? → bb pr merge
 ├── Close/decline PR? → bb pr close
 ├── List/resolve tasks? → bb pr tasks
+├── Raw API call? → bb api <path>
 ├── Upload images to PR? → Browser (working-with-bitbucket-web)
 └── SSO-gated page? → Browser (last resort)
 ```
@@ -98,6 +100,20 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 ## Command Reference
 
 Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags, defaults, and examples.
+
+---
+
+## Raw API Access
+
+For API endpoints not yet wrapped by `bb` commands, use `bb api` as an escape hatch:
+
+```bash
+bb api /repositories/{ws}/{repo}                        # GET (default)
+bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
+bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"test"}'
+```
+
+`{ws}` and `{repo}` are auto-replaced with the current repo's workspace and slug.
 
 ---
 
