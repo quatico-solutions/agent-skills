@@ -6,11 +6,15 @@ license: MIT
 metadata:
   author: eins78
   repo: https://github.com/eins78/skills
-  version: 2.1.0
+  version: 2.1.1
 compatibility: Designed for Claude Code and Cursor
 ---
 
 # Session Wrap-up
+
+## Project-Specific Instructions
+
+If running in a project with a local `CLAUDE.md`, check for a **"Session Wrap Up"** heading. If found, follow those additional instructions alongside (and in addition to) the steps below.
 
 ## CRITICAL: Restore Full Session History First
 
