@@ -4,7 +4,7 @@ description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list,
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Working with Bitbucket API
@@ -19,18 +19,23 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 ## Prerequisites
 
-Before using any `bb` command, verify it is installed:
+Before using any `bb` command, verify it is installed **and working**:
 
 ```bash
-command -v bb
+bb --version 2>/dev/null
 ```
 
-**If `bb` is not installed:** Stop and tell the user:
-1. Run `install-dependencies.sh` from this skill directory
-2. Then run `bb auth login` to set up authentication
-3. Verify with `bb auth status`
+**If `bb` works:** Continue.
 
-Do NOT silently fall back to `curl` or browser automation. The user must opt in to the setup.
+**If `bb` is not found or fails** (e.g., stale symlink after plugin upgrade): Run `install-dependencies.sh` from this skill directory to install/repair it — no user approval needed, this is safe and idempotent:
+
+```bash
+bash "{{SKILL_DIR}}/install-dependencies.sh"
+```
+
+Then verify with `bb auth status`. If not logged in, tell the user to run `bb auth login`.
+
+Do NOT silently fall back to `curl` or browser automation.
 
 > **Exception:** If the user explicitly prefers browser automation, or if the project's CLAUDE.md says to use `working-with-bitbucket-web`, honor that preference.
 
