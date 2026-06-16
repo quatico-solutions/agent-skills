@@ -1,10 +1,11 @@
 ---
 name: test-driven-development
 description: "Use when implementing any feature or bugfix, before writing implementation code. Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow."
+license: MIT
 compatibility: claude-code, cursor
 metadata:
   version: "1.0.0"
-  source: "Based on a colleague's Jest Guide and Double Loop presentation"
+  source: "Based on internal Jest testing guides and double-loop BDD/TDD practice"
 ---
 
 # Test-Driven Development (TDD)
@@ -389,7 +390,7 @@ When working on user stories with acceptance criteria, TDD is the **inner loop**
 2. **Inner loop (TDD):** Red-Green-Refactor for each unit needed
 3. **Repeat** TDD cycles until BDD test passes
 
-See **double-loop-bdd-tdd** for the complete workflow.
+See the outer BDD loop (outside-in development) for the complete workflow.
 
 ## Testing Anti-Patterns
 
@@ -403,7 +404,6 @@ When adding mocks or test utilities, read [testing-anti-patterns.md](testing-ant
 | Skill | Use For |
 |-------|---------|
 | **jest-testing-conventions** | Jest-specific patterns (jest.fn/spyOn/mock, fake timers) |
-| **double-loop-bdd-tdd** | Outer BDD loop when implementing user stories |
 | **systematic-debugging** | When bugs slip through |
 
 ## Final Rule

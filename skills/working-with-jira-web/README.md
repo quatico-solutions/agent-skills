@@ -115,4 +115,4 @@ Same pattern as `working-with-bitbucket-web`: requires native browser integratio
 ## Related Skills
 
 - `working-with-bitbucket-web` — Browser tool selection pattern (SSO)
-- `quatico-sso-auth` — SSO authentication handling
+- SSO authentication tooling — SSO authentication handling

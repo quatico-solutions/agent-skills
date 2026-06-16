@@ -96,4 +96,4 @@ Gist file sort order: `!#-.` → digits → `_` → alpha. Name the demo `readme
 | `commit` | One commit near the end; squash on updates; droppable if merging without demo |
 | `handling-pull-requests` | Offer to embed demo highlights in PR description |
 | Plan review skills | Suggest adding a demo step when reviewing plans |
-| `double-loop-bdd-tdd` | BDD test screenshots feed into showboat documents |
+| BDD/acceptance tests | BDD/acceptance test screenshots feed into showboat documents |

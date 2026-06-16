@@ -44,7 +44,7 @@ Development notes for the executable demo document skill.
 - Justified exception to `--help` delegation — multi-tool workflow not discoverable from any single tool's help
 - `gh` is repo-agnostic: creates gists in user's GitHub account regardless of project host
 - Gist files sort: `!#-.` → digits → `_` → alpha. Since 2025-03, `readme.*` auto-pins to top — name the demo `readme.md` in the gist
-- Learned from two internal-project sessions (Feb 2026) where the naive approach failed
+- Learned from two internal sessions (early 2026) where the naive approach failed
 
 ### No Flowcharts
 

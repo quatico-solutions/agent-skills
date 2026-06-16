@@ -9,8 +9,8 @@ Development notes for the test-driven-development skill.
 Other skills reference external TDD resources (superpowers plugin), but we can't rely on everyone having those installed. This standalone skill:
 - Is self-contained (no external dependencies)
 - Follows proven LLM optimization patterns from superpowers
-- Adapts to our development method (a colleague's presentation)
-- Integrates with our double-loop-bdd-tdd skill as the inner loop
+- Adapts to our development method
+- Integrates as the inner loop within the outer BDD loop (outside-in development)
 
 ### Structure Pattern (from Superpowers)
 
@@ -25,11 +25,11 @@ Proven LLM-friendly patterns we kept:
 
 ### Key Adaptations
 
-**From a colleague's Presentation (slides 50-51):**
+**From the TDD flow presentation:**
 - TDD flow digraph with "revert if passes first run" decision point
 - Emphasis on watching tests fail correctly
 
-**From a colleague's Jest Guide:**
+**From the internal Jest guide:**
 - Naming conventions (testObj, target, mock*, actual, expected)
 - AAA pattern (Arrange-Act-Assert)
 - "Mocks are necessary evil" principle
@@ -38,7 +38,7 @@ Proven LLM-friendly patterns we kept:
 
 **What We Delegated:**
 - Jest-specific mocking patterns -> **jest-testing-conventions**
-- BDD outer loop details -> **double-loop-bdd-tdd**
+- BDD outer loop details -> the outer BDD loop (outside-in development)
 
 ### Digraph Visualization
 
@@ -52,8 +52,6 @@ Render the TDD flow digraph (requires `brew install graphviz`):
 | Source | URL | Content Used |
 |--------|-----|--------------|
 | Superpowers TDD skill | (structure reference) | LLM optimization patterns, anti-patterns file |
-| a colleague's Jest Guide | [Bitbucket](https://example.invalid/jest-guide/src/develop/jest-guide.md) | Naming conventions, AAA pattern, core testing rules |
-| Double Loop workshop | [Bitbucket](https://example.invalid/double-loop-tdd-with-bdd/) | TDD flow digraph, integration with BDD |
 | jest-testing-conventions | (this repo) | Jest-specific patterns (delegates there) |
 
 ## Testing Notes
@@ -72,7 +70,7 @@ Test in both environments:
 | Skill | Relationship |
 |-------|--------------|
 | jest-testing-conventions | Jest-specific patterns (jest.fn/spyOn/mock, fake timers) |
-| double-loop-bdd-tdd | Outer BDD loop—this skill is the inner TDD loop |
+| outer BDD loop (outside-in development) | This skill is the inner TDD loop |
 | commit-notation | Referenced for commits after completing work |
 
 ## Version History

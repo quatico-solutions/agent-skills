@@ -6,7 +6,7 @@
     "name": "Quatico Solutions AG"
   },
   "repository": "https://github.com/quatico-solutions/agent-skills",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "keywords": [
     "skills",
     "tdd",

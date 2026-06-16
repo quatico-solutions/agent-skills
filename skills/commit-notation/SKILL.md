@@ -4,16 +4,14 @@ description: "Format git commit messages using Quatico's notation (Arlo's v1 wit
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  source: https://docs.example.invalid/internal/development-practices/commit-notation
-  version: "1.1"
-metadata:
+  source: https://github.com/quatico-solutions/QuaticoCommitNotation
   version: "1.0.0"
 ---
 
 # Commit Notation
 
-> **Source of truth:** [docs.example.invalid — Commit Notation](https://docs.example.invalid/internal/development-practices/commit-notation)
-> **SYNC REQUIRED:** Changes here MUST stay consistent with the docs site. Changes incomplete without sync.
+> **Source of truth:** [QuaticoCommitNotation (GitHub)](https://github.com/quatico-solutions/QuaticoCommitNotation)
+> **SYNC REQUIRED:** Changes here MUST stay consistent with the canonical repo. Changes incomplete without sync.
 
 Quatico uses Arlo's Commit Notation v1 with extensions (T, E).
 

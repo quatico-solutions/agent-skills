@@ -1,10 +1,11 @@
 ---
 name: jest-testing-conventions
 description: "Use when writing unit tests with Jest. Covers naming conventions (testObj, target, mock, actual, expected), jest.fn/spyOn/mock mastery, clear/reset/restore differences, module mocking, fake timers, and AAA pattern. Triggers: Jest, unit test, mock, spy, stub, jest.fn, jest.spyOn, jest.mock."
+license: MIT
 compatibility: claude-code, cursor
 metadata:
   version: "1.1.0"
-  source: "Based on a colleague's Jest Guide"
+  source: "Based on an internal Jest testing guide"
 ---
 
 # Jest Testing Conventions
@@ -510,4 +511,4 @@ Before committing tests:
 | Skill | Use For |
 |-------|---------|
 | **test-driven-development** | TDD workflow—Red-Green-Refactor, when to test |
-| **double-loop-bdd-tdd** | Outer BDD loop for user stories |
+| outer BDD loop (outside-in development) | Outer BDD loop for user stories |

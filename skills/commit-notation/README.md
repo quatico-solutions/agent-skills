@@ -6,14 +6,13 @@ Development notes for the commit notation skill.
 
 | Resource | URL |
 |----------|-----|
-| Quatico Commit Notation (canonical) | https://docs.example.invalid/internal/development-practices/commit-notation |
+| QuaticoCommitNotation (canonical) | https://github.com/quatico-solutions/QuaticoCommitNotation |
 | Arlo's Commit Notation (original) | https://github.com/RefactoringCombos/ArlosCommitNotation |
-| Quatico GitHub fork (archived) | https://github.com/quatico-solutions/QuaticoCommitNotation |
 
 ## Key Design Decisions
 
 ### Source of Truth
-The canonical documentation is maintained at [docs.example.invalid](https://docs.example.invalid/internal/development-practices/commit-notation). SKILL.md and REFERENCE.md must stay in sync with that page.
+The canonical documentation is maintained at [QuaticoCommitNotation (GitHub)](https://github.com/quatico-solutions/QuaticoCommitNotation). SKILL.md and REFERENCE.md must stay in sync with that repo.
 
 ### Extension Letters
 Quatico extends Arlo's v1 notation with additional intention letters:

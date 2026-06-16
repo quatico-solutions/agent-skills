@@ -1,6 +1,7 @@
 ---
 name: triage-ticket
 description: "Use when the user wants to triage a JIRA ticket, analyze a bug report or feature request, assess ticket readiness, scope changes, or evaluate a ticket before sprint planning. Triggers: triage, ticket, bug report, feature request, JIRA, scope, assess ticket, ticket review, sprint planning prep."
+license: MIT
 compatibility: claude-code, cursor
 metadata:
   version: "1.0.0"

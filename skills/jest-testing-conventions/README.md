@@ -5,19 +5,19 @@ Development notes for the jest-testing-conventions skill.
 ## Design Decisions
 
 ### Source Material
-Based on "a colleague's pocket guide to Unit Testing with Jest" (`jest-guide.md`), converted to skill format with:
+Based on an internal pocket guide to unit testing with Jest, converted to skill format with:
 - Condensed explanations
-- Added naming conventions from internal-project
+- Added naming conventions from an internal project
 - Removed lengthy motivational sections
 - Added practical anti-patterns
 
 ### Scope
 - Focused on Jest-specific patterns
 - Complements TDD workflow skills
-- Inner loop of double-loop-bdd-tdd
+- Inner loop within the outer BDD loop (outside-in development)
 
 ### Naming Conventions
-Variables follow internal-project conventions:
+Variables follow internal project conventions:
 - `testObj` - The object being tested
 - `target` / `target*` - Function or mock being observed
 - `mock*` - Mock implementations
@@ -26,8 +26,7 @@ Variables follow internal-project conventions:
 
 ## Source Materials
 
-- a colleague's internal Jest pocket guide (internal document)
-- [internal-project cursor rules @ 888eb07](https://example.invalid/internal-project/src/888eb0724d798a806c341227c3613f47c34172e1/.cursor/rules.md) - internal-project naming conventions
+- Internal Jest pocket guide (internal document)
 - [Jest mock functions](https://jestjs.io/docs/mock-functions) - Official documentation
 
 ## Testing Notes
@@ -82,4 +81,4 @@ Current decision: Out of scope, may add later.
 
 ## Version History
 
-- **1.0** - Initial version based on jest-guide.md with internal-project conventions
+- **1.0** - Initial version based on the internal Jest guide with internal project conventions

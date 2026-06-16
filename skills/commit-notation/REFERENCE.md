@@ -1,8 +1,8 @@
 # Quatico Commit Notation Reference
 
-> **Source of truth:** [docs.example.invalid — Commit Notation](https://docs.example.invalid/internal/development-practices/commit-notation)
-> This file mirrors that page, optimized for Claude's context window.
-> **SYNC REQUIRED:** Changes here MUST stay consistent with the docs site. Changes incomplete without sync.
+> **Source of truth:** [QuaticoCommitNotation (GitHub)](https://github.com/quatico-solutions/QuaticoCommitNotation)
+> This file mirrors that repo, optimized for Claude's context window.
+> **SYNC REQUIRED:** Changes here MUST stay consistent with the canonical repo. Changes incomplete without sync.
 
 Based on Arlo's Commit Notation v1 with Quatico extensions.
 
