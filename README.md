@@ -11,12 +11,6 @@ Shared skills for AI-assisted development with Claude Code and Cursor.
 /plugin install quatico-essentials@quatico-marketplace
 ```
 
-Optional plugins:
-
-```
-/plugin install agent-admin@quatico-marketplace
-```
-
 ### Cursor ([team marketplace](https://cursor.com/docs/plugins#team-marketplaces))
 
 Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `quatico-essentials` as required for the team.
@@ -34,7 +28,7 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 ## Skills
 
-Skills are grouped into plugins. The table below must stay in sync with the skill directories in each plugin.
+The `quatico-essentials` plugin bundles all skills below. The table must stay in sync with the skill directories.
 
 ### quatico-essentials (17 skills)
 
@@ -57,14 +51,6 @@ Skills are grouped into plugins. The table below must stay in sync with the skil
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | `schweizer-schreibweise` | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
-
-### agent-admin (3 skills)
-
-| Skill | Description |
-|-------|-------------|
-| `agents-md-maintenance` | Maintain AGENTS.md hub-and-spoke integrity: detect drift, broken references, duplicates |
-| `consolidate-agent-rules` | Transform verbose agent rules into AGENTS.md hub-and-spoke pattern with 3 verification loops |
-| `init-agent` | Systematic CLAUDE.md creation through project exploration, ecosystem discovery, and rule synthesis |
 
 **Usage tips:**
 

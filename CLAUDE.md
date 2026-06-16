@@ -8,10 +8,9 @@ Each plugin is a top-level directory containing its own skills and commands:
 
 ```
 quatico-essentials/  ← 17 skills + 1 command
-agent-admin/         ← 3 skills
 ```
 
-The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists all plugins. No symlinks — each skill lives directly in its plugin directory.
+The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists the plugin. No symlinks — each skill lives directly in its plugin directory.
 
 ## Versioning
 
@@ -48,7 +47,7 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 
 **Every change to skills or plugin membership MUST update `README.md`.**
 
-The skills table in README.md is grouped by plugin (quatico-essentials, agent-admin). When you:
+The skills table in README.md lists the quatico-essentials plugin's skills. When you:
 
 - **Add a skill**: add it to the correct plugin's `skills/` directory and the matching README table
 - **Remove a skill**: remove from the directory and the table
