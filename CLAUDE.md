@@ -8,7 +8,6 @@ Each plugin is a top-level directory containing its own skills and commands:
 
 ```
 essentials/          ← 20 skills + 1 command
-bdd-methodology/     ← 3 skills
 agent-admin/         ← 3 skills
 ```
 
@@ -49,7 +48,7 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 
 **Every change to skills or plugin membership MUST update `README.md`.**
 
-The skills table in README.md is grouped by plugin (essentials, bdd-methodology, agent-admin). When you:
+The skills table in README.md is grouped by plugin (essentials, agent-admin). When you:
 
 - **Add a skill**: add it to the correct plugin's `skills/` directory and the matching README table
 - **Remove a skill**: remove from the directory and the table

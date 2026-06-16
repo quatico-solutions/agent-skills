@@ -2,11 +2,20 @@
   "name": "essentials",
   "displayName": "Essentials",
   "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-  "version": "1.3.0",
-  "author": { "name": "Quatico Solutions AG" },
+  "version": "2.0.0",
+  "author": {
+    "name": "Quatico Solutions AG"
+  },
   "repository": "https://github.com/quatico-solutions/agent-skills",
   "license": "UNLICENSED",
-  "keywords": ["skills", "tdd", "commit-notation", "bitbucket", "jira", "quatico"],
+  "keywords": [
+    "skills",
+    "tdd",
+    "commit-notation",
+    "bitbucket",
+    "jira",
+    "quatico"
+  ],
   "skills": "./skills/",
   "commands": "./commands/"
 }

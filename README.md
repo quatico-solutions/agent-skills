@@ -14,7 +14,6 @@ Shared skills for AI-assisted development with Claude Code and Cursor.
 Optional plugins:
 
 ```
-/plugin install bdd-methodology@quatico-marketplace
 /plugin install agent-admin@quatico-marketplace
 ```
 
@@ -35,9 +34,9 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 ## Skills
 
-Skills are grouped into plugins. The table below must stay in sync with the plugin symlinks in `plugins/`.
+Skills are grouped into plugins. The table below must stay in sync with the skill directories in each plugin.
 
-### essentials (22 skills)
+### essentials (20 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -50,12 +49,10 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 | `java-development` | Java coding conventions: vavr functional style (Try, Option, List), named constants, JUnit 5 patterns (DisplayName, AssertJ, Nested), security patterns |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
-| `quatico-sso-auth` | Handles SSO authentication for internal tools (Keycloak + Google SSO) |
 | `shared-element-development` | Patterns and decision-making for component sharing across projects |
 | `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
 | `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
 | `storybook-component-docs` | Conventions for documenting components in Storybook with proper naming, descriptions, and cross-references |
-| `styling-wbcomponents` | Theming with starter-theme starter: multi-tier token system, DS token theming, shadow DOM patterns |
 | `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
 | `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
@@ -63,14 +60,6 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 | `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | `schweizer-schreibweise` | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 | `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
-
-### bdd-methodology (3 skills)
-
-| Skill | Description |
-|-------|-------------|
-| `double-loop-bdd-tdd` | Outside-in development with nested BDD/TDD loops for user stories and integration work |
-| `implementing-bdd-scenarios` | Step definitions, Page Objects, async handling, selectors, waiting strategies |
-| `writing-bdd-scenarios` | Gherkin feature files: structure, Given-When-Then, business language, data tables, tags |
 
 ### agent-admin (3 skills)
 
@@ -84,7 +73,6 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 
 - `branch-and-commit`: `"organize my uncommitted changes into commits"`
 - `writing-clearly-and-concisely`: Works on any prose — `"rewrite @README.md using /writing-clearly-and-concisely"`
-- `styling-wbcomponents`: Also useful for reviews, not just development — `"review this PR according to /styling-wbcomponents"`
 - `handling-pull-requests`: Can drive review responses end-to-end — `"use /chrome to address my review comments"`
 - `challenge-the-plan`: Accepts a plan path as argument, or auto-searches for PLAN/SPEC/STORY files
 - `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
@@ -92,7 +80,7 @@ Skills are grouped into plugins. The table below must stay in sync with the plug
 - `story-tracking`: `"continue on FOOBAR-1234"` or `"create a story for the WCAG audit"`
 - `story-tracking` + `markdown`: Complementary — `story-tracking` covers structure, `markdown` covers syntax
 - `working-with-bitbucket-api` + `working-with-bitbucket-web`: Complementary — API skill handles PR operations and source browsing via `bb` CLI, web skill handles rich text and images. Run `install-dependencies.sh` to set up `bb`
-- `working-with-jira-web`, `quatico-sso-auth`: Require native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
+- `working-with-jira-web`: Requires native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 
 ## Creating Skills
 
