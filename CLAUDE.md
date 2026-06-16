@@ -4,13 +4,16 @@ Agent instructions for the `agent-skills` repository.
 
 ## Repository Structure
 
-Each plugin is a top-level directory containing its own skills and commands:
+A single plugin (`quatico-skills`) over a flat skill pool:
 
 ```
-quatico-essentials/  ← 17 skills + 1 command
+skills/          ← 17 skills (flat pool, one dir per skill)
+commands/        ← 1 command
+.claude-plugin/  ← marketplace.json + plugin.json
+.cursor-plugin/  ← marketplace.json + plugin.json
 ```
 
-The marketplace (`.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`) lists the plugin. No symlinks — each skill lives directly in its plugin directory.
+Both marketplace manifests define one plugin, `quatico-skills`, with `source: "./"`; skills are discovered from `skills/` and commands from `commands/`. No symlinks. Layout follows the flat-pool convention of `anthropics/skills`.
 
 ## Versioning
 
@@ -35,7 +38,7 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 - Every skill has `SKILL.md` (frontmatter + instructions) and `README.md` (development notes)
 - Optional: `REFERENCE.md`, `install-dependencies.sh`, `diagrams/`
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
-- When adding a new skill, place it in the appropriate plugin's `skills/` directory
+- When adding a new skill, place it in the top-level `skills/` directory
 
 ### Frontmatter Rules
 
@@ -47,10 +50,9 @@ Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (se
 
 **Every change to skills or plugin membership MUST update `README.md`.**
 
-The skills table in README.md lists the quatico-essentials plugin's skills. When you:
+The skills table in README.md lists the `quatico-skills` plugin's skills. When you:
 
-- **Add a skill**: add it to the correct plugin's `skills/` directory and the matching README table
-- **Remove a skill**: remove from the directory and the table
-- **Move a skill between plugins**: move the directory and update both tables
+- **Add a skill**: add it to `skills/` and the README table (linked to its directory)
+- **Remove a skill**: remove from `skills/` and the table
 
-The README tables must always match the actual contents of each plugin's `skills/` directory.
+The README table must always match the actual contents of the `skills/` directory.

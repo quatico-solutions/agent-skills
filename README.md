@@ -8,12 +8,12 @@ Shared skills for AI-assisted development with Claude Code and Cursor.
 
 ```
 /plugin marketplace add https://github.com/quatico-solutions/agent-skills.git
-/plugin install quatico-essentials@quatico-marketplace
+/plugin install quatico-skills@quatico-marketplace
 ```
 
 ### Cursor ([team marketplace](https://cursor.com/docs/plugins#team-marketplaces))
 
-Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `quatico-essentials` as required for the team.
+Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `quatico-skills` as required for the team.
 
 ### Legacy (manual)
 
@@ -28,29 +28,30 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 ## Skills
 
-The `quatico-essentials` plugin bundles all skills below. The table must stay in sync with the skill directories.
+The `quatico-skills` plugin bundles all 17 skills below, each linked to its
+directory. The table must stay in sync with the `skills/` directory.
 
-### quatico-essentials (17 skills)
+### quatico-skills (17 skills)
 
 | Skill | Description |
 |-------|-------------|
-| `bye` | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
-| `branch-and-commit` | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
-| `challenge-the-plan` | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
-| `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
-| `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
-| `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
-| `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
-| `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
-| `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
-| `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
-| `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
-| `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
-| `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
-| `working-with-bitbucket-web` | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
-| `working-with-jira-web` | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
-| `schweizer-schreibweise` | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
-| `writing-clearly-and-concisely` | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
+| [`bye`](skills/bye) | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
+| [`branch-and-commit`](skills/branch-and-commit) | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
+| [`challenge-the-plan`](skills/challenge-the-plan) | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
+| [`commit`](skills/commit) | When and what to commit: timing, atomic commits, git hooks, skip policies |
+| [`commit-notation`](skills/commit-notation) | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
+| [`handling-pull-requests`](skills/handling-pull-requests) | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
+| [`jest-testing-conventions`](skills/jest-testing-conventions) | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
+| [`markdown`](skills/markdown) | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
+| [`show-your-work`](skills/show-your-work) | Executable demo documents proving completed work (showboat + rodney) |
+| [`story-tracking`](skills/story-tracking) | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
+| [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
+| [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
+| [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
+| [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
+| [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
+| [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
+| [`writing-clearly-and-concisely`](skills/writing-clearly-and-concisely) | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
 
 **Usage tips:**
 
