@@ -8,7 +8,7 @@ Shared skills for AI-assisted development with Claude Code and Cursor.
 
 ```
 /plugin marketplace add https://github.com/quatico-solutions/agent-skills.git
-/plugin install essentials@quatico-marketplace
+/plugin install quatico-essentials@quatico-marketplace
 ```
 
 Optional plugins:
@@ -19,7 +19,7 @@ Optional plugins:
 
 ### Cursor ([team marketplace](https://cursor.com/docs/plugins#team-marketplaces))
 
-Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `essentials` as required for the team.
+Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `quatico-essentials` as required for the team.
 
 ### Legacy (manual)
 
@@ -36,7 +36,7 @@ for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n
 
 Skills are grouped into plugins. The table below must stay in sync with the skill directories in each plugin.
 
-### essentials (20 skills)
+### quatico-essentials (17 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -46,13 +46,10 @@ Skills are grouped into plugins. The table below must stay in sync with the skil
 | `commit` | When and what to commit: timing, atomic commits, git hooks, skip policies |
 | `commit-notation` | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
 | `handling-pull-requests` | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
-| `java-development` | Java coding conventions: vavr functional style (Try, Option, List), named constants, JUnit 5 patterns (DisplayName, AssertJ, Nested), security patterns |
 | `jest-testing-conventions` | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | `markdown` | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
-| `shared-element-development` | Patterns and decision-making for component sharing across projects |
 | `show-your-work` | Executable demo documents proving completed work (showboat + rodney) |
 | `story-tracking` | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
-| `storybook-component-docs` | Conventions for documenting components in Storybook with proper naming, descriptions, and cross-references |
 | `test-driven-development` | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | `triage-ticket` | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
 | `working-with-bitbucket-api` | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |

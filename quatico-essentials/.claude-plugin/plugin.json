@@ -1,6 +1,5 @@
 {
-  "name": "essentials",
-  "displayName": "Essentials",
+  "name": "quatico-essentials",
   "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
   "version": "2.0.0",
   "author": {
@@ -15,7 +14,5 @@
     "bitbucket",
     "jira",
     "quatico"
-  ],
-  "skills": "./skills/",
-  "commands": "./commands/"
+  ]
 }

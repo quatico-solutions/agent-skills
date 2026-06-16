@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "essentials",
-      "source": "./essentials",
+      "name": "quatico-essentials",
+      "source": "./quatico-essentials",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
       "version": "2.0.0"
     },
