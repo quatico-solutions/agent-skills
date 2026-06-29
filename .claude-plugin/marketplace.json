@@ -10,9 +10,183 @@
   "plugins": [
     {
       "name": "quatico-skills",
-      "source": "./",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "2.0.0"
+      "version": "2.0.1",
+      "source": "./",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "branch-and-commit",
+      "description": "Intelligently groups and commits changes based on revertibility, intention, and logical dependencies. Optionally creates feature branches. Orders commits for optimal review and prepares for PR usin...",
+      "version": "1.0.0",
+      "source": "./skills/branch-and-commit",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "bye",
+      "description": "Use when the user says /bye, \\wrap up\\, \\end session\\, or similar. Reconstructs full session history including compacted context, creates a sessionlog, commits changes, and summarizes next steps.",
+      "version": "2.1.1",
+      "source": "./skills/bye",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "challenge-the-plan",
+      "description": "Systematically interrogate implementation plans through adaptive depth interviews covering technical, domain, UX, and non-functional dimensions to uncover gaps and validate decisions. Use when: use...",
+      "version": "1.0.0",
+      "source": "./skills/challenge-the-plan",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "commit",
+      "description": "When and what to commit. Covers timing, atomic commits, and git hooks. Use when: making commits, deciding when to commit, preparing changes. Triggers: commit, commit this, commit changes, git commi...",
+      "version": "1.0.0",
+      "source": "./skills/commit",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "commit-notation",
+      "description": "Format git commit messages using Quaticos notation (Arlos v1 with extensions). Use when: committing changes, making commits, creating commits, writing commit messages, reviewing commits, or analyzi...",
+      "version": "1.0.0",
+      "source": "./skills/commit-notation",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "handling-pull-requests",
+      "description": "Guides PR workflows: creating PRs, addressing review feedback, replying to comments. Use when creating PRs, responding to code review, or managing PR lifecycle. Triggers: create PR, open PR, new PR...",
+      "version": "1.0.0",
+      "source": "./skills/handling-pull-requests",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "jest-testing-conventions",
+      "description": "Use when writing unit tests with Jest. Covers naming conventions (testObj, target, mock, actual, expected), jest.fn/spyOn/mock mastery, clear/reset/restore differences, module mocking, fake timers,...",
+      "version": "1.1.0",
+      "source": "./skills/jest-testing-conventions",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "markdown",
+      "description": "Use when writing or reviewing any markdown file in this workspace. Quick reference for supported syntax (CommonMark + Bitbucket safe).",
+      "version": "1.0.0",
+      "source": "./skills/markdown",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "schweizer-schreibweise",
+      "description": "Use when writing or reviewing German-language content for Swiss audiences — orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar (Perfekt, dative), vocabulary ...",
+      "version": "1.0.1",
+      "source": "./skills/schweizer-schreibweise",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "show-your-work",
+      "description": "Use when the user says \\show your work\\, \\make a demo\\, \\prove it works\\, \\demonstrate the feature\\, \\capture the evidence\\, \\showboat\\, or \\rodney\\. Also triggers on: demo this, demo time, show wh...",
+      "version": "1.0.0",
+      "source": "./skills/show-your-work",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "story-tracking",
+      "description": "Use when user says \\continue on\\, \\work on\\, \\create story\\, \\new story\\, \\resume\\, or references a JIRA ticket for multi-session work. NOT for Storybook UI component stories.",
+      "version": "1.0.0",
+      "source": "./skills/story-tracking",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "test-driven-development",
+      "description": "Use when implementing any feature or bugfix, before writing implementation code. Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow.",
+      "version": "1.0.0",
+      "source": "./skills/test-driven-development",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "triage-ticket",
+      "description": "Use when the user wants to triage a JIRA ticket, analyze a bug report or feature request, assess ticket readiness, scope changes, or evaluate a ticket before sprint planning. Triggers: triage, tick...",
+      "version": "1.0.0",
+      "source": "./skills/triage-ticket",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "working-with-bitbucket-api",
+      "description": "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge) and source browsing (ls, cat, branch, tag) including markdown descriptions. Browser o...",
+      "version": "1.1.1",
+      "source": "./skills/working-with-bitbucket-api",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "working-with-bitbucket-web",
+      "description": "Last resort for Bitbucket operations that `bb` CLI cannot handle (image uploads, SSO-gated pages). Prefer `working-with-bitbucket-api` for all PR operations. Triggers: bitbucket UI, bitbucket web, ...",
+      "version": "1.5.0",
+      "source": "./skills/working-with-bitbucket-web",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "working-with-jira-web",
+      "description": "Navigates JIRA for ticket operations. Primary: Atlassian MCP for CRUD. Fallback: Browser for visual verification. Triggers: JIRA, create ticket, edit ticket, link issues, JQL, fix version.",
+      "version": "2.1.0",
+      "source": "./skills/working-with-jira-web",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "writing-clearly-and-concisely",
+      "description": "Apply Strunks timeless writing rules to ANY prose humans will read—documentation, commit messages, error messages, explanations, reports, or UI text. Makes your writing clearer, stronger, and more ...",
+      "version": "1.0.0",
+      "source": "./skills/writing-clearly-and-concisely",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
     }
   ]
 }

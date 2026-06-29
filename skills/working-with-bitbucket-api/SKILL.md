@@ -4,7 +4,7 @@ description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list,
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Working with Bitbucket API
