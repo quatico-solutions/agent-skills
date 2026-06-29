@@ -1,0 +1,11 @@
+---
+"@quatico-solutions/agent-skills": patch
+---
+
+Brief description of change
+
+<!--
+bumps:
+  skills:
+    skill-name: patch
+-->
