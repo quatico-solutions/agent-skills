@@ -54,16 +54,21 @@ else
   release_notes="Release v${VERSION}"
 fi
 
-# Create GitHub Release
+# Create GitHub Release (idempotent: skip if it already exists — the publish step
+# re-runs on every changeset-free push to main)
 if command -v gh >/dev/null 2>&1; then
-  tmp_notes=$(mktemp)
-  echo "$release_notes" > "$tmp_notes"
-  gh release create "v${VERSION}" \
-    --title "v${VERSION}" \
-    --notes-file "$tmp_notes" \
-    --latest
-  rm -f "$tmp_notes"
-  echo "  ✓ Created GitHub Release v${VERSION}"
+  if gh release view "v${VERSION}" >/dev/null 2>&1; then
+    echo "  Release v${VERSION} already exists — skipping"
+  else
+    tmp_notes=$(mktemp)
+    echo "$release_notes" > "$tmp_notes"
+    gh release create "v${VERSION}" \
+      --title "v${VERSION}" \
+      --notes-file "$tmp_notes" \
+      --latest
+    rm -f "$tmp_notes"
+    echo "  ✓ Created GitHub Release v${VERSION}"
+  fi
 else
   echo "  WARN: gh CLI not available — skipping GitHub Release creation"
   echo "  Run manually: gh release create v${VERSION} --title 'v${VERSION}' --notes-file CHANGELOG.md"
