@@ -1057,7 +1057,10 @@ HELP
 
   if [[ "$approve" -eq 1 ]]; then
     local result
-    result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/approve")"
+    # Send an empty JSON object: bb_api_call always sets Content-Type:
+    # application/json, and Bitbucket rejects a POST that advertises a JSON body
+    # but sends none with HTTP 400. /approve takes no fields, so {} is correct.
+    result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/approve" -d '{}')"
     if [[ "${JSON_OUTPUT:-}" != "1" ]]; then
       echo "Approved PR #${pr_id}"
     else
@@ -1176,7 +1179,9 @@ HELP
   repo="$(bb_repo)"
 
   local result
-  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/decline")"
+  # Empty body + Content-Type: application/json would 400 (same as /approve);
+  # send {} explicitly.
+  result="$(bb_api_call POST "/repositories/${ws}/${repo}/pullrequests/${pr_id}/decline" -d '{}')"
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     echo "$result" | jq .
