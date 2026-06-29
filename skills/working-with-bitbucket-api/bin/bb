@@ -351,12 +351,21 @@ HELP
     # Interactive mode
     [[ -z "$email" ]] && read -rp "Atlassian account email: " email
     echo ""
-    echo "Opening Atlassian API token page..."
-    echo "  Select these scopes:"
-    echo "    read:user:bitbucket, read:repository:bitbucket,"
-    echo "    read:pullrequest:bitbucket, write:pullrequest:bitbucket,"
-    echo "    write:repository:bitbucket"
-    open "https://id.atlassian.com/manage-profile/security/api-tokens"
+    local token_url="https://id.atlassian.com/manage-profile/security/api-tokens"
+    echo "Create an API token and select these scopes:"
+    echo ""
+    echo "  - read:user:bitbucket"
+    echo "  - read:repository:bitbucket"
+    echo "  - read:pullrequest:bitbucket"
+    echo "  - write:pullrequest:bitbucket"
+    echo "  - write:repository:bitbucket"
+    echo ""
+    echo "Token page: ${token_url}"
+    echo ""
+    read -rp "Open in browser? [Y/n] " open_browser
+    if [[ "${open_browser:-Y}" =~ ^[Yy]?$ ]]; then
+      open "$token_url"
+    fi
     echo ""
     read -rsp "Paste your API token: " token
     echo ""
