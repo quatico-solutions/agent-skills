@@ -2,28 +2,39 @@
 
 Shared skills for AI-assisted development with Claude Code and Cursor.
 
-## Setup
+## Install
 
-### Claude Code (plugin)
+Install as a plugin (recommended — auto-updates) or via the `skills` CLI.
+
+### Claude Code
 
 ```
-/plugin marketplace add https://github.com/quatico-solutions/agent-skills.git
+/plugin marketplace add quatico-solutions/agent-skills
 /plugin install quatico-skills@quatico-marketplace
 ```
 
-### Cursor ([team marketplace](https://cursor.com/docs/plugins#team-marketplaces))
+### Cursor
 
-Plugins are available via the Quatico team marketplace in Cursor Settings > Plugins. Your admin can set `quatico-skills` as required for the team.
+In **Settings → Plugins**, add a marketplace and paste this repo URL:
 
-### Legacy (manual)
-
-```bash
-pnpx skills add quatico-solutions/agent-skills -g -a claude-code --all -y && pnpx skills add eins78/skills -g -a claude-code -s bye -y
+```
+https://github.com/quatico-solutions/agent-skills
 ```
 
+Then install the **quatico-skills** plugin. It auto-updates when the marketplace refreshes.
+
+### Any agent (`skills` CLI)
+
+The [`skills`](https://www.npmjs.com/package/skills) CLI installs into Claude Code, Cursor, and other agents — it prompts for which skills and which agents:
+
 ```bash
-# Cursor (copies skills for Cursor compatibility)
-for s in ~/.agents/skills/*/; do n=$(basename "$s"); rm -rf ~/.cursor/skills/"$n" && cp -r "$s" ~/.cursor/skills/"$n"; done
+npx skills@latest add quatico-solutions/agent-skills
+```
+
+Non-interactive (all skills, one agent):
+
+```bash
+npx skills add https://github.com/quatico-solutions/agent-skills.git --global --agent claude-code --all --yes
 ```
 
 ## Skills
