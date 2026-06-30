@@ -1,0 +1,15 @@
+{
+  "values": [
+    {
+      "name": "v1.0.0",
+      "target": {
+        "hash": "abc123def456",
+        "message": "Release 1.0.0",
+        "date": "2025-01-01T10:00:00+00:00",
+        "author": { "raw": "Alice <alice@example.com>" }
+      }
+    }
+  ],
+  "page": 1,
+  "size": 1
+}

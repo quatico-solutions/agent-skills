@@ -1,0 +1,33 @@
+{
+  "values": [
+    {
+      "id": 40,
+      "title": "Initial setup",
+      "state": "MERGED",
+      "draft": false,
+      "author": {
+        "display_name": "Alice Smith",
+        "nickname": "alice",
+        "account_id": "557058:aaaa0000-1111-2222-3333-444455556666",
+        "uuid": "{aaaa0000-1111-2222-3333-444455556666}"
+      },
+      "source": { "branch": { "name": "feature/init" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": [
+        {
+          "display_name": "Bob Jones",
+          "nickname": "bob",
+          "account_id": "557058:bbbb0000-1111-2222-3333-444455556666",
+          "uuid": "{bbbb0000-1111-2222-3333-444455556666}"
+        }
+      ],
+      "created_on": "2025-01-10T10:00:00.000000+00:00",
+      "updated_on": "2025-01-12T14:00:00.000000+00:00",
+      "description": "Project setup",
+      "close_source_branch": true,
+      "links": { "html": { "href": "https://bitbucket.org/testws/testrepo/pull-requests/40" } }
+    }
+  ],
+  "page": 1,
+  "size": 1
+}

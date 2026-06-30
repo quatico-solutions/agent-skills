@@ -1,0 +1,25 @@
+{
+  "values": [
+    {
+      "update": {
+        "state": "OPEN",
+        "date": "2025-01-15T10:00:00.000000+00:00",
+        "author": {
+          "display_name": "Alice Smith",
+          "nickname": "alice"
+        }
+      }
+    },
+    {
+      "approval": {
+        "date": "2025-01-15T14:00:00.000000+00:00",
+        "user": {
+          "display_name": "Bob Jones",
+          "nickname": "bob"
+        }
+      }
+    }
+  ],
+  "page": 1,
+  "size": 2
+}

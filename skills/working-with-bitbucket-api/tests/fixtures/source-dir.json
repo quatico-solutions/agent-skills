@@ -1,0 +1,9 @@
+{
+  "values": [
+    { "path": "src", "type": "commit_directory", "size": 0 },
+    { "path": "README.md", "type": "commit_file", "size": 1234 },
+    { "path": "package.json", "type": "commit_file", "size": 567 }
+  ],
+  "page": 1,
+  "size": 3
+}

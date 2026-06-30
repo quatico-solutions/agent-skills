@@ -1,0 +1,22 @@
+{
+  "values": [
+    {
+      "content_matches": [
+        {
+          "lines": [
+            { "line": 10, "segments": [{ "text": "function login() {" }] }
+          ]
+        }
+      ],
+      "file": {
+        "path": "src/auth.ts",
+        "type": "commit_file",
+        "links": {
+          "self": { "href": "https://api.bitbucket.org/2.0/repositories/testws/testrepo/src/abc123/src/auth.ts" }
+        }
+      }
+    }
+  ],
+  "page": 1,
+  "size": 1
+}

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Routes bb calls through bash -x for xtrace coverage; passes everything else
+# to real bash. Intended to be placed on PATH as "bash" so that
+# run-bb.ts's execFile('bash', [BB_PATH, ...]) is transparently wrapped.
+#
+# IMPORTANT: shebang MUST be a direct path (/bin/bash), NOT /usr/bin/env bash.
+# This script is placed on PATH *as* "bash", so env bash would find this
+# script again — infinite recursion.
+
+REAL_BASH="$(which -a bash | grep -v "$0" | head -1)"
+
+if [[ "$1" == *"/bin/bb" ]]; then
+  XTRACE_LOG="${BB_XTRACE_LOG:-.xtrace.log}"
+  exec 3>>"$XTRACE_LOG"
+  export BASH_XTRACEFD=3
+  export PS4='+${BASH_SOURCE}:${LINENO}: '
+  exec "$REAL_BASH" -x "$@"
+else
+  exec "$REAL_BASH" "$@"
+fi
