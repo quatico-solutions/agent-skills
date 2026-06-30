@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 2.0.3
+
+### Patch Changes
+
+- [#6](https://github.com/quatico-solutions/agent-skills/pull/6) [`28c6d5a`](https://github.com/quatico-solutions/agent-skills/commit/28c6d5ad364db3097a4e0d929a934cf6c41cb355) Thanks [@eins78](https://github.com/eins78)! - working-with-bitbucket-api: add a loopback-restricted `BB_API_URL` test seam (refuses non-local hosts so the auth token can't be exfiltrated), guard `bb pr comment --line` against a missing `--file`, and add a 149-test integration suite (node:test + mock server) covering every `bb` command and flag.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 2.0.2
 
 ### Patch Changes
