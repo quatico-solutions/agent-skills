@@ -84,6 +84,15 @@ node --import tsx --test pr-list.test.ts
 pnpm test:bb
 ```
 
+The `test` script discovers test files with `find` rather than a shell glob, so it runs identically under any Node version and any shell (the `node --test` flag only learned to expand globs itself in Node 21).
+
+### Continuous integration
+
+`.github/workflows/bb-tests.yml` runs this suite on every pull request that
+touches `skills/working-with-bitbucket-api/**` (and on pushes to `main`). PRs
+that don't touch the CLI skip it. The runner only needs `curl` and `jq`
+(pre-installed on `ubuntu-latest`) plus the dev dependencies in this directory.
+
 ## Conventions
 
 ### File naming

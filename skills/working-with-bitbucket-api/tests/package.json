@@ -2,8 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import tsx --test ./**/*.test.ts",
-    "test:coverage": "rm -rf ../coverage .xtrace.log .bashcov-bin && mkdir -p .bashcov-bin && ln -sf \"$(pwd)/.build/dev/bash-coverage-wrapper\" .bashcov-bin/bash && BB_XTRACE_LOG=\"$(pwd)/.xtrace.log\" PATH=\"$(pwd)/.bashcov-bin:$PATH\" node --import tsx --test --test-concurrency 4 --test-timeout 30000 ./**/*.test.ts && node --import tsx .build/dev/generate-coverage.ts"
+    "test": "node --import tsx --test $(find . -name '*.test.ts' -not -path './node_modules/*')",
+    "test:coverage": "rm -rf ../coverage .xtrace.log .bashcov-bin && mkdir -p .bashcov-bin && ln -sf \"$(pwd)/.build/dev/bash-coverage-wrapper\" .bashcov-bin/bash && BB_XTRACE_LOG=\"$(pwd)/.xtrace.log\" PATH=\"$(pwd)/.bashcov-bin:$PATH\" node --import tsx --test --test-concurrency 4 --test-timeout 30000 $(find . -name '*.test.ts' -not -path './node_modules/*') && node --import tsx .build/dev/generate-coverage.ts"
   },
   "devDependencies": {
     "express": "^5",
