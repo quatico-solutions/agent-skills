@@ -3,7 +3,21 @@
 set -euo pipefail
 
 BB_VERSION="1.0.0"
-BB_API="https://api.bitbucket.org/2.0"
+# BB_API_URL lets the test suite redirect API calls to a local mock server.
+# It is restricted to loopback so it can never be used to exfiltrate the
+# auth token (sent as HTTP Basic on every call) to a remote host — there is
+# no legitimate reason to point the Bitbucket Cloud CLI at a non-local host.
+# Unset in production, where BB_API is the real Bitbucket API.
+if [[ -n "${BB_API_URL:-}" ]]; then
+  if [[ "$BB_API_URL" =~ ^https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/|$) ]]; then
+    BB_API="$BB_API_URL"
+  else
+    echo >&2 "error: BB_API_URL must point to a loopback host (localhost, 127.0.0.1, ::1)"
+    exit 1
+  fi
+else
+  BB_API="https://api.bitbucket.org/2.0"
+fi
 
 # --- Auth -------------------------------------------------------------------
 
@@ -991,6 +1005,11 @@ HELP
   # Create a comment
   if [[ -z "$body" ]]; then
     echo >&2 "error: --body is required (or use --resolve / --unresolve)"
+    exit 1
+  fi
+
+  if [[ -n "$line" && -z "$file" ]]; then
+    echo >&2 "error: --line requires --file"
     exit 1
   fi
 

@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "status": "modified",
+      "lines_added": 10,
+      "lines_removed": 3,
+      "old": { "path": "src/auth.ts" },
+      "new": { "path": "src/auth.ts" }
+    },
+    {
+      "status": "added",
+      "lines_added": 25,
+      "lines_removed": 0,
+      "old": null,
+      "new": { "path": "src/login.ts" }
+    }
+  ],
+  "page": 1,
+  "size": 2
+}

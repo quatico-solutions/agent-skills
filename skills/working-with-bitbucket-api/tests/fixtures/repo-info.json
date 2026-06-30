@@ -1,0 +1,6 @@
+{
+  "full_name": "testws/testrepo",
+  "name": "testrepo",
+  "mainbranch": { "name": "main" },
+  "links": { "html": { "href": "https://bitbucket.org/testws/testrepo" } }
+}

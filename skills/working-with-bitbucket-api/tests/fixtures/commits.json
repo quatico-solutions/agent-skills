@@ -1,0 +1,31 @@
+{
+  "values": [
+    {
+      "hash": "abc123def456789012345678901234567890abcd",
+      "message": "Add login feature\n\nImplements OAuth login flow",
+      "date": "2025-01-15T10:00:00+00:00",
+      "author": {
+        "raw": "Alice Smith <alice@example.com>",
+        "user": {
+          "display_name": "Alice Smith",
+          "nickname": "alice"
+        }
+      }
+    },
+    {
+      "hash": "def456abc789012345678901234567890abcdef01",
+      "message": "Initial commit",
+      "date": "2025-01-01T10:00:00+00:00",
+      "author": {
+        "raw": "Alice Smith <alice@example.com>",
+        "user": {
+          "display_name": "Alice Smith",
+          "nickname": "alice"
+        }
+      }
+    }
+  ],
+  "page": 1,
+  "pagelen": 30,
+  "size": 2
+}

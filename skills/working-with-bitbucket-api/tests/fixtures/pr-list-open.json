@@ -1,0 +1,46 @@
+{
+  "values": [
+    {
+      "id": 42,
+      "title": "Add login feature",
+      "state": "OPEN",
+      "draft": false,
+      "author": {
+        "display_name": "Alice Smith",
+        "nickname": "alice",
+        "account_id": "557058:aaaa0000-1111-2222-3333-444455556666",
+        "uuid": "{aaaa0000-1111-2222-3333-444455556666}"
+      },
+      "source": { "branch": { "name": "feature/login" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": [],
+      "created_on": "2025-01-15T10:00:00.000000+00:00",
+      "updated_on": "2025-01-15T12:00:00.000000+00:00",
+      "description": "Adds login page",
+      "close_source_branch": false,
+      "links": { "html": { "href": "https://bitbucket.org/testws/testrepo/pull-requests/42" } }
+    },
+    {
+      "id": 43,
+      "title": "Fix typo in README",
+      "state": "OPEN",
+      "draft": false,
+      "author": {
+        "display_name": "Bob Jones",
+        "nickname": "bob",
+        "account_id": "557058:bbbb0000-1111-2222-3333-444455556666",
+        "uuid": "{bbbb0000-1111-2222-3333-444455556666}"
+      },
+      "source": { "branch": { "name": "fix/readme-typo" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": [],
+      "created_on": "2025-01-16T09:00:00.000000+00:00",
+      "updated_on": "2025-01-16T09:30:00.000000+00:00",
+      "description": "Fixes typo",
+      "close_source_branch": true,
+      "links": { "html": { "href": "https://bitbucket.org/testws/testrepo/pull-requests/43" } }
+    }
+  ],
+  "page": 1,
+  "size": 2
+}

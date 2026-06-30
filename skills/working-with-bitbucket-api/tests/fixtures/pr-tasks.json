@@ -1,0 +1,24 @@
+{
+  "values": [
+    {
+      "id": 200,
+      "state": "UNRESOLVED",
+      "content": { "raw": "Fix the error handling" },
+      "creator": {
+        "display_name": "Bob Jones",
+        "nickname": "bob"
+      },
+      "created_on": "2025-01-15T11:00:00.000000+00:00"
+    },
+    {
+      "id": 201,
+      "state": "RESOLVED",
+      "content": { "raw": "Add tests" },
+      "creator": {
+        "display_name": "Bob Jones",
+        "nickname": "bob"
+      },
+      "created_on": "2025-01-15T11:05:00.000000+00:00"
+    }
+  ]
+}

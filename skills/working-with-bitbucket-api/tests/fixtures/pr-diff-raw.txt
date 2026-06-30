@@ -1,0 +1,13 @@
+diff --git a/src/auth.ts b/src/auth.ts
+index abc1234..def5678 100644
+--- a/src/auth.ts
++++ b/src/auth.ts
+@@ -1,5 +1,8 @@
+-export function login() {
+-  return false
++export function login(username: string, password: string) {
++  if (!username || !password) {
++    throw new Error('Missing credentials')
++  }
++  return authenticate(username, password)
+ }
