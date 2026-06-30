@@ -56,3 +56,20 @@ The skills table in README.md lists the `quatico-skills` plugin's skills. When y
 - **Remove a skill**: remove from `skills/` and the table
 
 The README table must always match the actual contents of the `skills/` directory.
+
+## Gates Over Rules
+
+**For important agent behaviors, prefer gates, not rules.** ([Reference](https://blog.fsck.com/2026/04/07/rules-and-gates/))
+
+- A **rule** is a guideline the agent can rationalize around — it lives in prose (`CLAUDE.md`, skill instructions) and depends on the agent choosing to follow it.
+- A **gate** is a hard stop with objective verification — enforced via hooks or CI, where the agent cannot proceed without meeting a concrete, checkable condition.
+- **The test:** Can you answer "Did I complete this?" without actually doing the work? If yes, it's a rule. If no, it's a gate.
+
+When a skill includes a critical workflow (session teardown, credential handling, destructive operations), prefer a gate over prose. Even when the user casually says "add a rule for X," consider whether it should be a gate.
+
+**Skill authors:** if your skill has a "MUST" or "NEVER", ask whether it's enforced (hook/CI) or just prose. Prose-only MUSTs eventually get violated — convert the critical ones to gates.
+
+**Candidates in this repo:**
+
+- "Documentation Sync (CRITICAL)" above is prose-only — a candidate for a CI check / pre-push hook that fails when the README skills table doesn't match `skills/`.
+- Versioning is currently soft-gated: CI *warns* when a PR has no changeset, but doesn't fail. Hardening that into a failure would make it a gate.
