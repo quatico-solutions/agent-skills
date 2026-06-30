@@ -50,6 +50,22 @@ describe('bb source cat', () => {
     assert.equal(tagCalls.length, 0, 'Should NOT call tag resolution')
   })
 
+  it('Accepts --raw and prints file content for piping', async () => {
+    // Given a file exists at the given hash (meta check is pinned to ?format=meta,
+    // so the raw fetch resolves to the raw stub, not the metadata)
+    const hash = 'abc123def4567890abcdef1234567890abcdef12'
+    server.stubWithQuery('GET', `/repositories/testws/testrepo/src/${hash}/README.md`,
+      { format: 'meta' }, sourceFileMeta)
+    server.stubRaw('GET', `/repositories/testws/testrepo/src/${hash}/README.md`, 'raw bytes here')
+
+    // When I run bb source cat README.md --ref <hash> --raw
+    const result = await bb(`source cat README.md --ref ${hash} --raw`, { port: server.port })
+
+    // Then --raw is accepted and the file content is emitted
+    assert.equal(result.exitCode, 0)
+    assert.match(result.stdout, /raw bytes here/)
+  })
+
   it('Errors when path is a directory', async () => {
     // Given the metadata reports a directory type
     const hash = 'abc123def4567890abcdef1234567890abcdef12'

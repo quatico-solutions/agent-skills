@@ -15,6 +15,8 @@ export async function bb(args: string | string[], opts: {
   port: number
   repo?: string
   env?: Record<string, string>
+  /** Written to the subprocess's stdin (e.g. a token for `auth login`). */
+  input?: string
 }): Promise<BbResult> {
   const repo = opts.repo ?? 'testws/testrepo'
   const argList = Array.isArray(args) ? args : args.split(/\s+/).filter(Boolean)
@@ -34,7 +36,7 @@ export async function bb(args: string | string[], opts: {
   }
 
   return new Promise<BbResult>((resolve) => {
-    execFile('bash', [BB_PATH, ...argList], {
+    const child = execFile('bash', [BB_PATH, ...argList], {
       env,
       timeout: 5_000,
       maxBuffer: 1024 * 1024,
@@ -47,5 +49,8 @@ export async function bb(args: string | string[], opts: {
           : error ? 1 : 0,
       })
     })
+    // Always close stdin so commands that `read` from it (e.g. auth login in
+    // non-interactive mode) get EOF instead of blocking until the timeout.
+    child.stdin?.end(opts.input ?? '')
   })
 }

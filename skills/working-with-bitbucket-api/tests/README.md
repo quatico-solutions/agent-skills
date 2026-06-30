@@ -11,9 +11,10 @@ Each test spawns `bb` as a real subprocess, pointed at a local mock server. Two 
 
 Tests do **not** cover:
 
-- macOS Keychain integration
-- Git remote auto-detection
-- Intermediate resolution steps (reviewer lookup, ref resolution) — only that the final call has the correct values
+- **Real macOS Keychain writes** — `auth login` is tested with a `security` shim (`fixtures/bin/security`) so the success path never touches the developer's real Keychain
+- **Interactive prompts** — `auth login` without a tty (the email/token/browser prompts) is out of reach of the subprocess harness; only the non-interactive (`--email` + piped token) path is exercised
+- **Git remote auto-detection** — bypassed with the `-R` flag
+- Intermediate resolution steps are asserted only where they affect the final request (e.g. default-base resolution, reviewer lookup failure)
 
 ## Architecture
 
@@ -45,8 +46,19 @@ Tests also bypass other external dependencies:
 | Auth token | macOS Keychain | `BB_TOKEN=fake-test-token` |
 | Email | macOS Keychain | `BB_EMAIL=test@example.com` |
 | Repository | `git remote get-url origin` | `-R testws/testrepo` flag |
+| Keychain write (`auth login`) | `security add-generic-password` | `fixtures/bin/security` shim on `PATH` |
 
 This means tests need only `curl`, `jq`, and standard POSIX tools — no git repo, no Keychain, no network.
+
+### Subprocess stdin
+
+The `bb()` helper accepts an `input` option, written to the subprocess's stdin. Commands that read from stdin — notably `auth login` in non-interactive mode, which reads the token — use it:
+
+```typescript
+await bb(['auth', 'login', '--email', 'a@b.com'], { port: server.port, input: 'my-token\n' })
+```
+
+stdin is always closed (EOF) so commands that `read` from it never hang.
 
 ## How to Run
 

@@ -47,6 +47,54 @@ describe('bb pr edit', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('PUTs a new destination branch with --base', async () => {
+    // Given the API returns the current PR and accepts the update
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('PUT', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr edit 42 --base develop
+    const result = await bb('pr edit 42 --base develop', { port: server.port })
+
+    // Then the PUT payload retargets the destination branch
+    const putCalls = server.getCallsTo('PUT', '/pullrequests/42')
+    assert.equal(putCalls.length, 1, 'Should send one PUT')
+    const body = putCalls[0].body as Record<string, unknown>
+    assert.deepEqual((body.destination as any).branch.name, 'develop')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Sets draft:false with --ready', async () => {
+    // Given the API returns the current PR and accepts the update
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('PUT', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr edit 42 --ready
+    const result = await bb('pr edit 42 --ready', { port: server.port })
+
+    // Then the PUT payload marks the PR ready (draft:false)
+    const putCalls = server.getCallsTo('PUT', '/pullrequests/42')
+    assert.equal(putCalls.length, 1, 'Should send one PUT')
+    const body = putCalls[0].body as Record<string, unknown>
+    assert.equal(body.draft, false)
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Sets draft:true with --draft', async () => {
+    // Given the API returns the current PR and accepts the update
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('PUT', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr edit 42 --draft
+    const result = await bb('pr edit 42 --draft', { port: server.port })
+
+    // Then the PUT payload converts the PR back to draft (draft:true)
+    const putCalls = server.getCallsTo('PUT', '/pullrequests/42')
+    assert.equal(putCalls.length, 1, 'Should send one PUT')
+    const body = putCalls[0].body as Record<string, unknown>
+    assert.equal(body.draft, true)
+    assert.equal(result.exitCode, 0)
+  })
+
   it('Removes reviewer by display name with --remove-reviewer', async () => {
     // Given the PR has Bob Jones as a reviewer
     server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)

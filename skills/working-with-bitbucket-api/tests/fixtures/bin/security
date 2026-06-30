@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Test shim for macOS `security`. Tests must NEVER touch the real Keychain
+# (it could overwrite the developer's real bb token). This no-op stands in
+# for `security add-generic-password` during `bb auth login` success tests.
+exit 0
