@@ -28,13 +28,23 @@ node:test runner
 
 ### The `BB_API_URL` Mechanism
 
-The `bb` script has one line that makes all of this work:
+The `bb` script lets the API base be overridden, but **only to a loopback host**:
 
 ```bash
-BB_API="${BB_API_URL:-https://api.bitbucket.org/2.0}"
+if [[ -n "${BB_API_URL:-}" ]]; then
+  if [[ "$BB_API_URL" =~ ^https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/|$) ]]; then
+    BB_API="$BB_API_URL"
+  else
+    echo >&2 "error: BB_API_URL must point to a loopback host …"; exit 1
+  fi
+else
+  BB_API="https://api.bitbucket.org/2.0"
+fi
 ```
 
 In production, `BB_API_URL` is unset so `BB_API` defaults to the real Bitbucket API. In tests, we set `BB_API_URL=http://localhost:<port>/mockbb` to redirect all API calls to our local Express mock server.
+
+The loopback restriction is a security guard: every call carries the auth token as HTTP Basic, so an unrestricted override could exfiltrate the token to a remote host. The Bitbucket **Cloud** CLI only ever talks to `api.bitbucket.org`, so there is no legitimate non-local override to lose.
 
 ### Environment Bypass
 

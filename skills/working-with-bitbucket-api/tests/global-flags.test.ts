@@ -71,4 +71,18 @@ describe('bb global flags', () => {
     assert.match(result.stdout, /bb — Bitbucket Cloud CLI/)
     assert.equal(result.exitCode, 0)
   })
+
+  it('Rejects a non-loopback BB_API_URL (credential-exfiltration guard)', async () => {
+    // When BB_API_URL points to a remote host, bb must refuse rather than
+    // send HTTP Basic credentials off-box.
+    const result = await bb('auth status', {
+      port: server.port,
+      env: { BB_API_URL: 'https://evil.example.com' },
+    })
+
+    // Then it errors and makes no request
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /must point to a loopback host/)
+    assert.equal(server.getCalls().length, 0)
+  })
 })
