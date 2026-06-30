@@ -3,7 +3,9 @@
 set -euo pipefail
 
 BB_VERSION="1.0.0"
-BB_API="https://api.bitbucket.org/2.0"
+# BB_API_URL lets the test suite redirect API calls to a local mock server.
+# It is unset in production, so this defaults to the real Bitbucket API.
+BB_API="${BB_API_URL:-https://api.bitbucket.org/2.0}"
 
 # --- Auth -------------------------------------------------------------------
 
@@ -991,6 +993,11 @@ HELP
   # Create a comment
   if [[ -z "$body" ]]; then
     echo >&2 "error: --body is required (or use --resolve / --unresolve)"
+    exit 1
+  fi
+
+  if [[ -n "$line" && -z "$file" ]]; then
+    echo >&2 "error: --line requires --file"
     exit 1
   fi
 
