@@ -93,6 +93,26 @@ touches `skills/working-with-bitbucket-api/**` (and on pushes to `main`). PRs
 that don't touch the CLI skip it. The runner only needs `curl` and `jq`
 (pre-installed on `ubuntu-latest`) plus the dev dependencies in this directory.
 
+### Coverage (local, manual — not a CI gate)
+
+`pnpm test:coverage` runs the same suite under a bash xtrace wrapper and writes
+a line-by-line report to `coverage/index.html` plus a `bb coverage: NN%` summary.
+
+This is a **developer aid, run by hand** — reach for it when refactoring `bin/bb`
+or doing larger work on the CLI, to see which code paths the suite actually
+exercises before and after a change. It is intentionally **not** wired into CI
+and is **not** a gate: nothing fails on a coverage number, and the percentage is
+never computed on the runner (CI runs `pnpm test` only).
+
+Read the number as a guide, not a target. The coverage is line-based on bash
+xtrace, which records a multi-line `jq` command substitution (e.g. a `jq -n`
+payload or a `jq -r` format block) as a single executed line — so the
+continuation lines show as "missed" even though the tests assert on their
+output. Real behavioral coverage is meaningfully higher than the raw figure.
+The genuinely-uncovered paths are the ones the harness deliberately bypasses:
+interactive `auth login` prompts, real Keychain reads, and git-remote
+autodetection (see "What This Tests").
+
 ## Conventions
 
 ### File naming
