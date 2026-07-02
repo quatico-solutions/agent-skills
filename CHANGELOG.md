@@ -1,5 +1,21 @@
 # @quatico-solutions/agent-skills
 
+## 2.1.0
+
+### Minor Changes
+
+- [#10](https://github.com/quatico-solutions/agent-skills/pull/10) [`3bfaa56`](https://github.com/quatico-solutions/agent-skills/commit/3bfaa56a10420a589debbc6fc40162dd794ac6cb) Thanks [@eins78](https://github.com/eins78)! - bb CLI: attach images to PRs via the Downloads area — no browser needed. Adds `bb download upload` / `bb download list` and a `bb pr comment --image` convenience flag, and corrects the Bitbucket skills that wrongly claimed image uploads require a browser / have "no API support" ([#9](https://github.com/quatico-solutions/agent-skills/issues/9)).
+
+  Also fixes an intermittent EPIPE crash in the bb test harness: `run-bb.ts` now swallows stdin write errors that occur when a fast-exiting command closes its stdin before the helper finishes writing to it.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+      handling-pull-requests: minor
+      working-with-bitbucket-web: patch
+  -->
+
 ## 2.0.3
 
 ### Patch Changes
