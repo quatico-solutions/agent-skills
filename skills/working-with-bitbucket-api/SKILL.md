@@ -1,6 +1,6 @@
 ---
 name: working-with-bitbucket-api
-description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge) and source browsing (ls, cat, branch, tag) including markdown descriptions. Browser only for image uploads. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
+description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branch, tag) including markdown descriptions. Browser only for SSO-gated pages. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, upload image to PR, attach screenshot, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -55,13 +55,15 @@ Need to interact with Bitbucket?
 ├── Merge PR? → bb pr merge
 ├── Close/decline PR? → bb pr close
 ├── List/resolve tasks? → bb pr tasks
+├── Attach an image to a PR comment? → bb pr comment <id> --image <file>
+├── Upload a file to the repo? → bb download upload <file>
 ├── Raw API call? → bb api <path>
-├── Upload images to PR? → Browser (working-with-bitbucket-web)
 └── SSO-gated page? → Browser (last resort)
 ```
 
-`bb` handles everything including markdown in `--body` (descriptions, comments).
-Browser is a **last resort** — only for image uploads and SSO-gated pages.
+`bb` handles everything including markdown in `--body` (descriptions, comments)
+and image uploads (via the repo Downloads area — see below).
+Browser is a **last resort** — only for SSO-gated pages.
 
 > **Markdown**: Bitbucket uses CommonMark, not GFM — no task lists, no strikethrough, no bare autolinks. Use the `markdown` skill if installed.
 
@@ -122,11 +124,52 @@ bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"te
 
 ---
 
+## Attaching Images to PRs (no browser)
+
+Images can be attached to PR comments and descriptions **entirely via the API** —
+no browser required. Bitbucket's repo **Downloads** area accepts multipart file
+uploads; you then reference the resulting URL with CommonMark image syntax.
+
+**One step (recommended)** — `bb pr comment --image` uploads and references the image for you:
+
+```bash
+bb pr comment 42 --image before-after.png --body "Layout regression below:"
+```
+
+Repeat `--image` for multiple images. Each is uploaded under a `pr<id>-` prefixed
+name (avoids cross-PR collisions) and appended to the body as `![name](url)`.
+
+**Two steps** — upload, then reference the URL yourself (e.g. in a PR description):
+
+```bash
+url="$(bb download upload pr42-diff.png)"     # prints the download URL
+bb pr edit 42 --body "## Screenshots
+
+![diff]($url)"
+```
+
+`bb download list` shows what's currently in the Downloads area.
+
+### Caveats
+
+- The download URL is **private** — it returns `401` to unauthenticated requests
+  but renders inline for reviewers viewing the PR in an authenticated browser.
+  This is expected and fine.
+- Downloads are **repo-global** (not scoped to a PR) and **collide by name** — a
+  re-upload with the same name overwrites the previous file. Use unique, prefixed
+  names (the `--image` flow does this automatically).
+- `bb api` can't do uploads: it only sends JSON bodies. Use `bb download upload` /
+  `bb pr comment --image`, which send `multipart/form-data`.
+
+---
+
 ## Fallback: Browser Automation
 
 Use `working-with-bitbucket-web` skill only when:
-- Uploading images to PRs (no API support)
 - SSO-gated pages that require browser authentication
+
+Image uploads no longer need a browser — use `bb pr comment --image` or
+`bb download upload` (see above).
 
 ---
 
@@ -135,5 +178,5 @@ Use `working-with-bitbucket-web` skill only when:
 | Skill | Use For |
 |-------|---------|
 | `handling-pull-requests` | PR workflow (when to create, how to handle feedback) |
-| `working-with-bitbucket-web` | Browser fallback (image uploads, SSO pages) |
+| `working-with-bitbucket-web` | Browser fallback (SSO-gated pages only) |
 | `commit-notation` | Commit messages |

@@ -17,21 +17,40 @@ Both marketplace manifests define one plugin, `quatico-skills`, with `source: ".
 
 ## Versioning
 
-Every skill MUST have a `metadata.version` field in its SKILL.md frontmatter (semver, 3-part).
+**Versioning is changeset-driven — NEVER edit version numbers by hand.** Do not touch `metadata.version` in any `SKILL.md`, the `version` in `.claude-plugin/plugin.json` / `.cursor-plugin/plugin.json`, the `marketplace.json` files, or `package.json`. The release pipeline owns all of them; hand-edits cause conflicts and drift.
 
-**When a skill is changed, increment its version:**
+Instead, **every change that touches a skill MUST add a changeset**:
+
+```bash
+pnpm changeset   # scaffolds a file in .changeset/ from the template
+```
+
+Edit the created file — a one-line summary (becomes the `CHANGELOG.md` entry), a root-package bump in the frontmatter, and a `bumps:` block listing each changed skill with its level:
+
+```yaml
+---
+"@quatico-solutions/agent-skills": minor   # root package / collection bump
+---
+
+Brief description of the change
+
+<!--
+bumps:
+  skills:
+    working-with-bitbucket-api: minor
+    handling-pull-requests: patch
+-->
+```
+
+Choose each level by impact (applies to both the root bump and per-skill bumps):
 
 - **Patch** (`x.y.Z`): bug fixes, wording improvements, minor clarifications
-- **Minor** (`x.Y.0`): new sections, new patterns, expanded coverage
+- **Minor** (`x.Y.0`): new sections, new patterns, expanded coverage, a new skill
 - **Major** (`X.0.0`): structural reorganization, removed sections, breaking workflow changes
 
-**When any skill version is bumped, bump the plugin version** in the plugin's `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, and both root marketplace files:
+At release, `pnpm run version` consumes the changesets: `bump-skill-versions.sh` bumps each `SKILL.md` from the `bumps:` blocks, `changeset version` bumps `package.json` and writes `CHANGELOG.md`, and `sync-versions.sh` propagates the version to the plugin manifests and regenerates `marketplace.json`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full flow.
 
-- Skill patch → plugin patch (at minimum)
-- Skill minor → plugin minor (at minimum)
-- Skill major → plugin major
-
-**When a skill is added or removed from a plugin**, bump that plugin's minor version (add) or major version (remove).
+> CI only *warns* when a skill-touching PR has no changeset (a soft gate) — don't rely on it, add the changeset yourself.
 
 ## Skill Development
 

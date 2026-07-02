@@ -1,5 +1,8 @@
 import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { writeFileSync, rmSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 
@@ -164,5 +167,85 @@ Resolved comment #100 on PR #42
     assert.equal(result.stdout, `\
 Unresolved comment #100 on PR #42
 `)
+  })
+})
+
+describe('bb pr comment --image', () => {
+  let server: MockServer
+  let tmpDir: string
+  let imgPath: string
+
+  before(async () => {
+    server = await createMockServer()
+    tmpDir = mkdtempSync(path.join(tmpdir(), 'bb-cmt-'))
+    imgPath = path.join(tmpDir, 'before-after.png')
+    writeFileSync(imgPath, 'PNGDATA')
+  })
+  after(async () => {
+    await server.stop()
+    rmSync(tmpDir, { recursive: true, force: true })
+  })
+  beforeEach(() => server.reset())
+
+  it('uploads the image then references it inline in the comment body', async () => {
+    // Given both the Downloads endpoint and the comments endpoint accept requests
+    server.stub('POST', '/repositories/testws/testrepo/downloads', {}, 201)
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests/42/comments', commentResponse)
+
+    // When I comment with --image and a body
+    const result = await bb(
+      ['pr', 'comment', '42', '--image', imgPath, '--body', 'Regression below:'],
+      { port: server.port }
+    )
+
+    // Then it first uploads the image (multipart) under a pr<id>- prefixed name
+    const calls = server.getCalls()
+    const upload = calls.find(c => c.method === 'POST' && /\/downloads$/.test(c.path))
+    assert.ok(upload, 'expected an upload POST to /downloads')
+    assert.match(String(upload!.headers['content-type']), /multipart\/form-data/)
+
+    // And the comment body keeps the text and appends the CommonMark image ref
+    const comment = server.getLastCall()
+    assert.match(comment.path, /\/pullrequests\/42\/comments$/)
+    const raw = (comment.body as any).content.raw as string
+    assert.match(raw, /^Regression below:/)
+    assert.match(
+      raw,
+      /!\[before-after\.png\]\(https:\/\/bitbucket\.org\/testws\/testrepo\/downloads\/pr42-before-after\.png\)/
+    )
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('allows --image with no --body (image becomes the whole comment)', async () => {
+    // Given both endpoints accept requests
+    server.stub('POST', '/repositories/testws/testrepo/downloads', {}, 201)
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests/42/comments', commentResponse)
+
+    // When I comment with only --image
+    const result = await bb(['pr', 'comment', '42', '--image', imgPath], { port: server.port })
+
+    // Then the body is just the image reference
+    const raw = (server.getLastCall().body as any).content.raw as string
+    assert.match(raw, /^!\[before-after\.png\]\(https:\/\/bitbucket\.org\/testws\/testrepo\/downloads\/pr42-before-after\.png\)$/)
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('errors when a --image file is missing (no request sent)', async () => {
+    // When the image path does not exist
+    const result = await bb(['pr', 'comment', '42', '--image', '/no/such.png', '--body', 'x'], { port: server.port })
+
+    // Then it fails locally without hitting the API
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /image file not found/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
+  it('errors when neither --body nor --image is given', async () => {
+    // When I create a comment with no content
+    const result = await bb('pr comment 42', { port: server.port })
+
+    // Then it explains what is required
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /--body or --image is required/)
   })
 })

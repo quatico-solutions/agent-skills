@@ -1,6 +1,6 @@
 ---
 name: working-with-bitbucket-web
-description: "Last resort for Bitbucket operations that `bb` CLI cannot handle (image uploads, SSO-gated pages). Prefer `working-with-bitbucket-api` for all PR operations. Triggers: bitbucket UI, bitbucket web, upload image to PR, bitbucket SSO."
+description: "Last resort for Bitbucket operations that `bb` CLI cannot handle (SSO-gated pages). Prefer `working-with-bitbucket-api` for all PR operations, including image uploads. Triggers: bitbucket UI, bitbucket web, bitbucket SSO."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -14,8 +14,12 @@ metadata:
 **Before using the browser, try `bb` CLI (`working-with-bitbucket-api` skill).** It handles all PR operations — create, edit, comment, approve, merge, resolve — including markdown descriptions. Run `bb --help` for the full command list.
 
 **Only use this browser skill for:**
-- Uploading images to PRs (no API support)
 - SSO-gated pages that require browser authentication
+
+> **Image uploads no longer need a browser.** Attach images to PR comments and
+> descriptions via the API with `bb pr comment --image <file>` or
+> `bb download upload <file>` (see `working-with-bitbucket-api`). The manual
+> drag-drop workflow below remains only as a fallback if the CLI is unavailable.
 
 If you also need PR workflow guidance (templates, feedback process), invoke `handling-pull-requests`.
 
@@ -100,7 +104,12 @@ Copy and track progress:
 
 ---
 
-## Adding Images to PR Descriptions
+## Adding Images to PR Descriptions (fallback only)
+
+> **Prefer the API.** `bb pr comment --image <file>` and `bb download upload <file>`
+> attach images with no browser and no user assistance (see
+> `working-with-bitbucket-api`). Use the manual workflow below only when the `bb`
+> CLI is genuinely unavailable.
 
 **Limitation**: Browser automation cannot upload files (native file picker, clipboard paste, drag-drop are all inaccessible from automation).
 
