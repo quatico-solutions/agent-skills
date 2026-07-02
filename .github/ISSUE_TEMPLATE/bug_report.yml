@@ -1,0 +1,45 @@
+name: Bug report
+description: A skill gives wrong guidance, is out of date, or the tooling misbehaves.
+labels: ["bug"]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: Which skill is affected? (directory name under `skills/`, or "tooling" for CI/release scripts)
+      placeholder: working-with-bitbucket-api
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did the skill tell you to do, or what did the tooling do, that was wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The prompt you gave, the command you ran, or the section you followed.
+      placeholder: |
+        1. Invoked the skill with "..."
+        2. Followed the step "..."
+        3. Observed "..."
+    validations:
+      required: false
+  - type: input
+    id: agent
+    attributes:
+      label: Agent / environment
+      description: Which agent and version? (e.g. Claude Code, Cursor)
+      placeholder: Claude Code
+    validations:
+      required: false

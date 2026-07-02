@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose a new skill, or an addition to an existing one.
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New skill
+        - Addition to an existing skill
+    validations:
+      required: true
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: For an addition, which existing skill? For a new skill, a proposed name.
+      placeholder: commit-notation
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What task is under-served today? What does the agent get wrong or not know?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What guidance or capability should the skill add? Keep it concise — a skill teaches only what the agent doesn't already know.
+    validations:
+      required: true
