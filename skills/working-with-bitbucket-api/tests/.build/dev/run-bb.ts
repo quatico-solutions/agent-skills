@@ -51,6 +51,14 @@ export async function bb(args: string | string[], opts: {
     })
     // Always close stdin so commands that `read` from it (e.g. auth login in
     // non-interactive mode) get EOF instead of blocking until the timeout.
+    //
+    // Fast-exiting commands (unknown command, --version) can close their stdin
+    // before this write lands. The write then raises EPIPE — which, without a
+    // handler, surfaces as an uncaughtException and fails whichever test's
+    // subprocess won the race (a flaky failure under parallel load). It is
+    // harmless here: the command didn't consume stdin, and its real behavior is
+    // captured via exitCode/stdout/stderr above. So swallow stdin write errors.
+    child.stdin?.on('error', () => {})
     child.stdin?.end(opts.input ?? '')
   })
 }
