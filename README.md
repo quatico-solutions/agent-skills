@@ -58,7 +58,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`story-tracking`](skills/story-tracking) | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
 | [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
-| [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, source browsing. Requires `install-dependencies.sh` |
+| [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, image uploads, source browsing. Requires `install-dependencies.sh` |
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
@@ -74,7 +74,7 @@ directory. The table must stay in sync with the `skills/` directory.
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
 - `story-tracking`: `"continue on FOOBAR-1234"` or `"create a story for the WCAG audit"`
 - `story-tracking` + `markdown`: Complementary — `story-tracking` covers structure, `markdown` covers syntax
-- `working-with-bitbucket-api` + `working-with-bitbucket-web`: Complementary — API skill handles PR operations and source browsing via `bb` CLI, web skill handles rich text and images. Run `install-dependencies.sh` to set up `bb`
+- `working-with-bitbucket-api` + `working-with-bitbucket-web`: Complementary — API skill handles PR operations, image uploads, and source browsing via `bb` CLI; web skill is a fallback for SSO-gated pages. Run `install-dependencies.sh` to set up `bb`
 - `working-with-jira-web`: Requires native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 
 ## Creating Skills

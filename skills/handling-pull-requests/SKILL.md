@@ -19,7 +19,7 @@ digraph pr_workflow {
     start [label="PR-related task?" shape=ellipse];
     q1 [label="Creating a PR?"];
     q2 [label="Addressing review\nfeedback?"];
-    q3 [label="Image upload or\nSSO-gated page?"];
+    q3 [label="SSO-gated page?"];
 
     node [shape=box];
     this [label="This skill\n(handling-pull-requests)"];
@@ -34,9 +34,8 @@ digraph pr_workflow {
     q2 -> q3 [label="no"];
     q3 -> platform [label="yes"];
 
-    this -> bb [label="for BB operations" style=dashed];
+    this -> bb [label="for BB operations\n(incl. image uploads)" style=dashed];
     this -> commit [label="for commits" style=dashed];
-    this -> platform [label="images only" style=dashed];
 }
 ```
 
@@ -80,7 +79,7 @@ Generated with Claude Code
 5. **Create PR**: `bb pr create --title "..." --body "..." --base develop --reviewer "Name"`
 6. **Verify** with `bb pr view <id>` — **check the `Dest:` line** to confirm the target branch is correct
 
-> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, and all PR lifecycle operations. See `bb --help`. Browser is only needed for image uploads. If `bb` is not installed, stop and guide the user through setup (`install-dependencies.sh` + `bb auth login`) before proceeding.
+> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, image uploads (`bb pr comment --image` / `bb download upload`), and all PR lifecycle operations. See `bb --help`. Browser is only needed for SSO-gated pages. If `bb` is not installed, stop and guide the user through setup (`install-dependencies.sh` + `bb auth login`) before proceeding.
 
 > **Target branch matters.** `bb pr create` auto-detects the repo's default branch via the Bitbucket API. If auto-detection fails, it falls back to `main`. For repos that use `develop` (all Quatico repos), always pass `--base develop` explicitly to be safe. If a PR was created with the wrong target, fix it with `bb pr edit <id> --base develop`.
 
@@ -143,6 +142,18 @@ Example: *🤖 – Claude*
 - Reference specific code changes if applicable
 - Use platform's rich text editor carefully (see platform skill)
 
+### Attaching Screenshots
+
+Screenshots (before/after diffs, repros, measurements) are one of the highest-value
+things a review can include — attach them directly, no browser needed:
+
+```bash
+bb pr comment 42 --image before-after.png --body "Layout regression below:"
+```
+
+The image is uploaded to the repo Downloads area and referenced inline. See the
+`working-with-bitbucket-api` skill for details and caveats (private URLs, naming).
+
 ---
 
 ## Integration with Other Skills
@@ -153,7 +164,7 @@ Example: *🤖 – Claude*
 | `commit-notation` | Commit messages (F:, B:, R:, etc.) |
 | `markdown` | CommonMark formatting for PR descriptions and comments |
 | `writing-clearly-and-concisely` | PR descriptions and comments |
-| `working-with-bitbucket-web` | Last resort: image uploads, SSO pages |
+| `working-with-bitbucket-web` | Last resort: SSO-gated pages only |
 
 ---
 

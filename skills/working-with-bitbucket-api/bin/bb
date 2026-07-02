@@ -242,6 +242,32 @@ bb_current_ref() {
   bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // "main"'
 }
 
+bb_download_upload() {
+  # Upload a file to the repo Downloads area via multipart/form-data.
+  # bb_api_call can't do this: it always sends Content-Type: application/json,
+  # but downloads require multipart. We let curl build the multipart body (and
+  # its boundary) via -F. A successful upload returns HTTP 201 with no body.
+  # Files collide by name in Downloads — a re-upload with the same name
+  # overwrites the previous one.
+  local ws="$1" repo="$2" file="$3" name="$4"
+  local token email
+  token="$(bb_token)" || exit 1
+  email="$(bb_email)" || exit 1
+  local response http_code body
+  response="$(curl -sSL -w "\n%{http_code}" -X POST \
+    -u "${email}:${token}" \
+    -F "files=@${file};filename=${name}" \
+    "${BB_API}/repositories/${ws}/${repo}/downloads")"
+  http_code="$(echo "$response" | tail -1)"
+  body="$(echo "$response" | sed '$d')"
+  if [[ "$http_code" -ge 400 ]]; then
+    local msg
+    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+    echo >&2 "error: HTTP $http_code — $msg"
+    return 1
+  fi
+}
+
 # --- Output formatting -------------------------------------------------------
 
 bb_format_pr_list() {
@@ -929,7 +955,7 @@ HELP
 }
 
 cmd_pr_comment() {
-  local pr_id="" body="" file="" line="" resolve_id="" unresolve_id=""
+  local pr_id="" body="" file="" line="" resolve_id="" unresolve_id="" images=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -937,11 +963,12 @@ cmd_pr_comment() {
 Add, resolve, or unresolve a comment on a pull request.
 
 USAGE
-  bb pr comment <id> --body "..." [--file <path>] [--line <num>]
+  bb pr comment <id> --body "..." [--image <path>]... [--file <path>] [--line <num>]
                 [--resolve <id>] [--unresolve <id>] [--json]
 
 FLAGS
-  --body <text>             Comment text in CommonMark markdown (required for new comments)
+  --body <text>             Comment text in CommonMark markdown (required unless --image given)
+  --image <path>            Attach an image (uploads to Downloads, appends ![](url)); repeatable
   --file <path>             File path for inline comment
   --line <num>              Line number for inline comment (requires --file)
   --resolve <comment_id>    Resolve a comment thread
@@ -950,16 +977,20 @@ FLAGS
 
 Use --file and --line together for inline code comments.
 Use --resolve or --unresolve without --body to change thread state.
+Each --image is uploaded to the repo Downloads area under a pr<id>- prefixed
+name (to avoid cross-PR collisions) and referenced inline in the comment body.
 
 EXAMPLES
   bb pr comment 42 --body "Looks good!"
   bb pr comment 42 --body "Needs null check" --file src/auth.ts --line 15
+  bb pr comment 42 --image before-after.png --body "Layout regression below:"
   bb pr comment 42 --resolve 12345
   bb pr comment 42 --unresolve 12345
 HELP
         exit 0
         ;;
       --body)      body="$2"; shift 2 ;;
+      --image)     images+=("$2"); shift 2 ;;
       --file)      file="$2"; shift 2 ;;
       --line)      line="$2"; shift 2 ;;
       --resolve)   resolve_id="$2"; shift 2 ;;
@@ -1003,9 +1034,31 @@ HELP
   fi
 
   # Create a comment
-  if [[ -z "$body" ]]; then
-    echo >&2 "error: --body is required (or use --resolve / --unresolve)"
+  if [[ -z "$body" && ${#images[@]} -eq 0 ]]; then
+    echo >&2 "error: --body or --image is required (or use --resolve / --unresolve)"
     exit 1
+  fi
+
+  # Upload any images to the Downloads area and append CommonMark image
+  # references to the body. Names are prefixed with pr<id>- so screenshots from
+  # different PRs don't overwrite each other in the repo-global Downloads area.
+  if [[ ${#images[@]} -gt 0 ]]; then
+    local img base upload_name img_url
+    for img in "${images[@]}"; do
+      if [[ ! -f "$img" ]]; then
+        echo >&2 "error: image file not found: $img"
+        exit 1
+      fi
+      base="$(basename "$img")"
+      upload_name="pr${pr_id}-${base}"
+      bb_download_upload "$ws" "$repo" "$img" "$upload_name" || exit 1
+      img_url="https://bitbucket.org/${ws}/${repo}/downloads/${upload_name}"
+      if [[ -n "$body" ]]; then
+        body="${body}"$'\n\n'"![${base}](${img_url})"
+      else
+        body="![${base}](${img_url})"
+      fi
+    done
   fi
 
   if [[ -n "$line" && -z "$file" ]]; then
@@ -1934,6 +1987,115 @@ HELP
   echo "$result" | jq .
 }
 
+cmd_download_upload() {
+  local file="" name=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Upload a file to the repository Downloads area and print its URL.
+
+This is the browser-free way to attach images to PR comments and descriptions:
+upload the file, then reference the printed URL with CommonMark image syntax
+(![caption](url)) in a comment or description body.
+
+USAGE
+  bb download upload <file> [--name <name>] [--json]
+
+FLAGS
+  --name <name>   Store under this filename (default: the file's basename)
+  --json          Output {name, url} as JSON
+
+NOTES
+  - The URL is private: it returns 401 to unauthenticated requests but renders
+    inline for reviewers viewing the PR/issue in an authenticated browser.
+  - Downloads are repo-global (not scoped to a PR) and collide by name. Use a
+    unique, prefixed name (e.g. pr123-TICKET-desc.png) to avoid overwrites.
+
+EXAMPLES
+  bb download upload screenshot.png
+  bb download upload out.png --name pr123-before-after.png
+  url="$(bb download upload pr123-diff.png)"
+  bb pr comment 123 --body "![before/after]($url)"
+HELP
+        exit 0
+        ;;
+      --name)  name="$2"; shift 2 ;;
+      --json)  JSON_OUTPUT=1; shift ;;
+      -*)      echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)       file="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$file" ]]; then
+    echo >&2 "usage: bb download upload <file> [--name <name>] [--json]"
+    exit 1
+  fi
+  if [[ ! -f "$file" ]]; then
+    echo >&2 "error: file not found: $file"
+    exit 1
+  fi
+  [[ -z "$name" ]] && name="$(basename "$file")"
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  bb_download_upload "$ws" "$repo" "$file" "$name" || exit 1
+
+  local url="https://bitbucket.org/${ws}/${repo}/downloads/${name}"
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    jq -n --arg name "$name" --arg url "$url" '{name: $name, url: $url}'
+  else
+    echo "$url"
+  fi
+}
+
+cmd_download_list() {
+  local limit=50
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+List files in the repository Downloads area.
+
+USAGE
+  bb download list [--limit <n>] [--json]
+
+FLAGS
+  --limit <n>   Maximum entries to fetch (default: 50)
+  --json        Output raw JSON
+
+EXAMPLES
+  bb download list
+  bb download list --json
+HELP
+        exit 0
+        ;;
+      --limit) limit="$2"; shift 2 ;;
+      --json)  JSON_OUTPUT=1; shift ;;
+      -*)      echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)       echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local ws repo
+  ws="$(bb_workspace)"
+  repo="$(bb_repo)"
+
+  local result
+  result="$(bb_paginate "/repositories/${ws}/${repo}/downloads" "$limit")" || exit 1
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq .
+  else
+    echo "$result" | jq -r '
+      if length == 0 then "No downloads."
+      else (.[] | "\(.name)\t\(.size) bytes\t\(.downloads) downloads")
+      end'
+  fi
+}
+
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
@@ -1962,6 +2124,10 @@ Pull Requests:
   pr diff <id>        Show PR diff (or --stat for summary)
   pr status           Show PRs you authored or are reviewing
   pr activity <id>    Show PR activity timeline
+
+Downloads (attach images to PRs — no browser needed):
+  download upload <file>  Upload a file, print its URL (use in ![](url) markdown)
+  download list           List files in the Downloads area
 
 Raw API:
   api <path>          Make a raw API call with correct auth (escape hatch)
@@ -1993,7 +2159,10 @@ Examples:
   bb pr edit 42 --ready
   bb pr edit 42 --base develop
   bb pr comment 42 --body "Looks good!"
+  bb pr comment 42 --image before-after.png --body "Layout regression:"
   bb pr comment 42 --resolve 12345
+  bb download upload screenshot.png
+  bb download list
   bb pr tasks 42
   bb pr tasks 42 --resolve 12345
   bb pr merge 42 --squash --delete-branch
@@ -2083,6 +2252,14 @@ case "${1:-help}" in
       diff)     shift 2; cmd_source_diff "$@" ;;
       --help|-h) usage; exit 0 ;;
       *)       echo >&2 "unknown source command: $2"; exit 1 ;;
+    esac
+    ;;
+  download)
+    case "${2:-list}" in
+      upload)    shift 2; cmd_download_upload "$@" ;;
+      list)      shift 2; cmd_download_list "$@" ;;
+      --help|-h) usage; exit 0 ;;
+      *)         echo >&2 "unknown download command: $2"; exit 1 ;;
     esac
     ;;
   api)
