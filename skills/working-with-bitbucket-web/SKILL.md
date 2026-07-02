@@ -4,7 +4,7 @@ description: "Last resort for Bitbucket operations that `bb` CLI cannot handle (
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
 ---
 
 # Working with Bitbucket Web
