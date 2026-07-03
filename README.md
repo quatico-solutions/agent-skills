@@ -58,6 +58,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`story-tracking`](skills/story-tracking) | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
 | [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
+| [`typescript-strict-patterns`](skills/typescript-strict-patterns) | Strict TypeScript patterns: discriminated unions, branded types, Zod at boundaries, const arrays over enums. Adopted from [eins78/agent-skills](https://github.com/eins78/agent-skills) |
 | [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, image uploads, source browsing. Requires `install-dependencies.sh` |
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
