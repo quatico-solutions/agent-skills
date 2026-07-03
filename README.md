@@ -39,10 +39,12 @@ npx skills add https://github.com/quatico-solutions/agent-skills.git --global --
 
 ## Skills
 
-The `quatico-skills` plugin bundles all 18 skills below, each linked to its
+The `quatico-skills` plugin bundles all 17 skills below, each linked to its
 directory. The table must stay in sync with the `skills/` directory.
 
-### quatico-skills (18 skills)
+> **Moved skills:** `story-tracking` now ships with **[plot-pm/plot](https://github.com/plot-pm/plot)** — stories and plans are sibling concepts, so it lives with the Plot workflow.
+
+### quatico-skills (17 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -55,7 +57,6 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`jest-testing-conventions`](skills/jest-testing-conventions) | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | [`markdown`](skills/markdown) | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
 | [`show-your-work`](skills/show-your-work) | Executable demo documents proving completed work (showboat + rodney) |
-| [`story-tracking`](skills/story-tracking) | Multi-session tracking for complex tasks — markdown folders with scripts, test plans, and session logs, linked to JIRA |
 | [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
 | [`typescript-strict-patterns`](skills/typescript-strict-patterns) | Strict TypeScript patterns: discriminated unions, branded types, Zod at boundaries, const arrays over enums. Adopted from [eins78/agent-skills](https://github.com/eins78/agent-skills) |
@@ -73,8 +74,7 @@ directory. The table must stay in sync with the `skills/` directory.
 - `challenge-the-plan`: Accepts a plan path as argument, or auto-searches for PLAN/SPEC/STORY files
 - `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
-- `story-tracking`: `"continue on FOOBAR-1234"` or `"create a story for the WCAG audit"`
-- `story-tracking` + `markdown`: Complementary — `story-tracking` covers structure, `markdown` covers syntax
+- `markdown`: Pairs with the `story-tracking` skill from [plot-pm/plot](https://github.com/plot-pm/plot) — that skill covers story structure, `markdown` covers syntax
 - `working-with-bitbucket-api` + `working-with-bitbucket-web`: Complementary — API skill handles PR operations, image uploads, and source browsing via `bb` CLI; web skill is a fallback for SSO-gated pages. Run `install-dependencies.sh` to set up `bb`
 - `working-with-jira-web`: Requires native browser tools (Claude in Chrome / Cursor Browser) — MCP browser tools can't handle SSO
 

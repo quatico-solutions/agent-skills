@@ -19,4 +19,4 @@ Originally the markdown rules were inline in `story-tracking`. Extracted as a co
 
 ## Related Skills
 
-- `story-tracking` — primary consumer of these rules
+- `story-tracking` (now in [plot-pm/plot](https://github.com/plot-pm/plot)) — primary consumer of these rules
