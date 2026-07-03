@@ -7,13 +7,12 @@ Agent instructions for the `agent-skills` repository.
 A single plugin (`quatico-skills`) over a flat skill pool:
 
 ```
-skills/          ← 17 skills (flat pool, one dir per skill)
-commands/        ← 1 command
+skills/          ← 16 skills (flat pool, one dir per skill)
 .claude-plugin/  ← marketplace.json + plugin.json
 .cursor-plugin/  ← marketplace.json + plugin.json
 ```
 
-Both marketplace manifests define one plugin, `quatico-skills`, with `source: "./"`; skills are discovered from `skills/` and commands from `commands/`. No symlinks. Layout follows the flat-pool convention of `anthropics/skills`.
+Both marketplace manifests define one plugin, `quatico-skills`, with `source: "./"`; skills are discovered from `skills/` (and commands from `commands/`, currently empty — the only command moved to plot-pm/plot with its skill). No symlinks. Layout follows the flat-pool convention of `anthropics/skills`.
 
 ## Versioning
 
