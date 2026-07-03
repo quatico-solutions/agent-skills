@@ -119,16 +119,6 @@
       }
     },
     {
-      "name": "story-tracking",
-      "description": "Use when user says \\continue on\\, \\work on\\, \\create story\\, \\new story\\, \\resume\\, or references a JIRA ticket for multi-session work. NOT for Storybook UI component stories.",
-      "version": "1.0.0",
-      "source": "./skills/story-tracking",
-      "author": {
-        "name": "Quatico Solutions AG",
-        "email": ""
-      }
-    },
-    {
       "name": "test-driven-development",
       "description": "Use when implementing any feature or bugfix, before writing implementation code. Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow.",
       "version": "1.0.0",
