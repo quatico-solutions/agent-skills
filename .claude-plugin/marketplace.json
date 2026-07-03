@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "2.1.0",
+      "version": "3.0.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -81,7 +81,7 @@
     {
       "name": "markdown",
       "description": "Use when writing or reviewing any markdown file in this workspace. Quick reference for supported syntax (CommonMark + Bitbucket safe).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./skills/markdown",
       "author": {
         "name": "Quatico Solutions AG",
@@ -123,6 +123,16 @@
       "description": "Use when the user wants to triage a JIRA ticket, analyze a bug report or feature request, assess ticket readiness, scope changes, or evaluate a ticket before sprint planning. Triggers: triage, tick...",
       "version": "1.0.0",
       "source": "./skills/triage-ticket",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "typescript-strict-patterns",
+      "description": "Use when writing or reviewing any TypeScript code. Covers discriminated unions, branded types, Zod at boundaries, const arrays over enums, and safe access patterns.",
+      "version": "1.0.0",
+      "source": "./skills/typescript-strict-patterns",
       "author": {
         "name": "Quatico Solutions AG",
         "email": ""
