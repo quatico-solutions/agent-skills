@@ -7,7 +7,7 @@ Agent instructions for the `agent-skills` repository.
 A single plugin (`quatico-skills`) over a flat skill pool:
 
 ```
-skills/          ← 17 skills (flat pool, one dir per skill)
+skills/          ← 18 skills (flat pool, one dir per skill)
 commands/        ← 1 command
 .claude-plugin/  ← marketplace.json + plugin.json
 .cursor-plugin/  ← marketplace.json + plugin.json

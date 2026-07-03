@@ -39,10 +39,10 @@ npx skills add https://github.com/quatico-solutions/agent-skills.git --global --
 
 ## Skills
 
-The `quatico-skills` plugin bundles all 17 skills below, each linked to its
+The `quatico-skills` plugin bundles all 18 skills below, each linked to its
 directory. The table must stay in sync with the `skills/` directory.
 
-### quatico-skills (17 skills)
+### quatico-skills (18 skills)
 
 | Skill | Description |
 |-------|-------------|
