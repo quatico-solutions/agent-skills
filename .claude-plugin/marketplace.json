@@ -39,16 +39,6 @@
       }
     },
     {
-      "name": "challenge-the-plan",
-      "description": "Systematically interrogate implementation plans through adaptive depth interviews covering technical, domain, UX, and non-functional dimensions to uncover gaps and validate decisions. Use when: use...",
-      "version": "1.0.0",
-      "source": "./skills/challenge-the-plan",
-      "author": {
-        "name": "Quatico Solutions AG",
-        "email": ""
-      }
-    },
-    {
       "name": "commit",
       "description": "When and what to commit. Covers timing, atomic commits, and git hooks. Use when: making commits, deciding when to commit, preparing changes. Triggers: commit, commit this, commit changes, git commi...",
       "version": "1.0.0",

@@ -39,18 +39,17 @@ npx skills add https://github.com/quatico-solutions/agent-skills.git --global --
 
 ## Skills
 
-The `quatico-skills` plugin bundles all 17 skills below, each linked to its
+The `quatico-skills` plugin bundles all 16 skills below, each linked to its
 directory. The table must stay in sync with the `skills/` directory.
 
-> **Moved skills:** `story-tracking` now ships with **[plot-pm/plot](https://github.com/plot-pm/plot)** — stories and plans are sibling concepts, so it lives with the Plot workflow.
+> **Moved skills:** `story-tracking` and `challenge-the-plan` now ship with **[plot-pm/plot](https://github.com/plot-pm/plot)** — stories and plans are sibling concepts, and plan interrogation is the design-phase companion, so both live with the Plot workflow.
 
-### quatico-skills (17 skills)
+### quatico-skills (16 skills)
 
 | Skill | Description |
 |-------|-------------|
 | [`bye`](skills/bye) | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
 | [`branch-and-commit`](skills/branch-and-commit) | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
-| [`challenge-the-plan`](skills/challenge-the-plan) | Deep plan interrogation: adaptive interviews across technical, domain, UX, non-functional dimensions |
 | [`commit`](skills/commit) | When and what to commit: timing, atomic commits, git hooks, skip policies |
 | [`commit-notation`](skills/commit-notation) | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
 | [`handling-pull-requests`](skills/handling-pull-requests) | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
@@ -71,7 +70,6 @@ directory. The table must stay in sync with the `skills/` directory.
 - `branch-and-commit`: `"organize my uncommitted changes into commits"`
 - `writing-clearly-and-concisely`: Works on any prose — `"rewrite @README.md using /writing-clearly-and-concisely"`
 - `handling-pull-requests`: Can drive review responses end-to-end — `"use /chrome to address my review comments"`
-- `challenge-the-plan`: Accepts a plan path as argument, or auto-searches for PLAN/SPEC/STORY files
 - `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
 - `markdown`: Pairs with the `story-tracking` skill from [plot-pm/plot](https://github.com/plot-pm/plot) — that skill covers story structure, `markdown` covers syntax
