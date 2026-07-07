@@ -161,3 +161,110 @@ No pull requests match the query
 `)
   })
 })
+
+describe('bb pr list --json <fields> / --jq', () => {
+  let server: MockServer
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => server.reset())
+
+  it('Projects a single gh-style field', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I request only headRefName
+    const result = await bb('pr list --json headRefName', { port: server.port })
+
+    // Then each element is an object with exactly that key, mapped from the BB path
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), [
+      { headRefName: 'feature/login' },
+      { headRefName: 'fix/readme-typo' },
+    ])
+  })
+
+  it('Projects multiple fields with mapped values', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I request number,headRefName,isDraft
+    const result = await bb('pr list --json number,headRefName,isDraft', { port: server.port })
+
+    // Then each element has exactly those keys
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), [
+      { number: 42, headRefName: 'feature/login', isDraft: false },
+      { number: 43, headRefName: 'fix/readme-typo', isDraft: false },
+    ])
+  })
+
+  it('Mirrors gh author shape ({login})', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I request author
+    const result = await bb('pr list --json author', { port: server.port })
+
+    // Then author is an object with a login key (from .author.nickname)
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), [
+      { author: { login: 'alice' } },
+      { author: { login: 'bob' } },
+    ])
+  })
+
+  it('Passes JSON through --jq (acceptance: one branch per line)', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I run the forge-portable acceptance command
+    const result = await bb(
+      ['pr', 'list', '--state', 'open', '--json', 'headRefName', '--jq', '.[].headRefName'],
+      { port: server.port }
+    )
+
+    // Then stdout is one raw branch name per line
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stdout, 'feature/login\nfix/readme-typo\n')
+  })
+
+  it('Rejects an unknown field', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I request a field that does not exist
+    const result = await bb('pr list --json bogus', { port: server.port })
+
+    // Then it exits 1 and names the supported fields on stderr
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /unknown field 'bogus'/)
+    assert.match(result.stderr, /headRefName/)
+  })
+
+  it('Rejects --jq without --json', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I use --jq without --json
+    const result = await bb(['pr', 'list', '--jq', '.'], { port: server.port })
+
+    // Then it exits 1 with a clear message
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--jq requires --json/)
+  })
+
+  it('Bare --json still emits full objects (regression)', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I run bare --json
+    const result = await bb('pr list --json', { port: server.port })
+
+    // Then the full Bitbucket objects are returned unchanged (nested paths intact)
+    const parsed = JSON.parse(result.stdout)
+    assert.equal(result.exitCode, 0)
+    assert.equal(parsed.length, 2)
+    assert.equal(parsed[0].source.branch.name, 'feature/login')
+    assert.equal(parsed[0].id, 42)
+  })
+})
