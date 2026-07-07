@@ -108,6 +108,18 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 
 Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags, defaults, and examples.
 
+### Targeting another repository (`-R`)
+
+By default `bb` auto-detects the workspace/repo from the current directory's `origin` remote. To operate on a **different** repo — or from a directory that is not a Bitbucket checkout at all — pass the global `-R workspace/repo` flag **before** the subcommand:
+
+```bash
+bb -R quatico/other-repo source ls
+bb -R quatico/other-repo source cat README.md --ref develop
+bb -R quatico/other-repo pr list
+```
+
+`-R` is global, so it works for every command (`source`, `pr`, `api`, …). It must come **before** the subcommand — `bb source cat -R …` will not work. Without `-R`, source browsing and all other operations act on the current repo only.
+
 ---
 
 ## Raw API Access
@@ -120,7 +132,7 @@ bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
 bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"test"}'
 ```
 
-`{ws}` and `{repo}` are auto-replaced with the current repo's workspace and slug.
+`{ws}` and `{repo}` are auto-replaced with the current repo's workspace and slug — or with the repo named by a global `-R workspace/repo` flag (see [Targeting another repository](#targeting-another-repository--r)).
 
 ---
 
