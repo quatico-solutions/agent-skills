@@ -326,8 +326,15 @@ bb_format_diffstat() {
 # so other `pr` subcommands can reuse it later.
 bb_pr_json_projection() {
   local fields="$1" frag out="" f
-  local IFS=','
-  for f in $fields; do
+  local -a list
+  # Reject empty field names (leading/trailing/double comma). Checked on the raw
+  # string because `read` silently drops a trailing empty segment.
+  if [[ "$fields" == ,* || "$fields" == *, || "$fields" == *,,* ]]; then
+    echo >&2 "error: empty field name in list '$fields'"
+    return 1
+  fi
+  IFS=',' read -ra list <<< "$fields"
+  for f in "${list[@]}"; do
     case "$f" in
       number)      frag="number: .id" ;;
       title)       frag="title: .title" ;;

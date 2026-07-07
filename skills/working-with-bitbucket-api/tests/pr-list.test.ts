@@ -267,4 +267,79 @@ describe('bb pr list --json <fields> / --jq', () => {
     assert.equal(parsed[0].source.branch.name, 'feature/login')
     assert.equal(parsed[0].id, 42)
   })
+
+  it('Keeps Bitbucket state casing (documented gh divergence)', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I project the state field
+    const result = await bb('pr list --json state', { port: server.port })
+
+    // Then values stay Bitbucket's uppercase (not gh's lowercase)
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), [{ state: 'OPEN' }, { state: 'OPEN' }])
+  })
+
+  it('Projects null when a mapped path is absent', async () => {
+    // Given a PR with no author object
+    const noAuthor = {
+      values: [{
+        id: 99, title: 'Orphan', state: 'OPEN', draft: false,
+        source: { branch: { name: 'feature/orphan' } },
+        destination: { branch: { name: 'main' } }, reviewers: []
+      }],
+      page: 1, size: 1
+    }
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', noAuthor)
+
+    // When I project author (nickname absent)
+    const result = await bb('pr list --json author', { port: server.port })
+
+    // Then it does not crash; login is null
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), [{ author: { login: null } }])
+  })
+
+  it('Rejects a field list mixing valid and unknown fields', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When one of several fields is unknown
+    const result = await bb('pr list --json number,bogus', { port: server.port })
+
+    // Then it fails on the unknown one
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /unknown field 'bogus'/)
+  })
+
+  it('Rejects an empty field name (trailing/double comma)', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When the field list has a trailing comma
+    const trailing = await bb('pr list --json number,', { port: server.port })
+    // And when it has a double comma
+    const doubled = await bb('pr list --json number,,title', { port: server.port })
+
+    // Then both fail with a clear empty-field message
+    assert.equal(trailing.exitCode, 1)
+    assert.match(trailing.stderr, /empty field name/)
+    assert.equal(doubled.exitCode, 1)
+    assert.match(doubled.stderr, /empty field name/)
+  })
+
+  it('Applies --jq to full objects when no field list is given', async () => {
+    // Given bitbucket has open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+
+    // When I --jq over the full (unprojected) objects
+    const result = await bb(
+      ['pr', 'list', '--json', '--jq', '.[].source.branch.name'],
+      { port: server.port }
+    )
+
+    // Then jq reads the raw Bitbucket paths
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stdout, 'feature/login\nfix/readme-typo\n')
+  })
 })

@@ -8,7 +8,7 @@ Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Follows the same API-
 
 ## Design Decisions
 
-- **`gh` CLI conventions**: flag names (`--body`, `--head`, `--base`, `--reviewer`), command structure (`bb pr <verb>`), output modes (human-readable default, `--json` for machines)
+- **`gh` CLI conventions**: flag names (`--body`, `--head`, `--base`, `--reviewer`), command structure (`bb pr <verb>`), output modes (human-readable default, `--json` for machines). `bb pr list` also mirrors gh's scripting seam: `--json <fields>` selects gh-named fields (mapped to Bitbucket API paths) and `--jq <expr>` post-filters — so `bb pr list --json headRefName --jq '.[].headRefName'` matches the shape of the gh equivalent. See `bb pr list --help` for the field list.
 - **macOS Keychain auth**: no tokens in files or env by default — `security find-generic-password` at runtime
 - **Auto-detect workspace/repo**: parses `git remote get-url origin` so you don't have to type it
 - **Bundled in qs-config**: `bb` script ships in `bin/bb` within this skill directory; `install-dependencies.sh` symlinks it to `~/bin/`
