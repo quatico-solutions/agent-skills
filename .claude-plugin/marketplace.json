@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -141,7 +141,7 @@
     {
       "name": "working-with-bitbucket-api",
       "description": "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branch, tag) i...",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "source": "./skills/working-with-bitbucket-api",
       "author": {
         "name": "Quatico Solutions AG",

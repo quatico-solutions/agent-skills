@@ -1,5 +1,27 @@
 # @quatico-solutions/agent-skills
 
+## 3.2.0
+
+### Minor Changes
+
+- [#22](https://github.com/quatico-solutions/agent-skills/pull/22) [`df688e1`](https://github.com/quatico-solutions/agent-skills/commit/df688e16fc8caf675864652cc023d81107824d16) Thanks [@eins78](https://github.com/eins78)! - Document the global `-R workspace/repo` flag in `working-with-bitbucket-api` so agents know `bb source` (and every other command) can target a repo other than the current directory's
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+### Patch Changes
+
+- [#21](https://github.com/quatico-solutions/agent-skills/pull/21) [`44a134f`](https://github.com/quatico-solutions/agent-skills/commit/44a134fcb45d4bde3542f79f6734707177446f71) Thanks [@eins78](https://github.com/eins78)! - `bb --version` now reports the skill's actual version — the internal `BB_VERSION` string had been stuck at 1.0.0 across releases. The release chain (`sync-versions.sh`) keeps it in lockstep with the skill version from now on.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.1.0
 
 ### Minor Changes
