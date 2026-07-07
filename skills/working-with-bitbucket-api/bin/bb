@@ -318,6 +318,43 @@ bb_format_diffstat() {
   ] | @tsv' | column -t -s $'\t'
 }
 
+# Map a comma-separated list of gh-style field names to a jq program that
+# projects each PR object into an object with exactly those keys (gh semantics:
+# `--json a,b` -> [{"a":…,"b":…},…]). Field names mirror `gh pr list --json`;
+# values are read from the Bitbucket API v2 paths. Prints an error naming the
+# supported fields and returns 1 on any unknown field. Kept subcommand-agnostic
+# so other `pr` subcommands can reuse it later.
+bb_pr_json_projection() {
+  local fields="$1" frag out="" f
+  local -a list
+  # Reject empty field names (leading/trailing/double comma). Checked on the raw
+  # string because `read` silently drops a trailing empty segment.
+  if [[ "$fields" == ,* || "$fields" == *, || "$fields" == *,,* ]]; then
+    echo >&2 "error: empty field name in list '$fields'"
+    return 1
+  fi
+  IFS=',' read -ra list <<< "$fields"
+  for f in "${list[@]}"; do
+    case "$f" in
+      number)      frag="number: .id" ;;
+      title)       frag="title: .title" ;;
+      state)       frag="state: .state" ;;
+      headRefName) frag="headRefName: .source.branch.name" ;;
+      baseRefName) frag="baseRefName: .destination.branch.name" ;;
+      isDraft)     frag="isDraft: .draft" ;;
+      author)      frag="author: {login: .author.nickname}" ;;
+      url)         frag="url: .links.html.href" ;;
+      createdAt)   frag="createdAt: .created_on" ;;
+      updatedAt)   frag="updatedAt: .updated_on" ;;
+      *)
+        echo >&2 "error: unknown field '$f' (supported: number, title, state, headRefName, baseRefName, isDraft, author, url, createdAt, updatedAt)"
+        return 1 ;;
+    esac
+    out="${out:+$out, }$frag"
+  done
+  printf '[.[] | { %s }]' "$out"
+}
+
 # --- Subcommands: auth -------------------------------------------------------
 
 cmd_auth_status() {
@@ -464,17 +501,27 @@ cmd_pr_list() {
 List pull requests in the current repository.
 
 USAGE
-  bb pr list [--state <state>] [--author <name>] [--json]
+  bb pr list [--state <state>] [--author <name>] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
-  --state <state>   Filter by state: open, merged, declined, superseded (default: open)
-  --author <name>   Filter by author (nickname or display name)
-  --json            Output raw JSON array
+  --state <state>    Filter by state: open, merged, declined, superseded (default: open)
+  --author <name>    Filter by author (nickname or display name)
+  --json [<fields>]  Output JSON. Bare --json emits the full Bitbucket API objects.
+                     An optional comma-separated field list projects each PR into
+                     an object with just those keys (gh-style), e.g. --json number,headRefName.
+                     Supported fields (gh name -> value):
+                       number, title, state, headRefName, baseRefName,
+                       isDraft, author, url, createdAt, updatedAt
+                     Note: state values stay Bitbucket's (OPEN/MERGED/DECLINED/SUPERSEDED),
+                     not gh's lowercase. mergedAt is not supported (absent on BB PR objects).
+  --jq <expr>        Filter the JSON output through jq (raw output, -r). Requires --json.
 
 EXAMPLES
   bb pr list
   bb pr list --state merged
   bb pr list --author alice --json
+  bb pr list --json number,headRefName,isDraft
+  bb pr list --state open --json headRefName --jq '.[].headRefName'
 HELP
         exit 0
         ;;
@@ -486,10 +533,24 @@ HELP
         esac
         ;;
       --author)  author="$2"; shift 2 ;;
-      --json)    JSON_OUTPUT=1; shift ;;
+      --json)
+        JSON_OUTPUT=1; shift
+        # `pr list` takes no positional args, so a bare word after --json is the
+        # optional field list. A --flag token won't match, so --json --jq / --json
+        # --author keep today's full-object behavior.
+        if [[ $# -gt 0 && "$1" =~ ^[a-zA-Z][a-zA-Z0-9,]*$ ]]; then
+          JSON_FIELDS="$1"; shift
+        fi
+        ;;
+      --jq)      JQ_EXPR="$2"; shift 2 ;;
       *)         echo >&2 "unknown flag: $1"; exit 1 ;;
     esac
   done
+
+  # --jq operates on JSON output (mirrors gh, which requires --json for --jq).
+  if [[ -n "${JQ_EXPR:-}" && "${JSON_OUTPUT:-}" != "1" ]]; then
+    echo >&2 "error: --jq requires --json"; exit 1
+  fi
 
   local ws repo path
   ws="$(bb_workspace)"
@@ -516,7 +577,18 @@ HELP
   fi
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
-    echo "$result" | jq .
+    local out="$result"
+    # Project to the requested fields first (gh order: projection, then --jq).
+    if [[ -n "${JSON_FIELDS:-}" ]]; then
+      local proj
+      proj="$(bb_pr_json_projection "$JSON_FIELDS")" || exit 1
+      out="$(echo "$out" | jq "$proj")"
+    fi
+    if [[ -n "${JQ_EXPR:-}" ]]; then
+      echo "$out" | jq -r "$JQ_EXPR"
+    else
+      echo "$out" | jq .
+    fi
   else
     local count
     count="$(echo "$result" | jq 'length')"
