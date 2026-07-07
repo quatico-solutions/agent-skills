@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.1.0
+
+### Minor Changes
+
+- [#19](https://github.com/quatico-solutions/agent-skills/pull/19) [`8ccf35b`](https://github.com/quatico-solutions/agent-skills/commit/8ccf35b5d6e00f7372b4e66aad1e386768877e6f) Thanks [@eins78](https://github.com/eins78)! - working-with-bitbucket-api: `bb pr list` gains gh-compatible `--json <fields>` field selection and a `--jq <expr>` passthrough for scripting
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
 ## 3.0.0
 
 ### Major Changes
