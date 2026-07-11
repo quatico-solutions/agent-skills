@@ -167,16 +167,6 @@
         "name": "Quatico Solutions AG",
         "email": ""
       }
-    },
-    {
-      "name": "writing-clearly-and-concisely",
-      "description": "Apply Strunks timeless writing rules to ANY prose humans will read—documentation, commit messages, error messages, explanations, reports, or UI text. Makes your writing clearer, stronger, and more ...",
-      "version": "1.0.0",
-      "source": "./skills/writing-clearly-and-concisely",
-      "author": {
-        "name": "Quatico Solutions AG",
-        "email": ""
-      }
     }
   ]
 }
