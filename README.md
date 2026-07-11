@@ -63,12 +63,10 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
-| [`writing-clearly-and-concisely`](skills/writing-clearly-and-concisely) | Strunk's *Elements of Style* (1918) for clear prose—docs, commits, error messages, UI text. [Source](https://github.com/obra/the-elements-of-style) |
 
 **Usage tips:**
 
 - `branch-and-commit`: `"organize my uncommitted changes into commits"`
-- `writing-clearly-and-concisely`: Works on any prose — `"rewrite @README.md using /writing-clearly-and-concisely"`
 - `handling-pull-requests`: Can drive review responses end-to-end — `"use /chrome to address my review comments"`
 - `commit` + `commit-notation`: Complementary — `commit` covers timing and composition, `commit-notation` covers message format
 - `show-your-work`: `"show your work"` — creates executable demo docs with screenshots and command output
