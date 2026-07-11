@@ -1,5 +1,14 @@
 # @quatico-solutions/agent-skills
 
+## 3.3.0
+
+### Minor Changes
+
+- [#24](https://github.com/quatico-solutions/agent-skills/pull/24) [`8e92e74`](https://github.com/quatico-solutions/agent-skills/commit/8e92e74207c258745ae6b5e87661874cdda282ca) Thanks [@eins78](https://github.com/eins78)! - Remove the writing-clearly-and-concisely skill from this repo. It packaged
+  public-domain content (Strunk, _The Elements of Style_, 1918) from an upstream
+  project; to keep using it, install it from upstream:
+  <https://github.com/obra/the-elements-of-style>.
+
 ## 3.2.0
 
 ### Minor Changes
