@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.4.0
+
+### Minor Changes
+
+- [#26](https://github.com/quatico-solutions/agent-skills/pull/26) [`5c1edfd`](https://github.com/quatico-solutions/agent-skills/commit/5c1edfd03b26004ecec85114cd73052bfdc917ef) Thanks [@michaelaemisegger](https://github.com/michaelaemisegger)! - schweizer-schreibweise: percent and unit formatting — comma decimal (8,1 %, never the currency point) and a space before % and unit symbols
+
+  <!--
+  bumps:
+    skills:
+      schweizer-schreibweise: minor
+  -->
+
 ## 3.3.0
 
 ### Minor Changes
