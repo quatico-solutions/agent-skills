@@ -63,11 +63,14 @@ Characters:
 | Thousands separator | Apostrophe or thin space | Period | 1'000 or 1 000 (not 1.000) |
 | Decimal: general | Comma | Comma | 4,6 km |
 | Decimal: currency | **Point** | Comma | CHF 99.95 (not 99,95) |
+| Percent & units | Comma + space before symbol | Comma + space | 8,1 % · 5 kg · 50 km/h (not 8,1% or 8.1 %) |
 | Telephone numbers | Groups of 2 from right | Various | 044 123 45 67 |
 
 The apostrophe thousands separator (1'000) is the most common Swiss convention. The official Bundeskanzlei style uses thin spaces (1 000), but apostrophe is universally accepted and more common in business writing.
 
 **Critical:** Currency decimals use a point (CHF 99.95), not a comma. This is the opposite of general decimals (4,6 km). This trips up many writers.
+
+**Percent and units:** A percentage is *not* a currency — it takes the general decimal (comma), never the currency point: **8,1 %**, not 8.1 %. And like every unit symbol, `%` takes a space before it: 8,1 % / 50 % (not 8,1% or 50%). In flowing prose, spelling it out — «8,1 Prozent» — is the cleanest form; the `%` sign belongs in tables, graphics, and short copy (LinkedIn, ads). The same spacing applies to units: 5 kg, 50 km/h, 28,7 °C.
 
 ### Currency
 
@@ -195,7 +198,7 @@ When writing or reviewing Swiss German text, verify:
 
 1. **No ß** — every ß replaced with ss
 2. **Guillemets** — «» for quotes, ‹› for nested (not „" or "")
-3. **Numbers** — apostrophe thousands (1'000), comma decimals (4,6), but point for currency (CHF 99.95)
+3. **Numbers** — apostrophe thousands (1'000), comma decimals (4,6), but point for currency (CHF 99.95); percent takes comma + space (8,1 %, not 8,1% or 8.1 %)
 4. **Currency** — CHF prefix with point decimals (CHF 1'250.00)
 5. **Time** — period separator (13.30 Uhr, not 13:30)
 6. **Past tense** — Perfekt preferred over Präteritum
