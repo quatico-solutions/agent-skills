@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.3.0",
+      "version": "3.4.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -91,7 +91,7 @@
     {
       "name": "schweizer-schreibweise",
       "description": "Use when writing or reviewing German-language content for Swiss audiences — orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar (Perfekt, dative), vocabulary ...",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "source": "./skills/schweizer-schreibweise",
       "author": {
         "name": "Quatico Solutions AG",
