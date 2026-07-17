@@ -1,5 +1,26 @@
 # @quatico-solutions/agent-skills
 
+## 3.4.1
+
+### Patch Changes
+
+- [#28](https://github.com/quatico-solutions/agent-skills/pull/28) [`9a0c106`](https://github.com/quatico-solutions/agent-skills/commit/9a0c10662341241d68c950ae22a857bce6a6b8f4) Thanks [@eins78](https://github.com/eins78)! - working-with-bitbucket-api: state that this skill is the single source of truth for the `bb` command surface — repos must not keep a local `gh`→`bb` translation table (it drifts and spreads stale mappings); translate on the fly instead.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+  </content>
+
+- [#29](https://github.com/quatico-solutions/agent-skills/pull/29) [`4f5da72`](https://github.com/quatico-solutions/agent-skills/commit/4f5da723bd01dd5fa073939584aad25582a34dcb) Thanks [@eins78](https://github.com/eins78)! - working-with-bitbucket-api: turn the "Prerequisites" step into a real **Step 0 version gate**. The old check only confirmed `bb` _runs_ — so an older build, or a `~/bin/bb` symlink left pointing into a previous plugin version, passed while silently lacking newer subcommands/flags, producing failures that look like API/auth errors. The gate now compares `bb --version` and `readlink -f "$(command -v bb)"` against the version this skill ships (`BB_VERSION`), reinstalls from the skill if it's missing/older/foreign, and adds the rule: never diagnose a `bb` error before ruling out a version mismatch.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.4.0
 
 ### Minor Changes
