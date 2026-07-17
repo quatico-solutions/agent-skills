@@ -17,25 +17,31 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 ---
 
-## Prerequisites
+## Step 0 (gate): confirm `bb` is installed, current, AND this skill's — before any command
 
-Before using any `bb` command, verify it is installed **and working**:
-
-```bash
-bb --version 2>/dev/null
-```
-
-**If `bb` works:** Continue.
-
-**If `bb` is not found or fails** (e.g., stale symlink after plugin upgrade): Run `install-dependencies.sh` from this skill directory to install/repair it — no user approval needed, this is safe and idempotent:
+Before any `bb` command, check more than "does it run". A `bb` that merely works can be an
+**older build** — or a `~/bin/bb` symlink left pointing into a previous plugin version — that
+silently lacks newer subcommands or flags. The command then fails in a way that looks like an
+API or auth problem when the real fix is a reinstall. Verify version and provenance first:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"
+bb --version                          # running version
+readlink -f "$(command -v bb)"        # where it actually resolves
+grep BB_VERSION "{{SKILL_DIR}}/bin/bb"   # the version THIS skill ships
 ```
 
-Then verify with `bb auth status`. If not logged in, tell the user to run `bb auth login`.
+**If `bb` is missing, older than the skill's `BB_VERSION`, or resolves outside this skill's
+`bin/`,** reinstall — no user approval needed, this is safe and idempotent:
 
-Do NOT silently fall back to `curl` or browser automation.
+```bash
+bash "{{SKILL_DIR}}/install-dependencies.sh"   # re-symlinks ~/bin/bb -> this skill's bin/bb, checks jq
+```
+
+Re-run `bb --version` to confirm it matches, then check auth with `bb auth status`. If not
+logged in, tell the user to run `bb auth login`.
+
+**Never diagnose a `bb` command or auth error before ruling out a version mismatch** —
+reinstall from this skill first. Do NOT silently fall back to `curl` or browser automation.
 
 > **Exception:** If the user explicitly prefers browser automation, or if the project's CLAUDE.md says to use `working-with-bitbucket-web`, honor that preference.
 
