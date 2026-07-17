@@ -114,6 +114,8 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 
 Run `bb --help` for the full command list, or `bb <command> <subcommand> --help` for flags, defaults, and examples.
 
+> **This skill is the single source of truth for the `bb` command surface.** Do **not** maintain a local `gh`→`bb` translation/mapping table in a repo's `CLAUDE.md`/`AGENTS.md`. A copied local table duplicates this skill and drifts out of date — that is how stale, incorrect mappings spread (e.g. inventing a non-existent `bb pr ready` instead of `bb pr edit <id> --ready`). When a repo's agent-docs reference a `gh` command, translate it on the fly using this skill and `bb --help`, not from a hand-maintained table.
+
 ### Targeting another repository (`-R`)
 
 By default `bb` auto-detects the workspace/repo from the current directory's `origin` remote. To operate on a **different** repo — or from a directory that is not a Bitbucket checkout at all — pass the global `-R workspace/repo` flag **before** the subcommand:
