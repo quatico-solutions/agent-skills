@@ -13,6 +13,8 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 > **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
 
+> **Homebrew is an official dependency of the installer.** `install-dependencies.sh` installs `jq` via brew and copies `bb` into `$(brew --prefix)/bin` (on PATH for every Homebrew user). Non-Homebrew setups: `BB_INSTALL_DIR=<writable-dir-on-your-PATH> ./install-dependencies.sh` — and provide `jq` yourself.
+
 > **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
 
 ---
@@ -20,21 +22,20 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 ## Step 0 (gate): confirm `bb` is installed, current, AND this skill's — before any command
 
 Before any `bb` command, check more than "does it run". A `bb` that merely works can be an
-**older build** — or a `~/bin/bb` symlink left pointing into a previous plugin version — that
-silently lacks newer subcommands or flags. The command then fails in a way that looks like an
-API or auth problem when the real fix is a reinstall. Verify version and provenance first:
+**older build** — installed by a previous version of this skill — that silently lacks newer
+subcommands or flags. The command then fails in a way that looks like an API or auth problem
+when the real fix is a reinstall. Verify the version first:
 
 ```bash
-bb --version                          # running version
-readlink -f "$(command -v bb)"        # where it actually resolves
-grep BB_VERSION "{{SKILL_DIR}}/bin/bb"   # the version THIS skill ships
+bb --version                              # running version (missing counts as outdated)
+grep -m1 BB_VERSION "{{SKILL_DIR}}/bin/bb"   # the version THIS skill ships
 ```
 
-**If `bb` is missing, older than the skill's `BB_VERSION`, or resolves outside this skill's
-`bin/`,** reinstall — no user approval needed, this is safe and idempotent:
+**If `bb` is missing or its version differs from the skill's `BB_VERSION`,** reinstall — no
+user approval needed, this is safe and idempotent:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"   # re-symlinks ~/bin/bb -> this skill's bin/bb, checks jq
+bash "{{SKILL_DIR}}/install-dependencies.sh"   # copies this skill's bin/bb -> $(brew --prefix)/bin/bb, checks jq
 ```
 
 Re-run `bb --version` to confirm it matches, then check auth with `bb auth status`. If not
