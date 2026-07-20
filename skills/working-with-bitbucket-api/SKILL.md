@@ -13,6 +13,8 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 > **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
 
+> **Homebrew is an official dependency of the installer.** `install-dependencies.sh` installs `jq` via brew and copies `bb` into `$(brew --prefix)/bin` (on PATH for every Homebrew user). Non-Homebrew setups: `BB_INSTALL_DIR=<writable-dir-on-your-PATH> ./install-dependencies.sh` — and provide `jq` yourself.
+
 > **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
 
 ---

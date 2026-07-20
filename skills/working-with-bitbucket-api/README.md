@@ -17,6 +17,7 @@ Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Follows the same API-
 
 ## Dependencies
 
+- **Homebrew** (official dependency of `install-dependencies.sh` — provides `jq` and the install dir `$(brew --prefix)/bin`; escape hatch for non-Homebrew setups: `BB_INSTALL_DIR=<dir-on-PATH>` + self-provided `jq`)
 - `curl` (system)
 - `jq` (homebrew)
 - `security` (system — macOS Keychain CLI)
