@@ -2,7 +2,7 @@
 # bb — Bitbucket Cloud CLI (gh-style wrapper around REST API v2)
 set -euo pipefail
 
-BB_VERSION="1.4.1"
+BB_VERSION="1.5.0"
 # BB_API_URL lets the test suite redirect API calls to a local mock server.
 # It is restricted to loopback so it can never be used to exfiltrate the
 # auth token (sent as HTTP Basic on every call) to a remote host — there is

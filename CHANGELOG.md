@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.5.0
+
+### Minor Changes
+
+- [#31](https://github.com/quatico-solutions/agent-skills/pull/31) [`2d167b4`](https://github.com/quatico-solutions/agent-skills/commit/2d167b4ce6d1d70be6d10ded3d9be506691803c0) Thanks [@eins78](https://github.com/eins78)! - working-with-bitbucket-api: install `bb` by **copy into `$(brew --prefix)/bin`** instead of symlinking into `~/bin`. Fixes two real-world failures: `~/bin` is not on macOS default PATH (fresh machines got a non-functional install), and symlinks into the version-based plugin cache dangle after every plugin update. **Homebrew is now an official, documented dependency of the installer** (it was already assumed for `jq`); non-Homebrew setups get an escape hatch: `BB_INSTALL_DIR=<dir-on-PATH> ./install-dependencies.sh` with self-provided `jq`. The installer cleans up the legacy `~/bin/bb` symlink, warns when a foreign `bb` shadows the new one on PATH, and the Step 0 gate verifies by version comparison alone (the `readlink` provenance check is gone — a stale copy is caught by comparing `bb --version` against the skill's `BB_VERSION`).
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
 ## 3.4.1
 
 ### Patch Changes
