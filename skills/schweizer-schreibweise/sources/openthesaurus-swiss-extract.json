@@ -16,6 +16,21 @@
     "comment": ""
   },
   {
+    "swiss": "(der) Lätsch",
+    "equivalents": [
+      "Flunsch",
+      "Gesicht (ziehen)",
+      "vorgeschobene Unterlippe",
+      "Schmollmund",
+      "Schnute",
+      "Fleppe",
+      "Schippe",
+      "(die) Lätsche",
+      "Duckface"
+    ],
+    "comment": ""
+  },
+  {
     "swiss": "(die) Faust im Sack machen",
     "equivalents": [
       "unterdrücken (emotionalen Impuls)",
@@ -284,6 +299,15 @@
       "sich auf seine vier Buchstaben setzen"
     ],
     "comment": "Bsp.: \"Bedeutung: 1. sitzen (derb; aber nur im 'Ausland', d.h. ausserhalb von Bern); 2. absitzen; 'Hocket doch afe ab!': Setzen Sie sich doch schon mal!\" (auf berndeutsch.ch)"
+  },
+  {
+    "swiss": "abkalten",
+    "equivalents": [
+      "abkühlen (lassen)",
+      "abkühlen",
+      "kalt stellen"
+    ],
+    "comment": ""
   },
   {
     "swiss": "Abricotine",
@@ -795,7 +819,9 @@
       "Anrainer",
       "Anwohner",
       "Nachbar",
-      "Grundstücksnachbar"
+      "Grundstücksnachbar",
+      "Adjazent",
+      "Grenznachbar"
     ],
     "comment": ""
   },
@@ -847,7 +873,8 @@
       "Einspruch",
       "Beschwerde",
       "Berufung",
-      "Anfechtung"
+      "Anfechtung",
+      "Contradictio"
     ],
     "comment": ""
   },
@@ -1256,7 +1283,8 @@
     "equivalents": [
       "Schwimmmeister",
       "Bademeister",
-      "Schwimmaufsicht"
+      "Schwimmaufsicht",
+      "Badewaschl"
     ],
     "comment": ""
   },
@@ -1483,7 +1511,9 @@
       "Konkretisierung",
       "Zuschreibung von Eigenschaften",
       "Narrativ",
-      "Einordnung (als)"
+      "Einordnung (als)",
+      "Framing",
+      "Darstellungsweise"
     ],
     "comment": ""
   },
@@ -1697,6 +1727,17 @@
       "Fahrausweisverkäufer"
     ],
     "comment": ""
+  },
+  {
+    "swiss": "Blache",
+    "equivalents": [
+      "Tuch",
+      "Plane",
+      "Persenning",
+      "wasserfestes Gewebe",
+      "Öltuch"
+    ],
+    "comment": "Bsp.: \"Durch den Schaden im Scheunendach drohte das Heu nass zu werden. Das Heu wurde mit Blachen abgedeckt.\" (frsursee.ch)"
   },
   {
     "swiss": "Bostitch",
@@ -3081,7 +3122,8 @@
       "Einspruch",
       "Beschwerde",
       "Berufung",
-      "Anfechtung"
+      "Anfechtung",
+      "Contradictio"
     ],
     "comment": ""
   },
@@ -3090,6 +3132,14 @@
     "equivalents": [
       "Tiefgarage",
       "Parkhaus",
+      "Parkgebäude"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "Einstellraum",
+    "equivalents": [
+      "Garage",
       "Parkgebäude"
     ],
     "comment": ""
@@ -3125,6 +3175,16 @@
     "comment": ""
   },
   {
+    "swiss": "Einwohnerdienste",
+    "equivalents": [
+      "Einwohnermeldeamt",
+      "Meldebehörde",
+      "Meldestelle",
+      "Meldeamt"
+    ],
+    "comment": ""
+  },
+  {
     "swiss": "Einwohnergemeinde",
     "equivalents": [],
     "comment": ""
@@ -3134,10 +3194,8 @@
     "equivalents": [
       "Einwohnermeldeamt",
       "Meldebehörde",
-      "Meldehalle",
-      "Meldeamt",
-      "Bürgeramt",
-      "Bürgerbüro"
+      "Meldestelle",
+      "Meldeamt"
     ],
     "comment": ""
   },
@@ -3725,6 +3783,20 @@
     "comment": ""
   },
   {
+    "swiss": "Finken",
+    "equivalents": [
+      "Pantoletten",
+      "Mules",
+      "Pantoffeln",
+      "Patschen",
+      "Schlappen",
+      "Hausschuh",
+      "Schlorren",
+      "Puschen"
+    ],
+    "comment": ""
+  },
+  {
     "swiss": "fischeln",
     "equivalents": [
       "nach Fisch riechen"
@@ -4126,6 +4198,19 @@
       "Meis",
       "Schump",
       "Schumpe"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "Gant",
+    "equivalents": [
+      "Lizitation",
+      "Auktion",
+      "Versteigerung",
+      "Vergantung (schweiz. od. veraltet)",
+      "Gantung",
+      "Feilbietung",
+      "Gandt"
     ],
     "comment": ""
   },
@@ -4750,8 +4835,7 @@
       "Nationalversammlung",
       "Bundestag",
       "Abgeordnetenkammer",
-      "Landtag",
-      "heilige Hallen der Demokratie"
+      "Landtag"
     ],
     "comment": ""
   },
@@ -4964,6 +5048,14 @@
       "Meis",
       "Schump",
       "Schumpe"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "Gymi",
+    "equivalents": [
+      "Oberschule",
+      "Gymnasium"
     ],
     "comment": ""
   },
@@ -5182,6 +5274,14 @@
       "Flaschenkiste",
       "Rahmen",
       "Tragl"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "harzen",
+    "equivalents": [
+      "langsam vorangehen",
+      "(es) zieht sich"
     ],
     "comment": ""
   },
@@ -5479,7 +5579,8 @@
       "Abberufung",
       "Hinscheiden",
       "Heimgang",
-      "Sterbefall"
+      "Sterbefall",
+      "Dahinscheiden"
     ],
     "comment": ""
   },
@@ -5772,7 +5873,8 @@
       "schlecht drauf (sein)",
       "übel drauf (sein)",
       "mies drauf (sein)",
-      "(jemandem ist) eine Laus über die Leber gelaufen"
+      "(jemandem ist) eine Laus über die Leber gelaufen",
+      "bruddelig"
     ],
     "comment": ""
   },
@@ -6257,6 +6359,20 @@
       "Ländervertretung",
       "Senat",
       "zweite parlamentarische Kammer"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "Kollaudierung",
+    "equivalents": [
+      "Lob",
+      "Belobigung",
+      "Anerkennung",
+      "lobende Worte",
+      "Worte der Anerkennung",
+      "Würdigung",
+      "Streicheleinheit(en)",
+      "Kollaudation"
     ],
     "comment": ""
   },
@@ -6969,9 +7085,7 @@
     "swiss": "Maturand",
     "equivalents": [
       "Abiturient",
-      "Maturant",
-      "Schulabgänger",
-      "Schulabsolvent"
+      "Maturant"
     ],
     "comment": ""
   },
@@ -7332,7 +7446,8 @@
       "Guckerschecken",
       "Sommersprossen",
       "Gugerschecken",
-      "Sommerflecken"
+      "Sommerflecken",
+      "Epheliden"
     ],
     "comment": ""
   },
@@ -7500,8 +7615,7 @@
       "Nationalversammlung",
       "Bundestag",
       "Abgeordnetenkammer",
-      "Landtag",
-      "heilige Hallen der Demokratie"
+      "Landtag"
     ],
     "comment": ""
   },
@@ -7886,7 +8000,8 @@
       "Preisknaller",
       "Preishammer",
       "Preiskracher",
-      "Supersonderangebot"
+      "Supersonderangebot",
+      "Schnapper"
     ],
     "comment": ""
   },
@@ -8136,10 +8251,8 @@
     "equivalents": [
       "Einwohnermeldeamt",
       "Meldebehörde",
-      "Meldehalle",
-      "Meldeamt",
-      "Bürgeramt",
-      "Bürgerbüro"
+      "Meldestelle",
+      "Meldeamt"
     ],
     "comment": ""
   },
@@ -8202,6 +8315,17 @@
       "Pilotlizenz"
     ],
     "comment": ""
+  },
+  {
+    "swiss": "Plache",
+    "equivalents": [
+      "Tuch",
+      "Plane",
+      "Persenning",
+      "wasserfestes Gewebe",
+      "Öltuch"
+    ],
+    "comment": "Nebenform zu 'Blache', Bsp.: \"Bestimmte Ladungen sind nur in geschlossenen und undurchlässigen Fahrzeugen oder Behältern zu befördern bzw. durch Plachen und dgl. zu überdecken.\" (zvoe.at) | \"Zurück kommen wir ... [aus] unser[em] kuschlige[n] Hüttli..., warm isoliert mit Laub und Tannästen (und mit dem Luxus einer Plache als Regenschutz).\" (wildes-trekking.ch)"
   },
   {
     "swiss": "plätteln",
@@ -8384,16 +8508,17 @@
   {
     "swiss": "präsidieren",
     "equivalents": [
-      "vorstehen",
+      "(einem Gremium) vorstehen",
       "führen",
       "lenken",
       "leiten",
       "die Fäden in der Hand haben",
       "die Leitung innehaben",
       "den Vorsitz führen",
-      "vorsitzen",
+      "(einer Gruppe) vorsitzen",
       "das Zepter schwingen",
-      "das Zepter führen"
+      "das Zepter führen",
+      "den Vorsitz innehaben"
     ],
     "comment": ""
   },
@@ -8634,7 +8759,8 @@
       "Verschlankung (der Firma / der Organisation)",
       "Gesundschrumpfen",
       "Betriebsvereinfachung",
-      "Abspecken"
+      "Abspecken",
+      "Rightsizing"
     ],
     "comment": ""
   },
@@ -8695,7 +8821,8 @@
       "sich unzufrieden äußern",
       "(seinem) Ärger (über / auf etwas) Luft machen",
       "sich unzufrieden zeigen",
-      "sudern"
+      "sudern",
+      "moppern"
     ],
     "comment": ""
   },
@@ -8704,7 +8831,9 @@
     "equivalents": [
       "Stellung",
       "Tauglichkeitsuntersuchung",
-      "Musterung"
+      "Musterung",
+      "Assentierung",
+      "Begutachtung"
     ],
     "comment": ""
   },
@@ -8718,7 +8847,8 @@
       "Einspruch",
       "Beschwerde",
       "Berufung",
-      "Anfechtung"
+      "Anfechtung",
+      "Contradictio"
     ],
     "comment": ""
   },
@@ -8955,7 +9085,8 @@
       "Kötze",
       "Köze",
       "Kraxe",
-      "Traggestell"
+      "Traggestell",
+      "Packrahmen"
     ],
     "comment": ""
   },
@@ -9822,7 +9953,8 @@
       "Kirchner",
       "Mesmer",
       "Messner",
-      "Küster"
+      "Küster",
+      "Ädituus"
     ],
     "comment": ""
   },
@@ -9835,7 +9967,8 @@
       "Kirchner",
       "Mesmer",
       "Messner",
-      "Küster"
+      "Küster",
+      "Ädituus"
     ],
     "comment": ""
   },
@@ -11098,10 +11231,10 @@
     "equivalents": [
       "urwüchsig",
       "naturbelassen",
-      "ungekünstelt",
+      "urig",
       "natürlich",
-      "naturgemäß",
-      "kernig"
+      "urspünglich",
+      "unverfälscht"
     ],
     "comment": ""
   },
@@ -11561,6 +11694,20 @@
       "Grundschule",
       "Elementarschule",
       "Klippschule"
+    ],
+    "comment": ""
+  },
+  {
+    "swiss": "von Beginn weg",
+    "equivalents": [
+      "von Anfang an",
+      "vom Beginn an",
+      "von Anbeginn",
+      "vom Start weg",
+      "sofort",
+      "von Beginn an",
+      "seit Anbeginn",
+      "ab initio"
     ],
     "comment": ""
   },
@@ -12127,7 +12274,8 @@
       "Gabelbissen",
       "Häppchen",
       "Fingerfood",
-      "was zu essen"
+      "was zu essen",
+      "Kleinigkeit zu essen"
     ],
     "comment": ""
   },
@@ -12273,7 +12421,8 @@
       "Gabelbissen",
       "Häppchen",
       "Fingerfood",
-      "was zu essen"
+      "was zu essen",
+      "Kleinigkeit zu essen"
     ],
     "comment": ""
   },

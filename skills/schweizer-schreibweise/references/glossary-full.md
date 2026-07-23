@@ -31,8 +31,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Tagesordnungspunkt → Traktandum
 - Tarifvertrag → Gesamtarbeitsvertrag
 - Taschengeld → Sackgeld
-- Telefongesellschaft → Fernmeldedienstanbieter
 - Telefongesellschaft → FDA
+- Telefongesellschaft → Fernmeldedienstanbieter
 - Zeitungsausträger → Zeitungsverträger
 - Zwangsvollstreckung → Betreibung
 - Übersicht → Auslegeordnung
@@ -166,13 +166,13 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 
 ## Küche, Nahrung
 
-- Abendessen → Znacht
 - Abendessen → Nachtessen
+- Abendessen → Znacht
 - Aperitif → Apéro
 - Bahnhofsrestaurant → Bahnhofbuffet
 - Blechkuchen mit Belag → Wähe
-- Chilischote → Peperoncino
 - Chilischote → Chili
+- Chilischote → Peperoncino
 - den Tisch decken → tischen
 - Eisbecher → Coupe
 - Feldsalat → Nüsslisalat
@@ -325,6 +325,7 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - niedlich → herzig
 - positive Nachricht → Aufsteller
 - prahlen → plagieren
+- Störenfried → Störefried
 - unnachgiebiges Beharren → Zwängerei
 - zügig → speditiv
 
@@ -394,13 +395,14 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 
 - (Außen-)Jalousie → Store
 - (dann) prost (Mahlzeit)! → Proscht Nägeli!
-- (das) Aufgebot (bestellen) → Eheverkünd(ig)ung
 - (das) Aufgebot (bestellen) → (Gesuch um) Durchführung des Vorbereitungsverfahrens
+- (das) Aufgebot (bestellen) → Eheverkünd(ig)ung
 - (das) Personalkarussell (dreht sich) → Sesselrücken
 - (die) Brezn → Bretzel
 - (ein) Ei am Wandern haben → nicht ganz hundert sein
 - (ein) Ei am Wandern haben → einen Ecken abhaben
 - (eine) Strafe zur Bewährung aussetzen → (jemanden) zu einer bedingten Strafe verurteilen
+- (einem Gremium) vorstehen → präsidieren
 - (etwas) verkleinern → (etwas) redimensionieren
 - (Geld) sparen → äufnen
 - (ihre) Kräfte bündeln (um etwas zu tun) → zusammenspannen
@@ -417,10 +419,11 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - (soziale) Randgruppe → Randständige
 - ...chen → ...li
 - 2CV → Döschwo
-- 31. Dezember → Altjahrstag
 - 31. Dezember → Altjahrabend
+- 31. Dezember → Altjahrstag
 - 31. Dezember → Altjahrsabend
 - Abi → Maturität
+- abkühlen (lassen) → abkalten
 - Abschiebehaft → Ausschaffungshaft
 - Abschiebung → Rückschaffung
 - Abschiebung → Ausschaffung
@@ -432,13 +435,13 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Alkoholgegner → Abstinent
 - alles zusammen (Geld) → total
 - Almabtrieb → Alpabzug
-- Almhirte → Küher
 - Almhirte → Älpler
+- Almhirte → Küher
 - Alpen-Soldanelle → Grosses Alpenglöckchen
 - Alster → Panasch
-- Altersrente → gesetzliche Rente
-- Altersrente → AHV-Rente
 - Altersrente → staatliche Rente
+- Altersrente → AHV-Rente
+- Altersrente → gesetzliche Rente
 - Altkatholische Kirche → Christkatholische Kirche
 - Amerikanischer Seesaibling → Kanadische Seeforelle
 - Amt → Amtsstelle
@@ -474,9 +477,9 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Autobahndreieck → Verzweigung
 - Autobusfahrer → Autobuschauffeur
 - Autobusfahrer → Buschauffeur
-- Autofahrer → Wagenlenker
 - Autofahrer → Fahrzeuglenker
 - Autofahrer → Autolenker
+- Autofahrer → Wagenlenker
 - Autoscooter → Putschauto
 - Autostraße → Hauptstrasse
 - Außengrenze → Landesgrenze
@@ -489,8 +492,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Bahnsteigkante → Perronkante
 - Bandmaß → Rollmeter
 - Bandschnalle → Ribbon
-- Bankautomat → Bancomat
 - Bankautomat → Postomat
+- Bankautomat → Bancomat
 - Barett → Béret
 - Bau → Kiste
 - Bemessungsgrundlage → steuerbares Einkommen
@@ -509,20 +512,20 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - besolden → entlöhnen
 - Betreuung → Beistandschaft
 - Bewährungsstrafe → bedingte Strafe
-- Bienlein → Bienle
 - Bienlein → Bienli
+- Bienlein → Bienle
 - Biestmilch → Brieschmilch
 - Biker → Velofahrer
 - Bildschirmtext → Videotex
 - BIP → Bruttoinlandprodukt
 - bis jetzt → (bis) anhin
-- Blaukraut → Kabis
 - Blaukraut → Rotkabis
+- Blaukraut → Kabis
 - Blinkleuchte → Richtungsanzeiger
 - Boche → Gummihals
 - Bodenkohlrabi → gelbe Rübe
-- Bonbon → Täfeli
 - Bonbon → Zältli
+- Bonbon → Täfeli
 - Bremshundertstel → Bremsgewichtshundertstel
 - Briefkuvert → Couvert
 - Brühe → Bouillon
@@ -552,8 +555,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - diplomiert → dipl.
 - Disco → Dancing
 - Distinktion → Gradabzeichen
-- Doktorand → Doktorierender
 - Doktorand → Dissertant
+- Doktorand → Doktorierender
 - Doktorgrad (erlangen) → doktorieren
 - Dorfschule → Gesamtschule
 - Dosenpfand → Flaschendepot
@@ -562,12 +565,12 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Druckraum → Gassenstübli
 - Druckraum → Gassenzimmer
 - durchboxen → durchstieren
-- durchrufen → ein Telefon geben
 - durchrufen → (jemanden / bei jemandem) antelefonieren
+- durchrufen → ein Telefon geben
 - durchwachsen → durchzogen
 - Echter Eibisch → Ibsche
-- Echter Eibisch → Eibschen
 - Echter Eibisch → Ibschge
+- Echter Eibisch → Eibschen
 - Echter Kerbel → Chörblichrut
 - Echter Kerbel → Körblinkraut
 - Echter Pfifferling → Eierschwämmli
@@ -575,6 +578,7 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - einige → etwelche
 - Einlassbeginn → Türöffnung
 - Einwohnermeldeamt → Personenmeldeamt
+- Einwohnermeldeamt → Einwohnerdienste
 - Einzelhandelsgeschäft → Detailgeschäft
 - einäschern → kremieren
 - Eisbecher → Glace-Töpfli
@@ -600,11 +604,11 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Fahrausweiskontrolle → Billettkontrolle
 - Fahrausweisverkauf → Billettverkauf
 - Fahrkartenkontrolleur → Billettkontrolleur
-- Fahrrad-Stellplatz → Velo-Abstellplatz
 - Fahrrad-Stellplatz → Veloparkplatz
-- Fahrrad-Stellplatz → Velostellplatz
 - Fahrrad-Stellplatz → Velo-Stellplatz
+- Fahrrad-Stellplatz → Velo-Abstellplatz
 - Fahrrad-Stellplatz → Velostand
+- Fahrrad-Stellplatz → Velostellplatz
 - Fahrraddraisine → Schienenvelo
 - Fahrraddraisine → Velodraisine
 - Fahrradkurier → Velokurier
@@ -635,6 +639,7 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Fleischhauer → Metzger
 - Fleischkloß → Fleischtätschli
 - Flotte Lotte → Passevite
+- Flunsch → (der) Lätsch
 - Fluppe → Zigi
 - Flurstück → Parzelle
 - Flussaue → Aue
@@ -650,8 +655,9 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Färse → Galtlig
 - Färse → Guschti
 - Führerausweis für Staplerfahrer → Staplerausweis
-- Führerscheinprüfung → Autoprüfung
 - Führerscheinprüfung → Führerprüfung
+- Führerscheinprüfung → Autoprüfung
+- Garage → Einstellraum
 - Gastronomie → Gastgewerbe
 - Gebirgskamm → Krete
 - gebrauchsfertig → pfannenfertig
@@ -660,9 +666,9 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Geheimratsecken → Ratsherrenecken
 - gehubbst wie gehickelt → Hans was Heiri
 - Geldwäsche → Geldwäscherei
-- Gemeindeflur → Allmeind
 - Gemeindeflur → Allmend
 - Gemeindeflur → Allmein
+- Gemeindeflur → Allmeind
 - Gendarm → Tschugger
 - Generalüberholung → Totalrevision
 - Genf → Gänf
@@ -698,13 +704,13 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - harken → rechen
 - Hartkeks → Militärbiskuit
 - Hbf → HB
-- hemdsärmelig → hemdärmelig
 - hemdsärmelig → hemdärmlig
+- hemdsärmelig → hemdärmelig
 - Herlitze → Tierlibaum
 - Heuwender → Heuzettler
-- hi! → Sali!
 - hi! → Salü!
 - hi! → hoi!
+- hi! → Sali!
 - hierbei → dannzumal
 - hinwiederum → handkehrum
 - historische Hilfswissenschaft → Historische Spezialwissenschaft
@@ -733,13 +739,13 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Kai → Quai
 - Kammerjäger → Desinfektor
 - Kampfkandidatur → Sprengkandidatur
-- Kanten → Gupf
-- Kanten → Bödeli
 - Kanten → Mürggel(i)
+- Kanten → Bödeli
+- Kanten → Gupf
 - Kantine → Personalrestaurant
-- Kassenführer → Säckelmeister
 - Kassenführer → Inkassant
 - Kassenführer → Kassier
+- Kassenführer → Säckelmeister
 - Kassenprüfer → Revisor
 - Katzentoilette → Katzenkiste
 - Kautabak → Snüs
@@ -756,8 +762,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Kinderlätzchen → Essmäntelchen
 - Kinderrad → Kindervelo
 - Kirchendiener → Siegrist
-- Kirchenmatrikel → Rödel
 - Kirchenmatrikel → Rodel
+- Kirchenmatrikel → Rödel
 - Klassentreffen → Klassenzusammenkunft
 - Klecks → Tolggen
 - Kleinbürger → Bünzli
@@ -779,10 +785,10 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Krawallmacher → Krawallant
 - Kristallsucher → Strahler
 - Krämerseele → Tüpflischisser
+- Kuhkaff → Hinterpfupfike
 - Kuhkaff → Hinterlupfigen
 - Kuhkaff → Hinterduggigen
 - Kuhkaff → Hinterpfupfikon
-- Kuhkaff → Hinterpfupfike
 - Käsekuchen → Quarktorte
 - Küchengehilfe → Aide
 - Kühltruhe → Tiefkühler
@@ -790,18 +796,21 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Label → Etikette
 - lagern → campieren
 - Land der Dichter und Denker → grosser Kanton (der grosse Kanton)
+- langsam vorangehen → harzen
 - Lappen → Fahrausweis
 - Laugengebäck → Silserbrot
 - Lebensjahr → Altersjahr
 - Lebensverneinung → Defaitismus
 - Leichenschau → Legalinspektion
-- Leichenschmaus → Gräbt
 - Leichenschmaus → Grebt
+- Leichenschmaus → Gräbt
 - Leiden → Gebresten
 - Leihrad → Leihvelo
 - Lichtzeichenanlage → Lichtsignalanlage
 - Liegerad → Liegevelo
 - Liegewagen → Couchette
+- Lizitation → Gant
+- Lob → Kollaudierung
 - Lohn → Entlöhnung
 - Lokomotivsandwich → Doppelpendelzug
 - Lolli → Schleckstängel
@@ -810,8 +819,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - mangeln → happern
 - Mankei → Munggen
 - Manövermunition → Markiermunition
-- Markise → Sonnenstore
 - Markise → Sonnenstoren
+- Markise → Sonnenstore
 - Markung → Gemarchen
 - Mauspad → Mausmatte
 - Medizinische(r) Fachangestellte(r) → Medizinischer Praxis-Assistent
@@ -823,28 +832,28 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Metropolregion → Metropolitanraum
 - Miezekatze → Büsi
 - Milchkanne → Milchkessel
-- Milchkasten → Milchchäschtli
 - Milchkasten → Milchkästli
+- Milchkasten → Milchchäschtli
 - missglücken → fallieren
 - mit Haut und Haaren → gesamthaft
 - Moldau → Republik Moldova
 - Mopp → Flaumer
 - Männerrad → Herrenvelo
-- Mücke → Staunse
-- Mücke → Stanze
 - Mücke → Schnake
+- Mücke → Stanze
+- Mücke → Staunse
 - Mühle → Nünistei
 - Müllbeseitigung → Kehrichtabfuhr
-- Müllverbrennung → Kehrichtverbrennung
 - Müllverbrennung → Kehrichtverwertung
+- Müllverbrennung → Kehrichtverbrennung
 - nach Fisch riechen → fischeln
 - nach hinten → retour
 - Nachsorge → Nachfürsorge
 - Nagelsperre → Nagelgurt
 - Namensaktie → Namenaktie
 - neidvoll → neidhaft
-- Neugeborenes → Buschi
 - Neugeborenes → Bébé
+- Neugeborenes → Buschi
 - Nießbrauch → Nutzniessung
 - Nuckel → Nuggi
 - Oberzentrum → Hauptzentrum
@@ -860,8 +869,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Pennant → Fanion
 - Pensionistenheim → Betagtenheim
 - Peperoni → Peperoncini
-- Perlwein → Sternwein
 - Perlwein → Sternliwein
+- Perlwein → Sternwein
 - Personenstand → Zivilstand
 - Pferdebahn → Rösslitram
 - Pferdewirt → Pferdewart
@@ -884,8 +893,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Postscheck → Postcheque
 - Praktikum → Stage
 - Preisaufschlag → Aufzahlung
-- Pressemitteilung → Medienmitteilung
 - Pressemitteilung → Communiqué
+- Pressemitteilung → Medienmitteilung
 - Presskopf → Schwartemagen
 - Presskopf → Schwartenmagen
 - Proppen → Zapfen (Flasche)
@@ -900,8 +909,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Radfahrstreifen → Velostreifen
 - Radlader → Trax
 - Radrennen → Velorennen
-- Radschnellweg → Velobahn
 - Radschnellweg → Veloschnellweg
+- Radschnellweg → Velobahn
 - Radverleih → Veloverleih
 - Radweg → Veloweg
 - Rauhnächte → Altjahrswoche
@@ -909,8 +918,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Rechtsvorrang → Rechtsvortritt
 - Reff → Räf
 - Reifeprüfung (südtirol.) → Maturitätsprüfung
-- Reifeprüfung (südtirol.) → Matur
 - Reifeprüfung (südtirol.) → Maturitätsexamen
+- Reifeprüfung (südtirol.) → Matur
 - Reifezeugnis → Maturitätszeugnis
 - Reihenhaus → Reiheneinfamilienhaus
 - Reisebus → Reisecar
@@ -920,23 +929,23 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - resignativ → defaitistisch
 - Rettungsdienst → Schutz und Rettung
 - Richtfest → Aufrichtfest
-- Ringelspiel → Reitschule
 - Ringelspiel → Rösslispiel
 - Ringelspiel → Rösslibahn
+- Ringelspiel → Reitschule
 - Rolle vorwärts → Heubürzli
 - Ross → Rössli
 - rumgammeln → flohnen
-- Rutte → Trische
 - Rutte → Treische
+- Rutte → Trische
 - Römisches Licht → Römische Kerze
-- Sacco → Veston
-- Sacco → Tschoope
 - Sacco → Kittel
+- Sacco → Tschoope
+- Sacco → Veston
 - Sahnesteif → Rahmhalter
 - Sammler → Kollektioneur
 - Sattelzug → Sattelmotorfahrzeug
-- Schaffnerkabine → Kondukteurkabine
 - Schaffnerkabine → Billeteurkabine
+- Schaffnerkabine → Kondukteurkabine
 - Schaffnersitz → Kondukteursitz
 - Schaffnersitz → Billeteursitz
 - schalldurchlässig → ringhörig
@@ -947,18 +956,18 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Schlacht → Wuhr
 - Schlacht → Werche
 - Schlampermäppchen → Etui
-- Schlauchschelle → Briden
 - Schlauchschelle → Schlauchbriden
+- Schlauchschelle → Briden
 - Schlotfeger → Kaminfeger
-- Schluckauf → Hitzgi
 - Schluckauf → Glucksi
-- Schluckauf → Hicki
 - Schluckauf → Higgis
+- Schluckauf → Hicki
+- Schluckauf → Hitzgi
 - Schlussbetrachtung → Résumé
 - Schmelzkäse → Schachtelkäse
 - schmotziger Donnerstag → schmutziger Donnerstag
-- Schneewehe → Schneewechte
 - Schneewehe → Wechte
+- Schneewehe → Schneewechte
 - Schnellkochtopf → Duromatic
 - Schnellrestaurant → Take-away
 - Schnitzel → Plätzli
@@ -969,8 +978,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Schriftführer → Aktuar
 - Schubkarre → Garette
 - Schubkarre → Karette
-- Schulaufgabe → Ufzgi
 - Schulaufgabe → Husi
+- Schulaufgabe → Ufzgi
 - Schuldrecht → Obligationenrecht
 - Schulranzen → Thek
 - Schulranzen → Schulsack
@@ -986,21 +995,21 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Schützenfest → Freischiessen
 - Secondhandshop → Brocki
 - Seeschifffahrt → Hochseeschifffahrt
-- Seilrutsche → Tyrolienne
 - Seilrutsche → Tirolienne
+- Seilrutsche → Tyrolienne
 - Seitengleitflug → Glissade
 - Seitenstreifen → Abstellstreifen
 - Semmel → Weggli
 - Serviererin → Saaltochter
+- Servierkraft → Restaurationsfachmann EFZ
 - Servierkraft → Restaurationsfachfrau EFZ
 - Servierkraft → Restaurationsangestellte/r
-- Servierkraft → Restaurationsfachmann EFZ
 - sich melden → aufstrecken
+- sich schleichen → abfahren
 - sich schleichen → sich verkrümeln
+- sich schleichen → Leine ziehen
 - sich schleichen → abschleichen
 - sich schleichen → die Finken klopfen
-- sich schleichen → Leine ziehen
-- sich schleichen → abfahren
 - sich setzen → abhocken
 - Skeptiker → Defaitist
 - so gesehen → aus dieser Optik
@@ -1009,8 +1018,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Sperrfrist → Embargo
 - Spezlwirtschaft → Vetterliwirtschaft
 - Spitzenkandidat → Kronfavorit
-- Springerle → Springerli
 - Springerle → Anisbrötli
+- Springerle → Springerli
 - Sprudel → Mineral
 - Spülbecken → Abwaschbecken
 - Spülmaschine → Abwaschmaschine
@@ -1031,8 +1040,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Straßenablauf → Dole
 - Straßenbahnfahrer → Trampilot
 - Straßenmeisterei → Werkhof
-- Stumpfgleis → Stumpengleis
 - Stumpfgleis → Kopfgleis
+- Stumpfgleis → Stumpengleis
 - Stutenkerl → Grittibänz
 - Stutenkerl → Grättimann
 - Stückzins → Marchzins
@@ -1043,8 +1052,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Süßholz → Bärendreck
 - Tablett → Tableau
 - Tacker → Bostitch
-- Tag zusammen! → Grüezi mitenand!
 - Tag zusammen! → Hoi zäme!
+- Tag zusammen! → Grüezi mitenand!
 - tagsüber → untertags
 - Taschenmesser → Schweizermesser
 - Taschenmesser → Schweizer Offiziersmesser
@@ -1056,8 +1065,8 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Tenor → Dispositiv
 - thermische Abfallbehandlungsanlage → Kehrichtverbrennungsanlage
 - thermische Abfallbehandlungsanlage → KVA
-- Tischfußball → Jöggeli
 - Tischfußball → Töggele
+- Tischfußball → Jöggeli
 - Torr → Millimeter Quecksilbersäule
 - Totenschrein → Totenbaum
 - Totenzettel → Leidzirkular
@@ -1066,12 +1075,13 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - trauernde(r) Angehörige(r) → Hinterlassene(r)
 - Trauersalamander → Totensalamander
 - Treideln → Recken
-- Treppenhaus → Treppenflur
 - Treppenhaus → Hausflur
+- Treppenhaus → Treppenflur
 - Tretboot → Pedalo
 - Trägerbohlwand → Rühlwand
 - Trüffel-Praline → Truffes
 - Tschechenigel → Stahlspinne
+- Tuch → Plache
 - Tunnel → Tunell
 - Turron → Torrone
 - UDS → Restwegaufzeichnungsgerät
@@ -1105,17 +1115,17 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Verzehr → Konsumation
 - Viehgitter → Bovi-Stop
 - viertel (eins) → viertel ab (zwölf)
+- von Anfang an → von Beginn weg
 - Vorfahrtsregel → Vortrittsregel
 - vorgeschobener Beobachter → Schiesskommandant
 - Vorrangverletzung → Vortrittsverletzung
-- Vorsaal → Vorplatz
 - Vorsaal → Entrée
-- vorstehen → präsidieren
+- Vorsaal → Vorplatz
 - Völkerball → Völk
 - Waffenschein → Waffentragbewilligung
 - Wagen → Wägeli
-- Waldmeister → Sternleberkraut
 - Waldmeister → Herfreudeli
+- Waldmeister → Sternleberkraut
 - Waldmeister → Theekraut
 - Wandelobligation → Wandler
 - Wanderarbeiter → Saisonnier
@@ -1151,18 +1161,18 @@ DE-DE → DE-CH. Beim Schreiben auf Schweizer Hochdeutsch die rechte Spalte verw
 - Zeitrelais → Minuterie
 - Zeitungsausträger → Verträger
 - Zibarte → Zibelle
-- Zibarte → Ziberli
 - Zibarte → Zyberli
+- Zibarte → Ziberli
 - Zicklein → Gitzi
 - Zuckerhut → Zuckerstock
 - Zugkreuzung → Zugskreuzung
 - Zugverkehr → Zugsverkehr
 - zuhören → losen
 - zukünftig → dereinst
-- Zusammenlegung → Güterregulierung
+- Zusammenlegung → Arrondierung
 - Zusammenlegung → Landumlegung
 - Zusammenlegung → Güterzusammenlegung
-- Zusammenlegung → Arrondierung
+- Zusammenlegung → Güterregulierung
 - zusätzliche Altersversorgung → Zusatzrente
 - Zuwanderer → Neuzuzüger
 - Zuwanderer → Zuzüger
