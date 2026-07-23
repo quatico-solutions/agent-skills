@@ -1380,6 +1380,11 @@
     "category": "Haus, Haushalt"
   },
   {
+    "swiss": "Störefried",
+    "de_de": "Störenfried",
+    "category": "Menschliches Verhalten"
+  },
+  {
     "swiss": "Teigwaren",
     "de_de": "Nudeln",
     "category": "Küche, Nahrung, Restaurant"
