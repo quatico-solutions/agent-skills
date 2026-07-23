@@ -2,7 +2,7 @@
 # bb — Bitbucket Cloud CLI (gh-style wrapper around REST API v2)
 set -euo pipefail
 
-BB_VERSION="1.5.0"
+BB_VERSION="1.6.0"
 # BB_API_URL lets the test suite redirect API calls to a local mock server.
 # It is restricted to loopback so it can never be used to exfiltrate the
 # auth token (sent as HTTP Basic on every call) to a remote host — there is
@@ -96,7 +96,7 @@ bb_nfc() {
 
 bb_resolve_user() {
   # Resolve a reviewer identifier to a JSON object for the reviewers array.
-  # Returns {account_id} or {uuid}. Accepts: UUID ({...}), account_id (24-char hex), or display name.
+  # Returns {account_id} or {uuid}. Accepts: UUID ({...}), account_id (24-char hex or realm:uuid), or display name.
   local input="$1"
 
   # UUID — use directly
@@ -105,8 +105,8 @@ bb_resolve_user() {
     return
   fi
 
-  # Account ID — 24-char hex
-  if [[ "$input" =~ ^[0-9a-f]{24}$ ]]; then
+  # Account ID — 24-char hex (legacy) or Atlassian realm:uuid (modern, e.g. 557058:<uuid>)
+  if [[ "$input" =~ ^[0-9a-f]{24}$ || "$input" =~ ^[0-9]+:[0-9a-f-]{36}$ ]]; then
     jq -n --arg id "$input" '{"account_id": $id}'
     return
   fi
@@ -134,7 +134,7 @@ bb_resolve_user() {
 
   if [[ -z "$account_id" ]]; then
     echo >&2 "error: cannot resolve reviewer '$input'"
-    echo >&2 "  Use account_id (24-char hex) or UUID ({...}) directly"
+    echo >&2 "  Use account_id (24-char hex or realm:uuid) or UUID ({...}) directly"
     echo >&2 "  Or check: bb -R $ws/$repo pr list --state merged --json | jq '.[].reviewers[].display_name'"
     return 1
   fi
@@ -692,7 +692,7 @@ FLAGS
   --json              Output raw JSON
 
 REVIEWER RESOLUTION
-  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex).
+  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex or realm:uuid).
   Display names are resolved from existing PR participants in the repo.
   For users not on any PR yet, use account_id or UUID directly.
 
@@ -807,7 +807,7 @@ FLAGS
   --json                    Output raw JSON
 
 REVIEWER RESOLUTION
-  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex).
+  Accepts display name, nickname, UUID ({...}), or account_id (24-char hex or realm:uuid).
   Display names are resolved from existing PR participants in the repo.
   For users not on any PR yet, use account_id or UUID directly.
 

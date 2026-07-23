@@ -134,6 +134,30 @@ describe('bb pr create', () => {
     assert.equal(reviewers[0].uuid, '{bbbb0000-1111-2222-3333-444455556666}')
     assert.equal(result.exitCode, 0)
   })
+
+  it('Sends reviewers array with modern Atlassian account_id --reviewer', async () => {
+    // Given the API accepts PR creation
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+
+    // When I run bb pr create with a modern Atlassian account_id (realm:uuid),
+    // which bypasses display name resolution the same way a UUID does
+    const result = await bb(
+      'pr create --title Test --head feature/x --reviewer 557058:3859695a-e73b-4129-b9c9-890bbb99f1a6',
+      { port: server.port }
+    )
+
+    // Then the payload includes a reviewers array with the account_id
+    const postCalls = server.getCallsTo('POST', '/pullrequests')
+    assert.ok(postCalls.length >= 1, 'Should send POST to create PR')
+    const createCall = postCalls.find(c => c.path === '/repositories/testws/testrepo/pullrequests')
+    assert.ok(createCall, 'Should find the create PR call')
+    const body = createCall.body as Record<string, unknown>
+    const reviewers = body.reviewers as Array<Record<string, string>>
+    assert.ok(Array.isArray(reviewers), 'reviewers should be an array')
+    assert.equal(reviewers.length, 1)
+    assert.equal(reviewers[0].account_id, '557058:3859695a-e73b-4129-b9c9-890bbb99f1a6')
+    assert.equal(result.exitCode, 0)
+  })
 })
 
 describe('output', () => {
