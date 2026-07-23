@@ -1,5 +1,35 @@
 # @quatico-solutions/agent-skills
 
+## 3.6.0
+
+### Minor Changes
+
+- [#33](https://github.com/quatico-solutions/agent-skills/pull/33) [`d300152`](https://github.com/quatico-solutions/agent-skills/commit/d300152fbbc25ab657474ee5424a67942216f888) Thanks [@michaelaemisegger](https://github.com/michaelaemisegger)! - working-with-bitbucket-api: accept modern Atlassian account_id (realm:uuid) as a direct `--reviewer` identifier, not only legacy 24-char-hex ids
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+### Patch Changes
+
+- [#34](https://github.com/quatico-solutions/agent-skills/pull/34) [`4c3583d`](https://github.com/quatico-solutions/agent-skills/commit/4c3583d4937e49d214d45ed27338c8ab5cb5d7a9) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - schweizer-schreibweise: refresh glossary sources and harden the downloader
+
+  Re-ran the source pipeline. OpenThesaurus grew by 11 Swiss-tagged terms and
+  Wikipedia added one Helvetism (Störefried → Störenfried), yielding 10 net new
+  entries in `glossary-full.md` (1113 → 1123); the curated core glossary is
+  unchanged. Also hardened `update-sources.sh`: it now validates the `%PDF-`
+  magic and falls back to the latest Wayback Machine snapshot when a primary URL
+  fails, so the recurring bk.admin.ch `/dam/` 502s no longer write 16-byte error
+  pages over the Bundeskanzlei PDFs.
+
+  <!--
+  bumps:
+    skills:
+      schweizer-schreibweise: patch
+  -->
+
 ## 3.5.0
 
 ### Minor Changes

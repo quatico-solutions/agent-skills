@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -91,7 +91,7 @@
     {
       "name": "schweizer-schreibweise",
       "description": "Use when writing or reviewing German-language content for Swiss audiences — orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar (Perfekt, dative), vocabulary ...",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "source": "./skills/schweizer-schreibweise",
       "author": {
         "name": "Quatico Solutions AG",
@@ -141,7 +141,7 @@
     {
       "name": "working-with-bitbucket-api",
       "description": "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branch, tag) i...",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./skills/working-with-bitbucket-api",
       "author": {
         "name": "Quatico Solutions AG",
