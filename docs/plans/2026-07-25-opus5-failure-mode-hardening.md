@@ -4,9 +4,15 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** feature
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
+
+## Approval
+
+- **Approved:** 2026-07-25T13:15:58Z
+- **Approved by:** jwloka
+- **Assignee:** jwloka
 
 ## Changelog
 
@@ -673,13 +679,13 @@ Separated from the work above. None of this is in scope for this plan.
 
 - `feature/opus5-hardening-testing-bounds` — Changes 1 and 2: stopping rule and
   verification budget in `test-driven-development`; bounded scaffolding in
-  `jest-testing-conventions` (plus the diagram-dedup decision).
+  `jest-testing-conventions` (plus the diagram-dedup decision). → #37
 - `feature/opus5-hardening-untrusted-content` — Change 3: the clause in all five
-  skills, plus the `handling-pull-requests` step-3 amendment. One commit, five files.
+  skills, plus the `handling-pull-requests` step-3 amendment. One commit, five files. → #38
 - `feature/opus5-hardening-evidence-and-convention` — Changes 4 and 7: the
   `branch-and-commit` cross-reference, and the model-class changeset convention in
   CLAUDE.md. Changes 5 and 6 produce no diff of their own — Change 5 is delivered by the
-  cross-reference rows in Changes 1 and 4, and Change 6 is a recommendation not to act.
+  cross-reference rows in Changes 1 and 4, and Change 6 is a recommendation not to act. → #39
 
 Each branch needs a changeset in `.changeset/` per CLAUDE.md. Suggested bumps:
 `minor` for the testing bounds and the untrusted-content clause (new sections,
