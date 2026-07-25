@@ -3,16 +3,28 @@ name: bb CLI tests
 # Runs the working-with-bitbucket-api integration suite (node:test + Express
 # mock server) only when the skill that owns the `bb` CLI is touched, so PRs
 # that don't change the CLI aren't slowed down by it.
+#
+# INVARIANT: `bb-tests` is a required status check on main, so every PR must
+# report it. The `paths` list below is mirrored as `paths-ignore` in
+# bb-tests-skip.yml, which reports a trivial `bb-tests` success on the PRs this
+# workflow skips. Editing the list here without editing it there leaves PRs
+# blocked on a check that never runs. Change both together.
+#
+# Note the lists are mirrored, not complementary: a PR touching files on both
+# sides triggers both workflows and gets two `bb-tests` runs, both of which must
+# pass. See the caveat in bb-tests-skip.yml.
 on:
   pull_request:
     paths:
       - 'skills/working-with-bitbucket-api/**'
       - '.github/workflows/bb-tests.yml'
+      - '.github/workflows/bb-tests-skip.yml'
   push:
     branches: [main]
     paths:
       - 'skills/working-with-bitbucket-api/**'
       - '.github/workflows/bb-tests.yml'
+      - '.github/workflows/bb-tests-skip.yml'
 
 defaults:
   run:
