@@ -4,9 +4,16 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** feature
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
+
+
+## Approval
+
+- **Approved:** 2026-07-25T13:15:58Z
+- **Approved by:** jwloka
+- **Assignee:** jwloka
 
 ## Changelog
 
