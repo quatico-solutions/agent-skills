@@ -1,0 +1,1 @@
+../2026-07-25-opus5-failure-mode-hardening.md
