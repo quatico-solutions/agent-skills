@@ -317,6 +317,45 @@ prose duplicates.
 
 **Delta: −20 lines, +2 pointer lines = −18.**
 
+#### 0e. Two further deletion inputs, both investigated, neither producing a deletion
+
+Requested as inputs to this section after the amendment. Both were checked; neither yields a
+change. Recorded because a negative result is the finding.
+
+**`/doctor` — not available, and not the tool described.** The request was to run `/doctor`
+and feed its skill-and-CLAUDE.md rightsizing findings into this section. No such command
+exists in this environment. The two candidates:
+
+| Candidate | What it actually does |
+|-----------|-----------------------|
+| `/omc-doctor` (oh-my-claudecode skill) | Diagnoses plugin *installation*: version drift between plugin and npm, legacy bash hooks in `settings.json`, stale plugin caches |
+| `/doctor` (Claude Code built-in) | Reports CLI health — auth, config, MCP connectivity. A user-typed command, not invocable as a skill |
+
+Neither inspects skill length or CLAUDE.md content. Running `omc-doctor` would report on the
+local agent-tooling install and produce nothing about these seven skills, so recording its
+output here would be noise presented as evidence. **No findings fed into this section from
+it.** If a rightsizing tool is meant, it is something else and needs naming; the line-count
+audit already in the backlog covers the same ground manually.
+
+**Automatic memory does not make any in-scope behaviour redundant.** Claude now saves
+memories automatically, so the question was whether session-log or documentation-writing
+instructions in these skills are now duplicated effort. Checked across the collection:
+
+- Every mention of session logs lives in **`bye`** (`SKILL.md`, `sessionlog-template.md`,
+  `claude-code-session-restoration.md`). `bye` is on this plan's non-goals list, so it is
+  out of scope regardless of the merits.
+- Of the seven in-scope skills, **zero** contain session-log, persistent-note or
+  memory-writing instructions. Nothing to delete.
+- `show-your-work` and `branch-and-commit` also carry none.
+
+Beyond scope, the premise would not hold anyway: auto-saved memories are facts for a *future
+session's* recall, while `show-your-work` produces a committed artefact for *humans reviewing
+a PR*. Different audience, different lifetime, not substitutes — and §6.5.1's raised
+hallucination rate is an argument for keeping a durable artefact, not for trusting recall.
+
+A `bye`-versus-automatic-memory review may well be worth doing. It belongs in its own plan,
+and is recorded in the backlog.
+
 #### Deletion pass total
 
 | Change | Delta |
@@ -986,6 +1025,16 @@ Separated from the work above. None of this is in scope for this plan.
 7. **A deletion pass across the eight out-of-scope skills.** This plan only touches seven files
    and finds −204 lines in them. `branch-and-commit` alone is 873 lines. The context-engineering
    post's 80% figure suggests the collection-wide number is large.
+8. **`bye` versus automatic memory.** Claude now saves memories automatically, which overlaps
+   what `bye` reconstructs and writes by hand — its three files include a session-history
+   reconstruction procedure and a sessionlog template. Worth asking which parts are now
+   redundant. Out of scope here (`bye` is on the non-goals list) and it needs its own plan,
+   because the answer probably is not "delete it": a sessionlog is a committed artefact for
+   humans, whereas automatic memory is agent-side recall. The reconstruction procedure is the
+   likelier candidate for trimming, not the log itself.
+9. **Name the rightsizing tool, if one exists.** The `/doctor` request in 0e assumed a command
+   that inspects skill and CLAUDE.md length. Nothing in this environment does that. If such a
+   tool exists under another name, using it would beat the manual line-count audit in item 4.
 
 ## Branches
 
