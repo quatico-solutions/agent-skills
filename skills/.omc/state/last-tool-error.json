@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd skills/test-driven-development && echo \\\"=== deletion candidates: enumerated-rationalisation blocks ===\\\" && awk 'NR>=324 && NR<=356' SKILL.md | head -4 && echo \\\"...\\\" && echo \\\"=== se...",
-  "error": "Exit code 1\n(eval):cd:1: no such file or directory: skills/test-driven-development",
-  "timestamp": "2026-07-25T15:48:37.283Z",
-  "retry_count": 1
-}
