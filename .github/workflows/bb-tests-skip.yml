@@ -10,14 +10,22 @@ name: bb CLI tests (skip)
 # PRs where the real suite deliberately does not run. Non-bb PRs go green; bb
 # PRs still run the real integration suite in bb-tests.yml.
 #
-# INVARIANT: `paths-ignore` below must mirror `paths` in bb-tests.yml exactly.
-# If the two lists drift, a PR can match both workflows (two conflicting
-# `bb-tests` runs) or neither (blocked again). Change both together.
+# INVARIANT: `paths-ignore` below must mirror `paths` in bb-tests.yml. If the
+# lists drift so that some path matches neither, PRs touching only that path are
+# blocked again on a check that never runs. Change both together.
+#
+# CAVEAT — the two filters are NOT mutually exclusive. `paths` and `paths-ignore`
+# each ask "does ANY changed file match?", so a PR touching files on both sides
+# (e.g. bb-tests.yml AND an unrelated file) triggers BOTH workflows and produces
+# two `bb-tests` check runs. Observed on PR #40. Both must then pass for the
+# required check to be green, so a mixed PR is gated by the real suite — the safe
+# direction. Do not assume exactly one run.
 on:
   pull_request:
     paths-ignore:
       - 'skills/working-with-bitbucket-api/**'
       - '.github/workflows/bb-tests.yml'
+      - '.github/workflows/bb-tests-skip.yml'
 
 jobs:
   # Job name MUST stay `bb-tests` — it is the required check context, not a label.
