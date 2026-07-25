@@ -231,6 +231,37 @@ Keep tests green. Don't add behavior.
 
 Next failing test for next feature.
 
+## Stopping Rule
+
+Red -> green -> refactor -> **stop**. One cycle ends when the test passes, the suite is
+green, and the output is clean. Then either start the next failing test or report done.
+
+**The cycle does not include:**
+
+- Building test scaffolding, fixtures, harnesses or helpers that the current failing
+  test does not require
+- Re-running a suite that already passed to confirm it still passes
+- Adding tests for behaviour no one asked for, found by inspecting existing code
+- Refactoring tests that are green and readable
+
+**Verification budget:** each cycle should need one red run and one green run. If you
+find yourself running the same test a third time, stop and say why — the code, the test,
+or your understanding is wrong. Fix that rather than adding verification around it. If a
+cycle has produced more test-support code than production code, stop and say so.
+
+**Build scaffolding only when a test needs it, and only as much as that test needs.**
+Infrastructure written before there is a failing test that uses it is speculative:
+delete it and let the next test pull it back in.
+
+**When budget is tight, ship the passing slice.** Partial work that runs and is reported
+honestly beats a complete verification apparatus around nothing. Do not go quiet: if the
+cycle cannot close, report what passes, what fails, and what is untested.
+
+**Stop means the cycle ends, not the work.** When an outer loop is driving — a BDD
+acceptance test, a plan step, a list of requested behaviours — stopping hands control
+back to it, and it decides whether another cycle is needed. Stopping is not the same as
+reporting done, and this rule is never a reason to leave requested work unfinished.
+
 ## Naming, AAA and One Assertion
 
 Variable naming (`testObj`, `target`, `mock*`, `actual`, `expected`), the
@@ -280,6 +311,8 @@ Before marking work complete:
 
 Can't check all boxes? You skipped TDD. Start over.
 
+Checked all boxes? Stop. Do not add an eleventh check of your own.
+
 ## When Stuck
 
 | Problem | Solution |
@@ -313,6 +346,7 @@ When adding mocks or test utilities, read [testing-anti-patterns.md](testing-ant
 |-------|---------|
 | **jest-testing-conventions** | Jest-specific patterns (jest.fn/spyOn/mock, fake timers) |
 | **systematic-debugging** | When bugs slip through |
+| **show-your-work** | Long-running or multi-cycle work — produce an artefact, not a claim |
 
 ## Final Rule
 

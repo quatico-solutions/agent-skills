@@ -443,6 +443,25 @@ expect(mock).toHaveBeenCalledWith(
 | Over-mocking | Tests prove nothing | Mock only boundaries |
 | Magic timeout numbers | Fragile, slow | Use fake timers |
 
+## Bounded Scaffolding
+
+Mock and fixture infrastructure is written for a test that exists, not for tests that
+might exist.
+
+| Situation | Do |
+|-----------|-----|
+| Test needs one stubbed function | `jest.fn()` inline in the test |
+| Second test needs the same stub | Leave both inline; duplication is cheaper than a helper |
+| Third test needs it | Extract a helper, no earlier |
+| Tempted to write `__mocks__/` up front | Stop — manual mocks are for modules already mocked in two or more test files |
+
+**Do not build a test utility module, a factory, a custom matcher or a shared setup
+harness until at least three tests need it.** Two duplicated arrangements are fine and
+often clearer than an abstraction.
+
+**Do not add coverage thresholds, custom reporters or CI test-gating as part of writing a
+test.** That is separate work with a separate owner.
+
 ## Verification Checklist
 
 Before committing tests:
@@ -454,6 +473,9 @@ Before committing tests:
 - [ ] No conditional assertions
 - [ ] Fake timers for time-based code
 - [ ] Console mocked if expected output
+
+Boxes checked? Stop. Adding checks of your own to this list is the failure mode this list
+guards against.
 
 ## Related Skills
 

@@ -17,3 +17,7 @@ coverage/
 
 # Claude Code local settings (machine-specific)
 .claude/
+
+# OMC agent tooling state (local only)
+.omc/
+**/.omc/
