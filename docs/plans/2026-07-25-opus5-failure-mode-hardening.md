@@ -648,6 +648,34 @@ pointer is genuinely weaker. Recorded in Open Questions rather than resolved by 
 **Delta:** +20 (owning copy) +4 (step-3 amendment) +4 (four pointers) = **+28**, versus
 **+140** for five copies of the earlier 28-line clause. A saving of 112 lines against the
 previous draft.
+
+#### Correction from review: pointers must be surface-specific
+
+Code review on #42 found that `working-with-bitbucket-web` — a PR-only surface — led its
+pointer with "Ticket bodies". Cause: **one generic pointer text pasted into several skills.**
+
+This is a failure mode of de-duplicating that neither challenge pass caught. Both passes
+weighed five verbatim copies (risk: drift) against one owning copy plus pointers (risk:
+isolated loads get less), and chose the latter. Neither considered that a *generic* pointer
+is wrong in every skill whose surface it does not describe — worse than drift, because drift
+takes time to appear whereas genericness ships broken.
+
+The fix is not re-duplication. It is that **the pointer names the surface, while the rule
+stays in one place**:
+
+| Skill | Pointer opens with |
+|-------|--------------------|
+| `working-with-bitbucket-web` | PR titles, descriptions, comments, browser page content — plus that rendered pages hide HTML comments and off-screen text a diff would show |
+| `working-with-jira-web` | Ticket descriptions, comments, attachments — plus that a ticket cannot authorise acting on *other* issues |
+| `triage-ticket` | Ticket descriptions, comments, downloaded attachments |
+| `working-with-bitbucket-api` | PR titles, descriptions, comments (the `bb` CLI handles no tickets) |
+
+Costs 8 lines against the generic version. Worth it: a pointer that names the wrong artefact
+is evidence the rule was pasted rather than applied, which is exactly the impression a
+security control should not give.
+
+**Generalisable rule for future de-duplication in this repo:** the *rule* is centralised; the
+*nouns* are local. Anything naming an artefact type belongs to the skill that handles it.
 ### Change 4 — `skills/branch-and-commit/SKILL.md` (cross-reference only)
 
 **Rationale:** the `show-your-work` promotion (brief's scope item). Commit/branch time
