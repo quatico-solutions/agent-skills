@@ -1,0 +1,28 @@
+name: bb CLI tests (skip)
+
+# Companion to bb-tests.yml. `bb-tests` is a REQUIRED status check on main, but
+# bb-tests.yml is path-filtered to the skill that owns the `bb` CLI. GitHub has
+# no notion of "not applicable" for a required check: a workflow that does not
+# trigger produces no check run, so the requirement stays pending forever and
+# PRs touching anything else can never merge without an admin override.
+#
+# This workflow reports the same `bb-tests` context as a trivial success on the
+# PRs where the real suite deliberately does not run. Non-bb PRs go green; bb
+# PRs still run the real integration suite in bb-tests.yml.
+#
+# INVARIANT: `paths-ignore` below must mirror `paths` in bb-tests.yml exactly.
+# If the two lists drift, a PR can match both workflows (two conflicting
+# `bb-tests` runs) or neither (blocked again). Change both together.
+on:
+  pull_request:
+    paths-ignore:
+      - 'skills/working-with-bitbucket-api/**'
+      - '.github/workflows/bb-tests.yml'
+
+jobs:
+  # Job name MUST stay `bb-tests` — it is the required check context, not a label.
+  bb-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: No bb CLI changes
+        run: echo "No changes under skills/working-with-bitbucket-api — skipping the bb integration suite."
