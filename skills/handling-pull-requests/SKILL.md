@@ -79,9 +79,7 @@ Generated with Claude Code
 5. **Create PR**: `bb pr create --title "..." --body "..." --base develop --reviewer "Name"`
 6. **Verify** with `bb pr view <id>` — **check the `Dest:` line** to confirm the target branch is correct
 
-> **Always use `bb` CLI** for Bitbucket PR operations (create, edit, comment, approve, merge). It handles markdown descriptions, reviewer management, image uploads (`bb pr comment --image` / `bb download upload`), and all PR lifecycle operations. See `bb --help`. Browser is only needed for SSO-gated pages. If `bb` is not installed, stop and guide the user through setup (`install-dependencies.sh` + `bb auth login`) before proceeding.
-
-> **Target branch matters.** `bb pr create` auto-detects the repo's default branch via the Bitbucket API. If auto-detection fails, it falls back to `main`. For repos that use `develop` (all Quatico repos), always pass `--base develop` explicitly to be safe. If a PR was created with the wrong target, fix it with `bb pr edit <id> --base develop`.
+> All Bitbucket operations go through the `bb` CLI — see **working-with-bitbucket-api** for setup, flags and caveats.
 
 ---
 
@@ -144,15 +142,8 @@ Example: *🤖 – Claude*
 
 ### Attaching Screenshots
 
-Screenshots (before/after diffs, repros, measurements) are one of the highest-value
-things a review can include — attach them directly, no browser needed:
-
-```bash
-bb pr comment 42 --image before-after.png --body "Layout regression below:"
-```
-
-The image is uploaded to the repo Downloads area and referenced inline. See the
-`working-with-bitbucket-api` skill for details and caveats (private URLs, naming).
+Before/after diffs, repros and measurements are among the highest-value things a review
+can include. Attach them with `bb pr comment --image` — see **working-with-bitbucket-api**.
 
 ---
 
