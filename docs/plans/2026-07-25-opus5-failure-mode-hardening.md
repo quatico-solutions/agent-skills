@@ -794,6 +794,42 @@ flatter the headline number would be gaming it. The honest total across everythi
 `wc -l` over the seven files and put the number in the PR. If the total is above 1781, the
 work is wrong and does not merge.
 
+#### As delivered (measured, not projected)
+
+The gate passed, but the projection above was optimistic by 39 lines. Actual, measured
+against `60522cf` (the merge of the plan PR):
+
+| File | Before | After | Delta |
+|------|--------|-------|-------|
+| `test-driven-development` | 416 | 358 | −58 |
+| `jest-testing-conventions` | 514 | 485 | −29 |
+| `working-with-jira-web` | 216 | 180 | −36 |
+| `handling-pull-requests` | 180 | 196 | **+16** |
+| `triage-ticket` | 41 | 48 | +7 |
+| `working-with-bitbucket-web` | 211 | 219 | +8 |
+| `working-with-bitbucket-api` | 203 | 203 | 0 |
+| **Total** | **1781** | **1689** | **−92** |
+
+Outside the skill budget: `bin/bb` +23, `CLAUDE.md` +17, `branch-and-commit` +4. Honest
+total across everything touched: **−48**.
+
+Where the projection was wrong, and it is worth knowing for the next pass:
+
+- **The owning clause cost more than budgeted.** `handling-pull-requests` was projected
+  net-negative after Change 0d's −18; it came out **+16**. The clause is 20 lines as
+  planned, but 0d's deletions recovered fewer lines than estimated — the block quotes
+  were shorter in reality than the estimate assumed.
+- **Pointers cost 7–8 lines each, not 1.** Only `working-with-bitbucket-api` had an
+  existing integration table to add a row to (hence its 0). The other three needed a short
+  section with a heading and a blank line, so "one pointer line" was wrong by a factor of
+  seven. That is the single largest source of the 39-line miss.
+- **The deletion estimates were close** (−204 projected, −196 actual), so the error was
+  almost entirely in the additions, not the cuts.
+
+The gate still passed by 92 lines, so the conclusion holds. But "one pointer line each"
+should be read as "one short pointer section each" in any future plan that reuses this
+shape.
+
 ### Non-goals
 
 Verbatim from the brief:
@@ -946,26 +982,29 @@ Separated from the work above. None of this is in scope for this plan.
 
 ## Branches
 
-- `feature/opus5-hardening-deletion-pass` — **Change 0, lands first.** The four deletion
-  groups: TDD rationalisation enumerations, cross-skill duplication, the JIRA browser-pitfall
-  catalogue, and the duplicated `bb` guidance in `handling-pull-requests`. Net −204 lines,
-  no additions. Must merge before the others so the budget is visibly paid before it is spent.
-  → new PR needed
-- `feature/opus5-hardening-testing-bounds` — Changes 1 and 2: stopping rule and
-  verification budget in `test-driven-development`; bounded scaffolding in
-  `jest-testing-conventions`. The diagram dedup moved to Change 0b. → #37
-- `feature/opus5-hardening-untrusted-content` — Change 3: the `bb --help` stanza and comment
-  delimiter in `bin/bb`, the owning clause copy in `handling-pull-requests` with its step-3
-  amendment, and four pointer lines. → #38
-- `feature/opus5-hardening-evidence-and-convention` — Changes 4 and 7: the
-  `branch-and-commit` cross-reference, and the model-class changeset convention in
-  CLAUDE.md. Changes 5 and 6 produce no diff of their own — Change 5 is delivered by the
-  cross-reference rows in Changes 1 and 4, and Change 6 is a recommendation not to act. → #39
+**As delivered: one branch, `feature/opus5-hardening` → #42.**
 
-Each branch needs a changeset in `.changeset/` per CLAUDE.md. Suggested bumps:
-`minor` for the testing bounds and the untrusted-content clause (new sections,
-expanded coverage), `patch` for the cross-references, `minor` for the CLAUDE.md
-convention.
+The four-branch split below was the plan of record until delivery. It was consolidated at
+the user's request into a single branch and PR. Recorded rather than rewritten, because the
+reasoning for the split still explains the commit structure inside #42 — the deletion pass
+is its own commit and lands before the additions, which was the split's real purpose.
+
+| Planned branch | Changes | Delivered as |
+|----------------|---------|--------------|
+| `…-deletion-pass` | Change 0 (four deletion groups) | #42, first commit (`R - Delete style constraints…`) |
+| `…-testing-bounds` | Changes 1, 2 | #42, second commit |
+| `…-untrusted-content` | Change 3 (`bb` + owning clause + pointers) | #42, second commit |
+| `…-evidence-and-convention` | Changes 4, 7 | #42, second commit |
+
+The three placeholder PRs the original split produced (#37, #38, #39) held only the
+`plot: approve` metadata stamp — no implementation — and were closed. The plan amendment
+(#41) was folded into #42 as well. Changes 5 and 6 produce no diff by design: Change 5 is
+delivered by the cross-reference rows in Changes 1 and 4, and Change 6 is a recommendation
+not to act.
+
+One changeset covers the work (`.changeset/opus5-failure-mode-hardening.md`): `minor` for
+the seven in-scope skills, `patch` for `branch-and-commit`, and `tuned-against:
+claude-opus-5` — the first live use of the Change 7 convention.
 
 ### Smoke checks before each branch merges
 
