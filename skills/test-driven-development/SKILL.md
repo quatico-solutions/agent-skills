@@ -39,15 +39,9 @@ Thinking "skip TDD just this once"? Stop. That's rationalization.
 NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
-Write code before the test? Delete it. Start over.
+Write code before the test? Delete it. Start over. Implement fresh from tests.
 
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
-
-Implement fresh from tests. Period.
+Tempted to skip this? That impulse is the thing the rule is for.
 
 ## Red-Green-Refactor
 
@@ -237,64 +231,43 @@ Keep tests green. Don't add behavior.
 
 Next failing test for next feature.
 
-## Naming Conventions
+## Stopping Rule
 
-| Name | Purpose | Example |
-|------|---------|---------|
-| `testObj` | Object under test | `const testObj = new OrderService()` |
-| `target` | Function under test | `const target = jest.fn()` |
-| `target*` | Specific mock target | `targetAdd`, `targetFetch` |
-| `mock*` | Mock implementation | `mockUserService`, `mockResponse` |
-| `actual` | Result from code | `const actual = testObj.calculate()` |
-| `expected` | Expected value | `const expected = 42` |
+Red -> green -> refactor -> **stop**. One cycle ends when the test passes, the suite is
+green, and the output is clean. Then either start the next failing test or report done.
 
-## AAA Pattern
+**The cycle does not include:**
 
-Every test follows Arrange-Act-Assert:
+- Building test scaffolding, fixtures, harnesses or helpers that the current failing
+  test does not require
+- Re-running a suite that already passed to confirm it still passes
+- Adding tests for behaviour no one asked for, found by inspecting existing code
+- Refactoring tests that are green and readable
 
-```typescript
-test('calculates discount for premium users', () => {
-    // Arrange
-    const testObj = new PricingService();
-    const mockUser = { isPremium: true };
-    const basePrice = 100;
-    const expected = 90;
+**Verification budget:** each cycle should need one red run and one green run. If you
+find yourself running the same test a third time, stop and say why — the code, the test,
+or your understanding is wrong. Fix that rather than adding verification around it. If a
+cycle has produced more test-support code than production code, stop and say so.
 
-    // Act
-    const actual = testObj.calculatePrice(basePrice, mockUser);
+**Build scaffolding only when a test needs it, and only as much as that test needs.**
+Infrastructure written before there is a failing test that uses it is speculative:
+delete it and let the next test pull it back in.
 
-    // Assert
-    expect(actual).toBe(expected);
-});
-```
+**When budget is tight, ship the passing slice.** Partial work that runs and is reported
+honestly beats a complete verification apparatus around nothing. Do not go quiet: if the
+cycle cannot close, report what passes, what fails, and what is untested.
 
-Clear separation makes tests readable and maintainable.
+**Stop means the cycle ends, not the work.** When an outer loop is driving — a BDD
+acceptance test, a plan step, a list of requested behaviours — stopping hands control
+back to it, and it decides whether another cycle is needed. Stopping is not the same as
+reporting done, and this rule is never a reason to leave requested work unfinished.
 
-## One Assertion Focus
+## Naming, AAA and One Assertion
 
-Each test verifies one behavior:
-
-<Bad>
-```typescript
-// Multiple behaviors in one test
-test('order processing', () => {
-    expect(order.validate()).toBe(true);
-    expect(order.calculateTotal()).toBe(100);
-    expect(order.save()).resolves.toBeDefined();
-});
-```
-</Bad>
-
-<Good>
-```typescript
-// Separate tests for each behavior
-test('validates order', () => { ... });
-test('calculates total', () => { ... });
-test('saves order', () => { ... });
-```
-</Good>
-
-"and" in test name? Split it.
+Variable naming (`testObj`, `target`, `mock*`, `actual`, `expected`), the
+Arrange-Act-Assert layout and one-behaviour-per-test live in the
+**jest-testing-conventions** skill. This skill owns the cycle; that one owns the
+mechanics.
 
 ## Good Tests (FIRST)
 
@@ -321,40 +294,6 @@ test('saves order', () => { ... });
 
 See **jest-testing-conventions** for mocking patterns.
 
-## Common Rationalizations
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
-
-## Red Flags - STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately (first run)
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
-
 ## Verification Checklist
 
 Before marking work complete:
@@ -371,6 +310,8 @@ Before marking work complete:
 - [ ] One behavior per test
 
 Can't check all boxes? You skipped TDD. Start over.
+
+Checked all boxes? Stop. Do not add an eleventh check of your own.
 
 ## When Stuck
 
@@ -405,6 +346,7 @@ When adding mocks or test utilities, read [testing-anti-patterns.md](testing-ant
 |-------|---------|
 | **jest-testing-conventions** | Jest-specific patterns (jest.fn/spyOn/mock, fake timers) |
 | **systematic-debugging** | When bugs slip through |
+| **show-your-work** | Long-running or multi-cycle work — produce an artefact, not a claim |
 
 ## Final Rule
 

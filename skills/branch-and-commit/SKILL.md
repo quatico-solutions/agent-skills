@@ -719,6 +719,10 @@ Then invoke `/commit-notation` with this context to get the proper annotation.
 - Can generate markdown description or create full PR
 - Commits already use proper notation for PR description generation
 
+**With show-your-work:**
+- Before claiming a branch is complete, capture evidence rather than asserting it
+- Long-running or multi-session work should leave an artefact, not a summary
+
 ## Examples
 
 ### Example 1: Using Current Branch

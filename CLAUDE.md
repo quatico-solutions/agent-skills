@@ -47,6 +47,23 @@ Choose each level by impact (applies to both the root bump and per-skill bumps):
 - **Minor** (`x.Y.0`): new sections, new patterns, expanded coverage, a new skill
 - **Major** (`X.0.0`): structural reorganization, removed sections, breaking workflow changes
 
+### Model class
+
+Skills are prompts, and prompts are model-dependent: a model update can change a skill's behaviour without a line of it changing. Record the model class a change was authored or tuned against as a sibling key in the `bumps:` block:
+
+```yaml
+<!--
+bumps:
+  skills:
+    test-driven-development: minor
+  tuned-against: claude-opus-5
+-->
+```
+
+**Indentation matters.** `tuned-against:` must sit at the same two-space indent as `skills:`. `bump-skill-versions.sh` treats any line indented four or more spaces as a skill entry, so a deeper indent would be parsed as a skill name and fail CI's "non-existent skill directory" check.
+
+Use the model family, not a dated snapshot (`claude-opus-5`, not `claude-opus-5-20260724`). Omit it for model-independent changes — a broken link, a corrected CLI flag. When a skill is revised specifically because a new model behaves differently, say so in the summary line too: that is the entry a reader needs when the next model lands.
+
 At release, `pnpm run version` consumes the changesets: `bump-skill-versions.sh` bumps each `SKILL.md` from the `bumps:` blocks, `changeset version` bumps `package.json` and writes `CHANGELOG.md`, and `sync-versions.sh` propagates the version to the plugin manifests and regenerates `marketplace.json`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full flow.
 
 > CI only *warns* when a skill-touching PR has no changeset (a soft gate) — don't rely on it, add the changeset yourself.
