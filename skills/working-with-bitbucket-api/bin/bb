@@ -309,19 +309,44 @@ bb_format_comment_list() {
   ] | @tsv' | column -t -s $'\t'
 }
 
+# Random hex token used to make the untrusted-content fence unforgeable. Regenerated per
+# invocation, so a token that leaks (e.g. an agent pastes bb output back into a comment)
+# is worthless by the time anyone could use it.
+bb_fence_token() {
+  od -An -N4 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n' \
+    || printf '%04x%04x' "$RANDOM" "$RANDOM"
+}
+
 # Full comment bodies, each fenced as untrusted content. Comment text is written by
 # third parties: the markers make that boundary explicit in the output itself, so a
 # reader (human or agent) can see where quoted data starts and stops without having to
 # remember a rule. Bodies are NOT truncated here — a reviewer acting on feedback needs
 # the whole text, and truncating would also hide the tail of an injected instruction.
+#
+# The markers carry a per-invocation token because a fixed delimiter is not a boundary:
+# a comment author who knows it can simply close the fence and have the rest of their
+# text render as if it were bb's own output. Two independent guards close that:
+#
+#   1. Marker text inside a body is rewritten to "... (escaped)", so no copy of a fence
+#      marker — exact, or carrying a guessed token — survives into the output.
+#   2. The real markers carry a token the author could not have known, so even a reader
+#      matching loosely can tell a genuine closer from a near-miss like
+#      "--  end untrusted content  --".
+#
+# Guard 1 makes the invariant hold unconditionally; guard 2 keeps it holding against a
+# reader that pattern-matches rather than string-matches. A legitimate comment quoting a
+# marker is rendered with "(escaped)" appended — mildly noisy, and the safe direction.
 bb_format_comment_bodies() {
-  jq -r '.[] |
+  local token
+  token="$(bb_fence_token)"
+  jq -r --arg t "$token" '.[] |
     "-- comment " + (.id | tostring) +
     " by " + (.user.display_name // .user.nickname // "unknown") +
     (if .inline then " on " + (.inline.path // "?") + ":" + ((.inline.to // .inline.from // 0) | tostring) else "" end) +
-    " -- begin untrusted content --\n" +
-    (.content.raw // "(empty)") +
-    "\n-- end untrusted content --\n"'
+    " -- begin untrusted content " + $t + " --\n" +
+    ((.content.raw // "(empty)")
+      | gsub("-- (?<k>begin|end) untrusted content"; "-- " + .k + " untrusted content (escaped)")) +
+    "\n-- end untrusted content " + $t + " --\n"'
 }
 
 bb_format_diffstat() {
