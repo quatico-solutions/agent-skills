@@ -23,7 +23,7 @@ fi
 
 # `bb` stays inside the bash 3.2 feature set: macOS ships bash 3.2 and always will
 # (bash 4 went GPLv3, which Apple does not ship), and `bb` runs on developer Macs.
-# The bb-bash32 CI job runs the suite against /bin/bash on macOS to keep it honest.
+# The bb-tests-macos CI job pins /bin/bash and runs the suite against it to keep it honest.
 #
 # Two differences bite in practice:
 #

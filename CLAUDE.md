@@ -56,7 +56,7 @@ At release, `pnpm run version` consumes the changesets: `bump-skill-versions.sh`
 - Every skill has `SKILL.md` (frontmatter + instructions) and `README.md` (development notes)
 - Optional: `REFERENCE.md`, `install-dependencies.sh`, `diagrams/`
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
-- **Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and always will (bash 4 went GPLv3), so no `declare -A`, no `${var^^}`/`${var,,}`, no `mapfile`; and under `set -u`, expand possibly-empty arrays as `${arr[@]+"${arr[@]}"}`. Gated for `bin/bb` by the `bb-bash32` CI job; the other scripts rely on this rule
+- **Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and always will (bash 4 went GPLv3), so no `declare -A`, no `${var^^}`/`${var,,}`, no `mapfile`; and under `set -u`, expand possibly-empty arrays as `${arr[@]+"${arr[@]}"}`. Gated for `bin/bb` by the `bb-tests-macos` CI job, which pins `/bin/bash`; the other scripts rely on this rule
 - When adding a new skill, place it in the top-level `skills/` directory
 
 ### Frontmatter Rules
