@@ -19,6 +19,23 @@ else
   BB_API="https://api.bitbucket.org/2.0"
 fi
 
+# --- Portability ------------------------------------------------------------
+
+# `bb` stays inside the bash 3.2 feature set: macOS ships bash 3.2 and always will
+# (bash 4 went GPLv3, which Apple does not ship), and `bb` runs on developer Macs.
+# The bb-bash32 CI job runs the suite against /bin/bash on macOS to keep it honest.
+#
+# Two differences bite in practice:
+#
+#   - No ${var^^} / ${var,,} case modification — use bb_upper below.
+#   - Under `set -u`, bash 3.2 treats "${arr[@]}" on an EMPTY array as an unbound
+#     variable and aborts; bash 4.4 fixed this. Where an array can legitimately be
+#     empty, expand it as ${arr[@]+"${arr[@]}"}, which yields nothing on both.
+
+bb_upper() {
+  printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
+}
+
 # --- Auth -------------------------------------------------------------------
 
 bb_token() {
@@ -334,7 +351,8 @@ bb_pr_json_projection() {
     return 1
   fi
   IFS=',' read -ra list <<< "$fields"
-  for f in "${list[@]}"; do
+  # `list` is empty when $fields is empty; expand empty-safely rather than aborting.
+  for f in ${list[@]+"${list[@]}"}; do
     case "$f" in
       number)      frag="number: .id" ;;
       title)       frag="title: .title" ;;
@@ -526,7 +544,7 @@ HELP
         exit 0
         ;;
       --state)
-        state="${2^^}"; shift 2
+        state="$(bb_upper "$2")"; shift 2
         case "$state" in
           OPEN|MERGED|DECLINED|SUPERSEDED) ;;
           *) echo >&2 "error: invalid --state '$state' (must be open, merged, declined, or superseded)"; exit 1 ;;
@@ -876,8 +894,9 @@ HELP
     local current_reviewers
     current_reviewers="$(echo "$current" | jq '[.reviewers[]? | {account_id}]')"
 
-    # Resolve and add new reviewers
-    for r in "${add_reviewers[@]}"; do
+    # Resolve and add new reviewers. Either array may be empty here — the guard above
+    # is an OR — so both loops use the empty-safe expansion.
+    for r in ${add_reviewers[@]+"${add_reviewers[@]}"}; do
       local obj
       obj="$(bb_resolve_user "$r")" || exit 1
       local aid
@@ -891,7 +910,7 @@ HELP
     done
 
     # Remove reviewers — match against current PR reviewers by name, UUID, or account_id
-    for r in "${remove_reviewers[@]}"; do
+    for r in ${remove_reviewers[@]+"${remove_reviewers[@]}"}; do
       r="$(bb_nfc "$r")"
       local before_count after_count
       before_count="$(echo "$current_reviewers" | jq 'length')"
@@ -2028,7 +2047,7 @@ EXAMPLES
 HELP
         exit 0
         ;;
-      --method) method="${2^^}"; shift 2 ;;
+      --method) method="$(bb_upper "$2")"; shift 2 ;;
       --data)   data="$2"; shift 2 ;;
       -*)       echo >&2 "unknown flag: $1"; exit 1 ;;
       *)        path="$1"; shift ;;
