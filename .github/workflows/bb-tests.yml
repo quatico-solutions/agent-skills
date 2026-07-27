@@ -4,11 +4,18 @@ name: bb CLI tests
 # mock server) only when the skill that owns the `bb` CLI is touched, so PRs
 # that don't change the CLI aren't slowed down by it.
 #
+# This workflow has two jobs: `bb-tests` on Linux/bash 5, and `bb-bash32` on macOS
+# against /bin/bash 3.2, which is the shell `bb` actually meets on a developer Mac.
+#
 # INVARIANT: `bb-tests` is a required status check on main, so every PR must
 # report it. The `paths` list below is mirrored as `paths-ignore` in
 # bb-tests-skip.yml, which reports a trivial `bb-tests` success on the PRs this
 # workflow skips. Editing the list here without editing it there leaves PRs
 # blocked on a check that never runs. Change both together.
+#
+# INVARIANT: every job here needs a same-named stub job in bb-tests-skip.yml, so it can
+# be made a required check. Adding a job here without one there means that check can
+# never be required — or, once required, blocks every non-bb PR.
 #
 # Note the lists are mirrored, not complementary: a PR touching files on both
 # sides triggers both workflows and gets two `bb-tests` runs, both of which must
@@ -49,6 +56,58 @@ jobs:
       # mid-test error.
       - name: Verify bb runtime deps
         run: curl --version && jq --version
+
+      - name: Install test deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run bb integration suite
+        run: pnpm test
+
+  # `bb` runs on developer Macs, where /bin/bash is 3.2 and always will be (bash 4 is
+  # GPLv3, which Apple does not ship). The ubuntu job above runs bash 5 and so cannot
+  # catch a bash-4-only construct — that is how `${2^^}` and an empty-array expansion
+  # under `set -u` both reached main, silently breaking --state, --method, --data,
+  # --remove-reviewer and --jq for anyone without Homebrew bash ahead of /bin/bash.
+  #
+  # A static grep for known bash-4 syntax would be a blocklist and would have missed the
+  # empty-array case, which is a runtime behaviour difference rather than a syntax error.
+  # Running the real suite against the real old shell is the only honest check.
+  bb-bash32:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: skills/working-with-bitbucket-api/tests/pnpm-lock.yaml
+
+      # Put macOS's own bash 3.2 ahead of anything the runner image preinstalls, so
+      # `#!/usr/bin/env bash` in bin/bb resolves to it.
+      - name: Pin bash to the macOS system shell
+        run: |
+          mkdir -p "$RUNNER_TEMP/bash32"
+          ln -sf /bin/bash "$RUNNER_TEMP/bash32/bash"
+          echo "$RUNNER_TEMP/bash32" >> "$GITHUB_PATH"
+
+      # Without this the job would keep passing if the image ever changed and the shim
+      # stopped resolving — a green check that tests nothing is worse than no check.
+      - name: Assert the suite will run against bash 3.2
+        run: |
+          version="$(bash --version | head -1)"
+          echo "$version"
+          case "$version" in
+            *"version 3.2"*) ;;
+            *) echo "::error::expected bash 3.2, got: $version"; exit 1 ;;
+          esac
+
+      - name: Verify bb runtime deps
+        run: |
+          command -v jq >/dev/null || brew install jq
+          curl --version && jq --version
 
       - name: Install test deps
         run: pnpm install --frozen-lockfile

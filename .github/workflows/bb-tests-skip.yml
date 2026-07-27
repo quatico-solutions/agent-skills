@@ -28,9 +28,17 @@ on:
       - '.github/workflows/bb-tests-skip.yml'
 
 jobs:
-  # Job name MUST stay `bb-tests` — it is the required check context, not a label.
+  # Job names MUST stay `bb-tests` / `bb-bash32` — they are check contexts, not labels.
+  # Every job in bb-tests.yml needs a stub here, or making it required would block every
+  # non-bb PR on a check that never runs.
   bb-tests:
     runs-on: ubuntu-latest
     steps:
       - name: No bb CLI changes
         run: echo "No changes under skills/working-with-bitbucket-api — skipping the bb integration suite."
+
+  bb-bash32:
+    runs-on: ubuntu-latest
+    steps:
+      - name: No bb CLI changes
+        run: echo "No changes under skills/working-with-bitbucket-api — skipping the bash 3.2 run."
