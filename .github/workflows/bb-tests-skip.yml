@@ -1,14 +1,14 @@
 name: bb CLI tests (skip)
 
-# Companion to bb-tests.yml. `bb-tests` is a REQUIRED status check on main, but
-# bb-tests.yml is path-filtered to the skill that owns the `bb` CLI. GitHub has
-# no notion of "not applicable" for a required check: a workflow that does not
-# trigger produces no check run, so the requirement stays pending forever and
-# PRs touching anything else can never merge without an admin override.
+# Companion to bb-tests.yml, which runs one job per supported platform
+# (bb-tests-linux, bb-tests-macos) but is path-filtered to the skill that owns the
+# `bb` CLI. GitHub has no notion of "not applicable" for a required check: a workflow
+# that does not trigger produces no check run, so the requirement stays pending forever
+# and PRs touching anything else can never merge without an admin override.
 #
-# This workflow reports the same `bb-tests` context as a trivial success on the
-# PRs where the real suite deliberately does not run. Non-bb PRs go green; bb
-# PRs still run the real integration suite in bb-tests.yml.
+# This workflow reports the same contexts as trivial successes on the PRs where the real
+# suite deliberately does not run. Non-bb PRs go green; bb PRs still run the real
+# integration suite in bb-tests.yml.
 #
 # INVARIANT: `paths-ignore` below must mirror `paths` in bb-tests.yml. If the
 # lists drift so that some path matches neither, PRs touching only that path are
@@ -17,7 +17,7 @@ name: bb CLI tests (skip)
 # CAVEAT — the two filters are NOT mutually exclusive. `paths` and `paths-ignore`
 # each ask "does ANY changed file match?", so a PR touching files on both sides
 # (e.g. bb-tests.yml AND an unrelated file) triggers BOTH workflows and produces
-# two `bb-tests` check runs. Observed on PR #40. Both must then pass for the
+# two runs of each context. Observed on PR #40. Both must then pass for the
 # required check to be green, so a mixed PR is gated by the real suite — the safe
 # direction. Do not assume exactly one run.
 on:
@@ -28,9 +28,19 @@ on:
       - '.github/workflows/bb-tests-skip.yml'
 
 jobs:
-  # Job name MUST stay `bb-tests` — it is the required check context, not a label.
-  bb-tests:
+  # Job names MUST match bb-tests.yml exactly — they are branch-protection check
+  # contexts, not labels. Every job there needs a stub here, or making it required would
+  # block every non-bb PR on a check that never runs. Both stubs run on Linux regardless
+  # of which platform they stand in for: they assert nothing, so the OS is irrelevant and
+  # a macOS runner would only cost minutes.
+  bb-tests-linux:
     runs-on: ubuntu-latest
     steps:
       - name: No bb CLI changes
-        run: echo "No changes under skills/working-with-bitbucket-api — skipping the bb integration suite."
+        run: echo "No changes under skills/working-with-bitbucket-api — skipping the Linux run."
+
+  bb-tests-macos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: No bb CLI changes
+        run: echo "No changes under skills/working-with-bitbucket-api — skipping the macOS run."

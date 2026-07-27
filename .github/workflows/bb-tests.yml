@@ -4,14 +4,38 @@ name: bb CLI tests
 # mock server) only when the skill that owns the `bb` CLI is touched, so PRs
 # that don't change the CLI aren't slowed down by it.
 #
-# INVARIANT: `bb-tests` is a required status check on main, so every PR must
-# report it. The `paths` list below is mirrored as `paths-ignore` in
-# bb-tests-skip.yml, which reports a trivial `bb-tests` success on the PRs this
-# workflow skips. Editing the list here without editing it there leaves PRs
-# blocked on a check that never runs. Change both together.
+# This is a PLATFORM matrix, not a bash-version sweep. `bb` supports two targets and
+# each job is one of them:
+#
+#   bb-tests-linux   Linux + GNU userland
+#   bb-tests-macos   macOS + BSD userland
+#
+# The bash version is incidental — it rides along because macOS ships bash 3.2 and
+# always will (bash 4 went GPLv3, which Apple does not ship) while Linux runners ship
+# bash 5. That difference is real and has bitten (see the macOS job below), but it is
+# not the reason both jobs exist. `bb` shells out constantly to `column`, `sed`, `tr`,
+# `od` and `date`, where the BSD and GNU implementations differ, and the skill's own
+# SKILL.md declares Linux supported for everything except `bb auth login`. Dropping
+# either job drops a documented platform.
+#
+# Do not collapse these into a bash matrix on one OS: that would test a combination
+# nobody runs and stop testing two that people do.
+#
+# INVARIANT: the `paths` list below is mirrored as `paths-ignore` in bb-tests-skip.yml,
+# which reports trivial successes on the PRs this workflow skips. Editing the list here
+# without editing it there leaves PRs blocked on a check that never runs. Change both
+# together.
+#
+# INVARIANT: every job here needs a same-named stub job in bb-tests-skip.yml, so it can
+# be made a required check. Adding a job here without one there means that check can
+# never be required — or, once required, blocks every non-bb PR.
+#
+# INVARIANT: job names are branch-protection check contexts, not labels. Renaming one
+# requires updating the required-status-checks list on main in the same change, or every
+# PR blocks forever on a context that no longer reports.
 #
 # Note the lists are mirrored, not complementary: a PR touching files on both
-# sides triggers both workflows and gets two `bb-tests` runs, both of which must
+# sides triggers both workflows and gets two runs of each context, all of which must
 # pass. See the caveat in bb-tests-skip.yml.
 on:
   pull_request:
@@ -31,7 +55,9 @@ defaults:
     working-directory: skills/working-with-bitbucket-api/tests
 
 jobs:
-  bb-tests:
+  # Linux + GNU userland. Also the faster of the two, so it is the one that usually
+  # tells you a change is broken first.
+  bb-tests-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +75,61 @@ jobs:
       # mid-test error.
       - name: Verify bb runtime deps
         run: curl --version && jq --version
+
+      - name: Install test deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run bb integration suite
+        run: pnpm test
+
+  # macOS + BSD userland — the platform `bb` is primarily written for (`bb auth login`
+  # uses the macOS Keychain via `security`, and `open`).
+  #
+  # It pins /bin/bash, so it also covers the bash 3.2 floor. That is a side effect of
+  # the platform, not the point of the job, but it is the side effect that has actually
+  # caught bugs: `${2^^}` and an empty-array expansion under `set -u` both reached main
+  # via the Linux job, silently breaking --state, --method, --data, --remove-reviewer
+  # and --jq for anyone without Homebrew bash ahead of /bin/bash.
+  #
+  # A static grep for known bash-4 syntax would be a blocklist and would have missed the
+  # empty-array case, which is a runtime behaviour difference rather than a syntax error.
+  # Running the real suite against the real old shell is the only honest check.
+  bb-tests-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: skills/working-with-bitbucket-api/tests/pnpm-lock.yaml
+
+      # Put macOS's own bash 3.2 ahead of anything the runner image preinstalls, so
+      # `#!/usr/bin/env bash` in bin/bb resolves to it.
+      - name: Pin bash to the macOS system shell
+        run: |
+          mkdir -p "$RUNNER_TEMP/bash32"
+          ln -sf /bin/bash "$RUNNER_TEMP/bash32/bash"
+          echo "$RUNNER_TEMP/bash32" >> "$GITHUB_PATH"
+
+      # Without this the job would keep passing if the image ever changed and the shim
+      # stopped resolving — a green check that tests nothing is worse than no check.
+      - name: Assert the suite will run against bash 3.2
+        run: |
+          version="$(bash --version | head -1)"
+          echo "$version"
+          case "$version" in
+            *"version 3.2"*) ;;
+            *) echo "::error::expected bash 3.2, got: $version"; exit 1 ;;
+          esac
+
+      - name: Verify bb runtime deps
+        run: |
+          command -v jq >/dev/null || brew install jq
+          curl --version && jq --version
 
       - name: Install test deps
         run: pnpm install --frozen-lockfile
