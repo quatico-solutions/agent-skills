@@ -21,8 +21,11 @@ echo "Scanning changesets for skill version bumps..."
 
 # Collect skill bumps from all pending changesets
 # Format: SKILL_NAME:BUMP_TYPE (one per line)
+#
+# Deliberately a newline-separated list rather than an associative array: macOS ships
+# bash 3.2, which has no `declare -A`, and maintainers run `pnpm run version` locally
+# to check a changeset before pushing. CI runs on Linux and would never have caught it.
 all_bumps=""
-declare -A SKILL_BUMPS=()
 
 for cs_file in "$CHANGESET_DIR"/*.md; do
   [ ! -f "$cs_file" ] && continue
@@ -65,31 +68,42 @@ for cs_file in "$CHANGESET_DIR"/*.md; do
   done <<< "$bumps_yaml"
 done
 
-# Deduplicate: if same skill appears multiple times, keep highest bump
-while IFS= read -r line; do
-  [ -z "$line" ] && continue
-  skill="${line%%:*}"
-  bump="${line##*:}"
-  existing="${SKILL_BUMPS[$skill]:-}"
-  if [ -z "$existing" ]; then
-    SKILL_BUMPS[$skill]="$bump"
-  else
-    existing_pri=$(bump_priority "$existing")
-    new_pri=$(bump_priority "$bump")
-    if [ "$new_pri" -gt "$existing_pri" ]; then
-      SKILL_BUMPS[$skill]="$bump"
-    fi
-  fi
-done <<< "$all_bumps"
+# Deduplicate: if the same skill appears in several changesets, keep the highest bump.
+# One "skill:bump" line per skill, sorted, so the applied order is deterministic.
+#
+# No `grep -v` in this pipeline on purpose: under `set -o pipefail` a grep that matches
+# nothing exits 1 and takes the whole script with it, which is exactly the no-changesets
+# case. Empty lines are skipped in the loop below instead.
+skill_names="$(printf '%s' "$all_bumps" | cut -d: -f1 | sort -u)"
 
-if [ ${#SKILL_BUMPS[@]} -eq 0 ]; then
+if [ -z "$skill_names" ]; then
   echo "  No skill version bumps found in changesets."
   exit 0
 fi
 
+resolved=""
+while IFS= read -r skill; do
+  [ -z "$skill" ] && continue
+  best=""
+  best_pri=0
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    [ "${line%%:*}" = "$skill" ] || continue
+    bump="${line##*:}"
+    pri=$(bump_priority "$bump")
+    if [ -z "$best" ] || [ "$pri" -gt "$best_pri" ]; then
+      best="$bump"
+      best_pri="$pri"
+    fi
+  done <<< "$all_bumps"
+  resolved="${resolved}${skill}:${best}"$'\n'
+done <<< "$skill_names"
+
 # Apply version bumps
-for skill in "${!SKILL_BUMPS[@]}"; do
-  bump="${SKILL_BUMPS[$skill]}"
+while IFS= read -r entry; do
+  [ -z "$entry" ] && continue
+  skill="${entry%%:*}"
+  bump="${entry##*:}"
   skill_md="$REPO_ROOT/skills/$skill/SKILL.md"
 
   if [ ! -f "$skill_md" ]; then
@@ -106,6 +120,6 @@ for skill in "${!SKILL_BUMPS[@]}"; do
   new_version=$(increment_semver "$current" "$bump")
   replace_version_in_frontmatter "$skill_md" "$current" "$new_version"
   echo "  ✓ $skill: $current → $new_version ($bump)"
-done
+done <<< "$resolved"
 
 echo "Done bumping skill versions."
