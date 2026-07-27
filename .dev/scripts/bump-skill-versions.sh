@@ -69,7 +69,9 @@ for cs_file in "$CHANGESET_DIR"/*.md; do
 done
 
 # Deduplicate: if the same skill appears in several changesets, keep the highest bump.
-# One "skill:bump" line per skill, sorted, so the applied order is deterministic.
+# One "skill:bump" line per skill. Skills are now applied in sorted order rather than the
+# associative array's hash order — the resulting SKILL.md versions are unchanged, only the
+# order of the progress lines, and sorted output is reproducible across runs.
 #
 # No `grep -v` in this pipeline on purpose: under `set -o pipefail` a grep that matches
 # nothing exits 1 and takes the whole script with it, which is exactly the no-changesets

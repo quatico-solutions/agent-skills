@@ -32,6 +32,10 @@ fi
 #     variable and aborts; bash 4.4 fixed this. Where an array can legitimately be
 #     empty, expand it as ${arr[@]+"${arr[@]}"}, which yields nothing on both.
 
+# Not quite identical to ${1^^}: callers use "$(bb_upper "$x")", and command
+# substitution strips trailing newlines. Only reachable via `--state $'open\n'` or
+# `--method $'get\n'`, where dropping the newline is the repair — ${1^^} would have
+# passed it through into a malformed request.
 bb_upper() {
   printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
 }
