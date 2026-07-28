@@ -1,8 +1,22 @@
 name: bb CLI tests
 
-# Runs the working-with-bitbucket-api integration suite (node:test + Express
-# mock server) only when the skill that owns the `bb` CLI is touched, so PRs
-# that don't change the CLI aren't slowed down by it.
+# Runs the working-with-bitbucket-api integration suite (node:test + Express mock
+# server). Both jobs ALWAYS run and always report; each decides for itself whether there
+# is anything worth testing and no-ops if not.
+#
+# That is deliberate. GitHub has no "not applicable" state for a required check: a
+# path-filtered workflow that does not trigger produces no check run at all, so the
+# requirement stays pending forever and unrelated PRs can never merge. The previous
+# design worked around that with a second workflow reporting the same contexts as
+# trivial successes, with mirrored `paths` / `paths-ignore` lists. Those lists are not
+# complements — each asks "does ANY changed file match?" — so a PR touching files on
+# both sides tripped both workflows and produced two runs per context, which on a mixed
+# PR bought nothing: the real suite still had to pass. Release PRs hit it every time,
+# since they always touch both skills/** and package.json.
+#
+# Filtering inside the job instead of on the trigger removes the whole class of problem.
+# One run per context, no mirrored lists to drift, and no question about how GitHub
+# resolves two check runs sharing a name.
 #
 # This is a PLATFORM matrix, not a bash-version sweep. `bb` supports two targets and
 # each job is one of them:
@@ -21,34 +35,23 @@ name: bb CLI tests
 # Do not collapse these into a bash matrix on one OS: that would test a combination
 # nobody runs and stop testing two that people do.
 #
-# INVARIANT: the `paths` list below is mirrored as `paths-ignore` in bb-tests-skip.yml,
-# which reports trivial successes on the PRs this workflow skips. Editing the list here
-# without editing it there leaves PRs blocked on a check that never runs. Change both
-# together.
-#
-# INVARIANT: every job here needs a same-named stub job in bb-tests-skip.yml, so it can
-# be made a required check. Adding a job here without one there means that check can
-# never be required — or, once required, blocks every non-bb PR.
-#
 # INVARIANT: job names are branch-protection check contexts, not labels. Renaming one
 # requires updating the required-status-checks list on main in the same change, or every
 # PR blocks forever on a context that no longer reports.
 #
-# Note the lists are mirrored, not complementary: a PR touching files on both
-# sides triggers both workflows and gets two runs of each context, all of which must
-# pass. See the caveat in bb-tests-skip.yml.
+# INVARIANT: both jobs must run unconditionally. Do not add a job-level `if:` to skip
+# them, and do not reintroduce a `paths:` filter — a skipped or absent job's standing as
+# a required check is exactly the murky area this design exists to avoid. Gate the
+# steps, not the job.
 on:
   pull_request:
-    paths:
-      - 'skills/working-with-bitbucket-api/**'
-      - '.github/workflows/bb-tests.yml'
-      - '.github/workflows/bb-tests-skip.yml'
   push:
     branches: [main]
-    paths:
-      - 'skills/working-with-bitbucket-api/**'
-      - '.github/workflows/bb-tests.yml'
-      - '.github/workflows/bb-tests-skip.yml'
+
+env:
+  # Paths that make the suite worth running. The workflow itself is included so a change
+  # to CI is exercised by CI. Defined once; both jobs read it.
+  BB_PATH_RE: '^(skills/working-with-bitbucket-api/|\.github/workflows/bb-tests\.yml$)'
 
 defaults:
   run:
@@ -61,25 +64,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Does this change touch the bb CLI?
+        id: scope
+        working-directory: .
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Post-merge runs on main always verify: there is no useful base to diff
+          # against, and the cost is paid once per merge rather than once per push.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA" HEAD | grep -qE "$BB_PATH_RE"; then
+            echo "bb CLI touched — running the integration suite."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes under skills/working-with-bitbucket-api — nothing to test."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: pnpm/action-setup@v4
+        if: steps.scope.outputs.run == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.scope.outputs.run == 'true'
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: skills/working-with-bitbucket-api/tests/pnpm-lock.yaml
 
-      # ubuntu-latest ships curl + jq, which `bb` shells out to. Assert they
-      # exist so a missing tool fails loudly here rather than as a cryptic
-      # mid-test error.
+      # ubuntu-latest ships curl + jq, which `bb` shells out to. Assert they exist so a
+      # missing tool fails loudly here rather than as a cryptic mid-test error.
       - name: Verify bb runtime deps
+        if: steps.scope.outputs.run == 'true'
         run: curl --version && jq --version
 
       - name: Install test deps
+        if: steps.scope.outputs.run == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Run bb integration suite
+        if: steps.scope.outputs.run == 'true'
         run: pnpm test
 
   # macOS + BSD userland — the platform `bb` is primarily written for (`bb auth login`
@@ -98,10 +128,33 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Does this change touch the bb CLI?
+        id: scope
+        working-directory: .
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA" HEAD | grep -qE "$BB_PATH_RE"; then
+            echo "bb CLI touched — running the integration suite."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes under skills/working-with-bitbucket-api — nothing to test."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: pnpm/action-setup@v4
+        if: steps.scope.outputs.run == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.scope.outputs.run == 'true'
         with:
           node-version: 20
           cache: pnpm
@@ -110,6 +163,7 @@ jobs:
       # Put macOS's own bash 3.2 ahead of anything the runner image preinstalls, so
       # `#!/usr/bin/env bash` in bin/bb resolves to it.
       - name: Pin bash to the macOS system shell
+        if: steps.scope.outputs.run == 'true'
         run: |
           mkdir -p "$RUNNER_TEMP/bash32"
           ln -sf /bin/bash "$RUNNER_TEMP/bash32/bash"
@@ -118,6 +172,7 @@ jobs:
       # Without this the job would keep passing if the image ever changed and the shim
       # stopped resolving — a green check that tests nothing is worse than no check.
       - name: Assert the suite will run against bash 3.2
+        if: steps.scope.outputs.run == 'true'
         run: |
           version="$(bash --version | head -1)"
           echo "$version"
@@ -127,12 +182,15 @@ jobs:
           esac
 
       - name: Verify bb runtime deps
+        if: steps.scope.outputs.run == 'true'
         run: |
           command -v jq >/dev/null || brew install jq
           curl --version && jq --version
 
       - name: Install test deps
+        if: steps.scope.outputs.run == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Run bb integration suite
+        if: steps.scope.outputs.run == 'true'
         run: pnpm test

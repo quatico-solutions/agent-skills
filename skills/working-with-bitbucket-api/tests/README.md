@@ -88,10 +88,18 @@ The `test` script discovers test files with `find` rather than a shell glob, so 
 
 ### Continuous integration
 
-`.github/workflows/bb-tests.yml` runs this suite on every pull request that
-touches `skills/working-with-bitbucket-api/**` (and on pushes to `main`). PRs
-that don't touch the CLI skip it. The runner only needs `curl` and `jq`
-(pre-installed on `ubuntu-latest`) plus the dev dependencies in this directory.
+`.github/workflows/bb-tests.yml` runs this suite on two platforms —
+`bb-tests-linux` (GNU userland) and `bb-tests-macos` (BSD userland, with
+`/bin/bash` 3.2 pinned, which is the shell `bb` meets on a developer Mac).
+
+Both jobs run on every pull request and on pushes to `main`, but each checks
+first whether the change actually touches `skills/working-with-bitbucket-api/**`
+and no-ops if not. The filtering is inside the job rather than on the trigger so
+the checks always report: a workflow that does not trigger produces no check run
+at all, which leaves a required check pending forever.
+
+The runner only needs `curl` and `jq` (pre-installed on both images) plus the
+dev dependencies in this directory.
 
 ### Coverage (local, manual — not a CI gate)
 
