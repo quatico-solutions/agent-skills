@@ -4,7 +4,7 @@ description: "Use when implementing any feature or bugfix, before writing implem
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   source: "Based on internal Jest testing guides and double-loop BDD/TDD practice"
 ---
 
