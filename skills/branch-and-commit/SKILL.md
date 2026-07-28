@@ -4,7 +4,7 @@ description: "Intelligently groups and commits changes based on revertibility, i
 compatibility: claude-code
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Branch and Commit

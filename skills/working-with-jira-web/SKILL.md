@@ -4,7 +4,7 @@ description: "Navigates JIRA for ticket operations. Primary: Atlassian MCP for C
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # Working with JIRA

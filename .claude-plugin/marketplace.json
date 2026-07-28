@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.6.0",
+      "version": "3.7.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -21,7 +21,7 @@
     {
       "name": "branch-and-commit",
       "description": "Intelligently groups and commits changes based on revertibility, intention, and logical dependencies. Optionally creates feature branches. Orders commits for optimal review and prepares for PR usin...",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./skills/branch-and-commit",
       "author": {
         "name": "Quatico Solutions AG",
@@ -61,7 +61,7 @@
     {
       "name": "handling-pull-requests",
       "description": "Guides PR workflows: creating PRs, addressing review feedback, replying to comments. Use when creating PRs, responding to code review, or managing PR lifecycle. Triggers: create PR, open PR, new PR...",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./skills/handling-pull-requests",
       "author": {
         "name": "Quatico Solutions AG",
@@ -71,7 +71,7 @@
     {
       "name": "jest-testing-conventions",
       "description": "Use when writing unit tests with Jest. Covers naming conventions (testObj, target, mock, actual, expected), jest.fn/spyOn/mock mastery, clear/reset/restore differences, module mocking, fake timers,...",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./skills/jest-testing-conventions",
       "author": {
         "name": "Quatico Solutions AG",
@@ -111,7 +111,7 @@
     {
       "name": "test-driven-development",
       "description": "Use when implementing any feature or bugfix, before writing implementation code. Triggers: TDD, test-driven, red-green-refactor, write test first, unit test workflow.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "./skills/test-driven-development",
       "author": {
         "name": "Quatico Solutions AG",
@@ -121,7 +121,7 @@
     {
       "name": "triage-ticket",
       "description": "Use when the user wants to triage a JIRA ticket, analyze a bug report or feature request, assess ticket readiness, scope changes, or evaluate a ticket before sprint planning. Triggers: triage, tick...",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "./skills/triage-ticket",
       "author": {
         "name": "Quatico Solutions AG",
@@ -141,7 +141,7 @@
     {
       "name": "working-with-bitbucket-api",
       "description": "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branch, tag) i...",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "source": "./skills/working-with-bitbucket-api",
       "author": {
         "name": "Quatico Solutions AG",
@@ -151,7 +151,7 @@
     {
       "name": "working-with-bitbucket-web",
       "description": "Last resort for Bitbucket operations that `bb` CLI cannot handle (SSO-gated pages). Prefer `working-with-bitbucket-api` for all PR operations, including image uploads. Triggers: bitbucket UI, bitbu...",
-      "version": "1.5.1",
+      "version": "1.6.0",
       "source": "./skills/working-with-bitbucket-web",
       "author": {
         "name": "Quatico Solutions AG",
@@ -161,7 +161,7 @@
     {
       "name": "working-with-jira-web",
       "description": "Navigates JIRA for ticket operations. Primary: Atlassian MCP for CRUD. Fallback: Browser for visual verification. Triggers: JIRA, create ticket, edit ticket, link issues, JQL, fix version.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "source": "./skills/working-with-jira-web",
       "author": {
         "name": "Quatico Solutions AG",

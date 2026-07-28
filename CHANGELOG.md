@@ -1,5 +1,43 @@
 # @quatico-solutions/agent-skills
 
+## 3.7.0
+
+### Minor Changes
+
+- [#42](https://github.com/quatico-solutions/agent-skills/pull/42) [`b3d5516`](https://github.com/quatico-solutions/agent-skills/commit/b3d55167b734402dd3bff2c2c56e4163c6ef6e58) Thanks [@jwloka](https://github.com/jwloka)! - Harden skills against documented Claude Opus 5 failure modes: delete style constraints and cross-skill duplication (net 92 fewer lines), bound the TDD verification cycle, and add an untrusted-content rule judged by target rather than authorship — in one owning skill plus `bb --help`, with `bb pr view --comments` fencing third-party comment bodies
+
+  <!--
+  bumps:
+    skills:
+      test-driven-development: minor
+      jest-testing-conventions: minor
+      handling-pull-requests: minor
+      triage-ticket: minor
+      working-with-jira-web: minor
+      working-with-bitbucket-web: minor
+      working-with-bitbucket-api: minor
+      branch-and-commit: patch
+    tuned-against: claude-opus-5
+  -->
+
+### Patch Changes
+
+- [#43](https://github.com/quatico-solutions/agent-skills/pull/43) [`66516be`](https://github.com/quatico-solutions/agent-skills/commit/66516be4018b7012ae1cc0e908d77816590fb527) Thanks [@eins78](https://github.com/eins78)! - Fix `bb` on macOS's system bash 3.2, where `--state`, `--method`, `--data`, `--remove-reviewer` and `--jq` all aborted, and gate it with a CI job that runs the suite against `/bin/bash` on macOS
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
+- [#45](https://github.com/quatico-solutions/agent-skills/pull/45) [`91e6b07`](https://github.com/quatico-solutions/agent-skills/commit/91e6b07a13d12d3976826c990e286230f6b657ab) Thanks [@eins78](https://github.com/eins78)! - Document the reworked `bb` CI in the test suite README: both platform jobs now always run and filter inside the job, rather than being path-filtered on the trigger with a mirrored skip workflow
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.6.0
 
 ### Minor Changes

@@ -4,7 +4,7 @@ description: "Use when the user wants to triage a JIRA ticket, analyze a bug rep
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Triage a JIRA Ticket
