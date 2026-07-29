@@ -1,6 +1,6 @@
 # Sessionlog Template
 
-Format and logic for creating or updating sessionlogs. Called from [SKILL.md](./SKILL.md) step 4.
+Format and logic for creating or updating sessionlogs. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 4.
 
 ## File Naming
 
