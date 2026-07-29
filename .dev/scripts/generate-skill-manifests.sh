@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# generate-skill-manifests.sh — rebuild marketplace.json with per-skill entries
+# generate-skill-manifests.sh — rebuild every marketplace.json with per-skill entries
 # Uses `skills ls --json` for canonical skill list, then reads metadata from SKILL.md
 # Called by: sync-versions.sh (part of pnpm run version)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-MARKETPLACE="$REPO_ROOT/.claude-plugin/marketplace.json"
+
+# Every marketplace manifest this repo ships. The generated `.plugins` array is
+# identical for all of them — what differs is each file's own top-level fields
+# (Cursor's has no `metadata` block, Claude's does), which are preserved.
+#
+# A missing file is skipped, not created: adding a marketplace is a deliberate
+# act, and silently scaffolding one would ship a manifest nobody reviewed.
+MARKETPLACES=(
+  "$REPO_ROOT/.claude-plugin/marketplace.json"
+  "$REPO_ROOT/.cursor-plugin/marketplace.json"
+)
 
 source "$(dirname "$0")/lib.sh"
 
@@ -14,7 +24,7 @@ AUTHOR_NAME=$(jq -r '.author.name // .author // "unknown"' "$REPO_ROOT/.claude-p
 AUTHOR_EMAIL=$(jq -r '.author.email // ""' "$REPO_ROOT/.claude-plugin/plugin.json")
 COLLECTION_DESC=$(jq -r '.description' "$REPO_ROOT/.claude-plugin/plugin.json")
 
-echo "Generating marketplace.json with per-skill entries..."
+echo "Generating marketplace manifests with per-skill entries..."
 
 # Start building the plugins array as a JSON file
 tmp_plugins=$(mktemp)
@@ -77,11 +87,29 @@ echo "$skill_json" | jq -r '.[] | "\(.name)\t\(.path)"' | while IFS=$'\t' read -
     }]' "$tmp_plugins" > "${tmp_plugins}.new" && mv "${tmp_plugins}.new" "$tmp_plugins"
 done
 
-# Write back to marketplace.json, preserving top-level fields
-jq --slurpfile p "$tmp_plugins" '.plugins = $p[0]' "$MARKETPLACE" > "${MARKETPLACE}.tmp"
-mv "${MARKETPLACE}.tmp" "$MARKETPLACE"
+# Write back to each marketplace.json, preserving that file's top-level fields
+written=0
+for marketplace in "${MARKETPLACES[@]}"; do
+  label="$(basename "$(dirname "$marketplace")")/$(basename "$marketplace")"
 
-count=$(jq '.plugins | length' "$MARKETPLACE")
-echo "  ✓ marketplace.json: $count entries (1 collection + $((count - 1)) skills)"
+  if [ ! -f "$marketplace" ]; then
+    echo "  – $label: not present, skipped"
+    continue
+  fi
+
+  jq --slurpfile p "$tmp_plugins" '.plugins = $p[0]' "$marketplace" > "${marketplace}.tmp"
+  mv "${marketplace}.tmp" "$marketplace"
+
+  count=$(jq '.plugins | length' "$marketplace")
+  echo "  ✓ $label: $count entries (1 collection + $((count - 1)) skills)"
+  written=$((written + 1))
+done
 
 rm -f "$tmp_plugins"
+
+# Every listed manifest missing is a broken release, not a quiet no-op: the
+# published plugin would keep whatever versions it happened to have.
+if [ "$written" -eq 0 ]; then
+  echo "ERROR: no marketplace manifest was written — none of the listed files exist" >&2
+  exit 1
+fi
