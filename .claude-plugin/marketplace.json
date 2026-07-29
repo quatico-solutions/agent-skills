@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.8.0",
+      "version": "3.8.1",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -31,7 +31,7 @@
     {
       "name": "bye",
       "description": "Use when the user says /bye, \"wrap up\", \"end session\", or similar. Reconstructs full session history including compacted context, creates a sessionlog (if the project has a sessionlog directory), c...",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "source": "./skills/bye",
       "author": {
         "name": "Quatico Solutions AG",
