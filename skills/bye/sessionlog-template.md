@@ -2,17 +2,59 @@
 
 Format and logic for creating or updating sessionlogs. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 4.
 
-## File Naming
+## Step 1: Find the Sessionlog Directory
+
+**Declared first.** Read `Sessionlog directory` from the project's
+`## Session Wrap Up` section in `CLAUDE.md` or `AGENTS.md`:
+
+```markdown
+## Session Wrap Up
+
+- **Sessionlog directory:** docs/sessionlogs/
+```
+
+Documentation-style repos that aggregate other repos conventionally use
+`sessionlogs/`; code repos `docs/sessionlogs/`, beside `docs/plans/`.
+
+**Undeclared?** Look for `sessionlogs/`, `docs/sessionlogs/`, `changelogs/`,
+`docs/changelogs/`. If more than one exists, take the **most populated** — an
+abandoned or accidentally created directory must not outrank the real one —
+and suggest declaring the key so the next session need not guess.
+
+**One home per unit.** Some repos aggregate several areas and keep a sessionlog
+directory per area, at the same relative path (`clients/acme/sessionlogs/`,
+`teams/blue/sessionlogs/`). Where those exist, file the log with **the unit
+that owns the work** — not the one that happens to hold the code, and not
+wherever the last file was touched. Work spanning two or more units belongs at
+the repo root. You know what this session was about, including work that
+changed no files at all; decide deliberately and say which home you chose.
+
+**One thread, one home.** A continuation goes beside its predecessor, even when
+the session touched other units too. Check before writing:
+
+```bash
+git ls-files '*sessionlogs/*' | grep -i '<topic-slug>'
+```
+
+**No sessionlog directory anywhere in this repository?** **Never create one.**
+Do not scaffold, do not guess. But do not go silent either — the work may
+deserve a log that lives in a *different* repository:
+
+```bash
+git rev-parse --show-superproject-working-tree 2>/dev/null   # a parent workspace
+ls -d ../*-workspace ../../*-workspace 2>/dev/null            # a sibling workspace
+```
+
+A code repository checked out on its own often keeps its documentation layer in
+a companion workspace repo that is neither its parent nor its child. Never
+write across a repository boundary on your own initiative — name the candidates
+and ask. If there are none, report
+`**Sessionlog:** Skipped — no sessionlog directory in this repository` in the
+final summary and continue with step 5.
+
+## Step 2: File Naming
 
 `{sessionlog-dir}/YYYY-MM-DD-topic-slug.md` — use today's date via `date +%Y-%m-%d`.
-
-The sessionlog directory varies by project. If project rules (CLAUDE.md / AGENTS.md) define a sessionlog directory, use that. Otherwise check these locations in order:
-1. `docs/sessionlogs/`
-2. `sessionlogs/`
-3. `docs/changelogs/` (backwards-compat)
-4. `changelogs/` (backwards-compat)
-
-Use whichever exists first. If none exists, skip sessionlog creation.
 
 ## Template
 
@@ -56,18 +98,21 @@ Use whichever exists first. If none exists, skip sessionlog creation.
 
 ## Finding Existing Sessionlogs
 
+Search every home, not just the one you are about to write to — a continuation
+belongs beside its predecessor (Step 1).
+
 ```bash
-# Find the sessionlog directory
-ls -d docs/sessionlogs/ sessionlogs/ docs/changelogs/ changelogs/ 2>/dev/null
+# Every sessionlog this repo tracks, in any home
+git ls-files '*sessionlogs/*' '*changelogs/*'
 
-# List recent sessionlogs (use whichever dir exists)
-ls -la docs/sessionlogs/ sessionlogs/ docs/changelogs/ changelogs/ 2>/dev/null | tail -5
+# Recent ones
+git ls-files '*sessionlogs/*' | sort | tail -5
 
-# Find sessionlogs from today
-ls docs/sessionlogs/ sessionlogs/ docs/changelogs/ changelogs/ 2>/dev/null | grep "$(date +%Y-%m-%d)"
+# From today
+git ls-files '*sessionlogs/*' | grep "$(date +%Y-%m-%d)"
 ```
 
-When unsure, ask: "Should I create a new sessionlog or update `sessionlogs/[file].md`?"
+When unsure, ask: "Should I create a new sessionlog or update `<path>`?"
 
 ## Plan Session Handling
 
