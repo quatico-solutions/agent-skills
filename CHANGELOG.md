@@ -1,5 +1,30 @@
 # @quatico-solutions/agent-skills
 
+## 3.8.0
+
+### Minor Changes
+
+- [#46](https://github.com/quatico-solutions/agent-skills/pull/46) [`17560d9`](https://github.com/quatico-solutions/agent-skills/commit/17560d9e4572227fdc259be233b758cdfb8140d6) Thanks [@eins78](https://github.com/eins78)! - bye takes the sessionlog directory from a declared `Sessionlog directory` key
+  under `## Session Wrap Up`, and when it is absent and several candidates exist,
+  picks the most populated rather than the first in a fixed list — an abandoned
+  directory no longer outranks the real one. Adds the ownership rule for repos
+  that keep one home per unit, and a continuation rule so a running thread stays
+  in one place. When a repository has no sessionlog directory, bye still creates
+  nothing, but now checks for a parent or sibling workspace repo and asks instead
+  of going silent.
+
+  Consolidates the diverged personal fork into this copy: skill-directory links
+  everywhere (relative links resolved against the working directory and broke),
+  the skip/create decision table with a project-rules override, the hard stop
+  when no home exists, and the session/token stats line. The
+  project-instructions hook the fork had dropped is kept.
+
+  <!--
+  bumps:
+    skills:
+      bye: minor
+  -->
+
 ## 3.7.0
 
 ### Minor Changes
