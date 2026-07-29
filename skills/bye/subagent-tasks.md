@@ -1,6 +1,6 @@
 # Subagent Tasks
 
-Task templates for delegating session analysis to subagents. Use these when the conversation is too long to analyze directly. Called from [SKILL.md](./SKILL.md) step 1.
+Task templates for delegating session analysis to subagents. Use these when the conversation is too long to analyze directly. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 1.
 
 ## Analyze Session File
 
@@ -28,10 +28,19 @@ prompt: |
   4. If compaction found, extract the embedded conversation:
      - Format is "User: [text]" and "Agent: [text]" separated by "---"
      - List what work was discussed
-  5. Return:
+  5. Count compactions: in `type=user` entries, count `content` blocks where
+     `type` is `"text"` (NOT `"tool_result"`) AND the text contains
+     "Context: This summary will be shown". Ignore occurrences inside
+     tool_result blocks — those are file reads, not compaction events.
+  6. Sum token usage from all assistant messages: each has `message.usage` with
+     `input_tokens` and `output_tokens` fields. Sum both across all entries.
+  7. Return:
      - session_type: "compaction" | "plan_mode" | "plan_execution" | "normal" | "subagent"
      - work_summary: 2-3 sentences of what happened
      - files_mentioned: list of file paths discussed
+     - compaction_count: number of compaction events detected (0 if none)
+     - total_input_tokens: sum of input_tokens across all assistant messages
+     - total_output_tokens: sum of output_tokens across all assistant messages
 ```
 
 ## Detect Plan Execution Session

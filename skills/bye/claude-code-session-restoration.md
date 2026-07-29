@@ -1,6 +1,6 @@
 # Claude Code Session Restoration
 
-Detailed procedure for restoring full session history from Claude Code's data files. Called from [SKILL.md](./SKILL.md) step 1.
+Detailed procedure for restoring full session history from Claude Code's data files. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 1.
 
 ## Finding Session Data
 
