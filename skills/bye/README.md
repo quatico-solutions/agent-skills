@@ -20,7 +20,7 @@ Session restoration is a **critical gate** — the first step in SKILL.md, block
 
 ## Tier
 
-**Reusable / Publishable** — project-agnostic session management. Works in any repository with a `sessionlogs/` or `changelogs/` directory.
+**Reusable / Publishable** — project-agnostic session management. Works in any repository that declares a `Sessionlog directory` under `## Session Wrap Up`, and falls back to the conventional locations when none is declared.
 
 ## Testing
 
@@ -34,7 +34,7 @@ Originally authored as a project-local slash command at `~/OPS/home-workspace/.c
 
 ## Known Gaps
 
-- Relies on `sessionlogs/` or `changelogs/` directory convention — projects without either need manual adaptation.
+- Placement is prose, not a gate — nothing fails a commit when a log lands in the wrong home.
 - Session file parsing heuristics (compaction detection) may need updates as Claude Code internals evolve.
 - Cursor session restoration not yet implemented.
 - No automated test suite; validation is manual/observational.
