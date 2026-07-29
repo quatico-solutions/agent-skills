@@ -1,6 +1,6 @@
 # Cursor Session Restoration
 
-Placeholder for Cursor-specific session restoration. Called from [SKILL.md](./SKILL.md) step 1.
+Placeholder for Cursor-specific session restoration. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 1.
 
 ## Status
 

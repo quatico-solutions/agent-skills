@@ -1,6 +1,6 @@
 # Subagent Tasks
 
-Task templates for delegating session analysis to subagents. Use these when the conversation is too long to analyze directly. Called from [SKILL.md](./SKILL.md) step 1.
+Task templates for delegating session analysis to subagents. Use these when the conversation is too long to analyze directly. Called from [SKILL.md](${CLAUDE_SKILL_DIR}/SKILL.md) step 1.
 
 ## Analyze Session File
 
