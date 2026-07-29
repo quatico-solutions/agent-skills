@@ -1,5 +1,59 @@
 # @quatico-solutions/agent-skills
 
+## 3.8.1
+
+### Patch Changes
+
+- [#48](https://github.com/quatico-solutions/agent-skills/pull/48) [`6b558d0`](https://github.com/quatico-solutions/agent-skills/commit/6b558d0449a960b27b11501798878cd489e985f4) Thanks [@eins78](https://github.com/eins78)! - bye: README described pre-2.2.0 behaviour, and the summary template hardcoded a path
+
+  `bye` 2.2.0 made the sessionlog directory configurable, but the README still
+  described the old behaviour in two places — one of which its own "Planned
+  Improvements" list already marked as done:
+
+  - **Tier** claimed the skill "works in any repository with a `sessionlogs/` or
+    `changelogs/` directory". It works in any repository that _declares_ one.
+  - **Known Gaps** listed "relies on `sessionlogs/` or `changelogs/` convention"
+    as an open limitation. That gap was closed by 2.2.0. Replaced with the gap
+    that is actually open: placement is prose, not a gate.
+
+  Also, the final-summary template in `SKILL.md` printed
+  `**Sessionlog:** sessionlogs/[file].md` — wrong in a code repo that keeps logs
+  under `docs/sessionlogs/`, and wrong in any repo declaring something else. Now
+  `<sessionlog directory>/[file].md`.
+
+  The "Cursor session restoration not yet implemented" gap was checked and is
+  **accurate** — that guide ships as an explicit placeholder. Left as is.
+
+  No behaviour change.
+
+  <!--
+  bumps:
+    skills:
+      bye: patch
+  -->
+
+- [#50](https://github.com/quatico-solutions/agent-skills/pull/50) [`2fe8b87`](https://github.com/quatico-solutions/agent-skills/commit/2fe8b877f44c0fe4bb3dacd47b19bf1735d3b2a2) Thanks [@eins78](https://github.com/eins78)! - release: generate `.cursor-plugin/marketplace.json` too — it had been frozen at 2.0.0
+
+  `generate-skill-manifests.sh` hardcoded the Claude manifest path and wrote only
+  that file, so `.cursor-plugin/marketplace.json` was touched by nothing in the
+  release pipeline. It still advertised `version: 2.0.0` and a single plugin entry
+  while the package had reached 3.8.0 — every skill version Cursor could see was
+  whatever happened to be true when the file was hand-written.
+
+  `sync-versions.sh` did keep both `plugin.json` files in step, which is why this
+  went unnoticed: the Cursor plugin's _own_ version was right, only its
+  marketplace listing was stale.
+
+  The generated `.plugins` array is identical for both targets; each file's own
+  top-level fields are preserved (Claude's has a `metadata` block, Cursor's does
+  not, and neither gains the other's). A listed manifest that does not exist is
+  skipped rather than created — adding a marketplace is a deliberate act. If
+  _none_ of them exists the script now exits 1 instead of quietly succeeding,
+  because a release that silently updates no manifest is a broken release.
+
+  No skill content changes, so this changeset carries no `bumps:` block — release
+  tooling only, at the package level.
+
 ## 3.8.0
 
 ### Minor Changes
