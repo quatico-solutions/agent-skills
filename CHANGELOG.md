@@ -1,5 +1,19 @@
 # @quatico-solutions/agent-skills
 
+## 3.8.2
+
+### Patch Changes
+
+- [#52](https://github.com/quatico-solutions/agent-skills/pull/52) [`eb38332`](https://github.com/quatico-solutions/agent-skills/commit/eb3833243236a795c8a385a1e8cad7fb4b796a02) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - Fix `bb api` unconditionally piping every response through `jq .`, which broke on non-JSON bodies (e.g. raw file content from the source endpoint) with a confusing `jq: parse error`. It now pretty-prints only when the body actually parses as JSON, and passes anything else through untouched.
+
+  Also add a note about the global `-R` flag to the per-subcommand `--help` text for `bb source cat` and `bb api`, so it's visible from inside the subcommand help rather than only `bb --help`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.8.1
 
 ### Patch Changes

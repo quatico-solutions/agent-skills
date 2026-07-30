@@ -1,7 +1,7 @@
 {
   "name": "quatico-skills",
   "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "author": {
     "name": "Quatico Solutions AG"
   },
