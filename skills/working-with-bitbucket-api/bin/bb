@@ -1724,6 +1724,8 @@ EXAMPLES
   bb source cat src/main.ts --ref develop
   bb source cat package.json --ref v1.0.0
   bb source cat config.yml | head -20
+
+See `bb --help` for global flags (e.g. -R workspace/repo to target another repo).
 HELP
         exit 0
         ;;
@@ -2112,6 +2114,8 @@ EXAMPLES
   bb api /repositories/{ws}/{repo}/pullrequests/42
   bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
   bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"test","source":{"branch":{"name":"my-branch"}}}'
+
+See `bb --help` for global flags (e.g. -R workspace/repo to target another repo).
 HELP
         exit 0
         ;;
