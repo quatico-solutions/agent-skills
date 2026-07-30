@@ -88,6 +88,19 @@ describe('bb api', () => {
     assert.match(result.stdout, /\n  "username": "testuser"/)
   })
 
+  it('Passes through non-JSON responses untouched (e.g. raw file content)', async () => {
+    // Given the API returns a raw (non-JSON) body, as the source-content endpoint does
+    server.stubRaw('GET', '/repositories/testws/testrepo/src/main/Dockerfile', 'FROM node:20-alpine\n')
+
+    // When I call bb api against that endpoint
+    const result = await bb('api /repositories/testws/testrepo/src/main/Dockerfile', { port: server.port })
+
+    // Then the raw body is printed as-is instead of failing with a jq parse error
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stdout, 'FROM node:20-alpine\n')
+    assert.equal(result.stderr, '')
+  })
+
   it('Errors when no path is given', async () => {
     // When I call bb api with no path
     const result = await bb('api', { port: server.port })

@@ -2143,7 +2143,11 @@ HELP
     result="$(bb_api_call "$method" "$path")"
   fi
 
-  echo "$result" | jq .
+  if printf '%s' "$result" | jq -e . >/dev/null 2>&1; then
+    printf '%s\n' "$result" | jq .
+  else
+    printf '%s\n' "$result"
+  fi
 }
 
 cmd_download_upload() {
