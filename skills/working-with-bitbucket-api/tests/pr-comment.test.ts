@@ -79,6 +79,67 @@ describe('bb pr comment', () => {
     assert.match(result.stderr, /--line requires --file/)
   })
 
+  it('Sends content.raw from --body-file', async () => {
+    // Given the API accepts comment creation and a body file exists on disk
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests/42/comments', commentResponse)
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'bb-cmtf-'))
+    const bodyFile = path.join(tmpDir, 'review.md')
+    writeFileSync(bodyFile, 'Multi-line\nreview comment.\n')
+
+    try {
+      // When I run bb pr comment 42 --body-file review.md
+      const result = await bb(['pr', 'comment', '42', '--body-file', bodyFile], { port: server.port })
+
+      // Then it sends POST with the file's contents as the comment body
+      const call = server.getLastCall()
+      const body = call.body as Record<string, unknown>
+      assert.deepEqual((body.content as any).raw, 'Multi-line\nreview comment.')
+      assert.equal(result.exitCode, 0)
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('Reads --body-file from stdin when path is "-"', async () => {
+    // Given the API accepts comment creation
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests/42/comments', commentResponse)
+
+    // When I run bb pr comment 42 --body-file - and pipe stdin
+    const result = await bb(
+      ['pr', 'comment', '42', '--body-file', '-'],
+      { port: server.port, input: 'From stdin\n' }
+    )
+
+    // Then it sends POST with the piped content as the comment body
+    const call = server.getLastCall()
+    const body = call.body as Record<string, unknown>
+    assert.deepEqual((body.content as any).raw, 'From stdin')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Errors when both --body and --body-file are given', async () => {
+    // When I run bb pr comment with both --body and --body-file
+    const result = await bb(
+      ['pr', 'comment', '42', '--body', 'x', '--body-file', 'y.md'],
+      { port: server.port }
+    )
+
+    // Then it errors and does not post the comment
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /--body and --body-file are mutually exclusive/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
+  it('Errors when --body-file path does not exist', async () => {
+    // When I run bb pr comment with a missing --body-file
+    const result = await bb(['pr', 'comment', '42', '--body-file', '/no/such/review.md'], { port: server.port })
+
+    // Then it errors and does not post the comment
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /body file not found/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
   it('Sends POST to /resolve with --resolve', async () => {
     // Given the API accepts comment resolution
     server.stub('POST', '/repositories/testws/testrepo/pullrequests/42/comments/100/resolve', {})
