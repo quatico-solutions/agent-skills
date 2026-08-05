@@ -70,8 +70,8 @@ Need to interact with Bitbucket?
 
 `bb` handles everything including markdown in `--body` (descriptions, comments)
 and image uploads (via the repo Downloads area — see below). For multi-line
-descriptions, use `--body-file <path>` (or `-` for stdin) instead of
-interpolating a file through the shell.
+descriptions or comments, use `--body-file <path>` (or `-` for stdin) instead
+of interpolating a file through the shell.
 Browser is a **last resort** — only for SSO-gated pages.
 
 > **Markdown**: Bitbucket uses CommonMark, not GFM — no task lists, no strikethrough, no bare autolinks. Use the `markdown` skill if installed.
