@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.9.0
+
+### Minor Changes
+
+- [#55](https://github.com/quatico-solutions/agent-skills/pull/55) [`25ec2ef`](https://github.com/quatico-solutions/agent-skills/commit/25ec2ef1b286b354adcb95f5502d388b8edc1ef2) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - Add `--body-file <path>` to `bb pr create` and `bb pr comment`, mirroring `gh pr create --body-file`. Accepts `-` to read from stdin; mutually exclusive with `--body`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
 ## 3.8.2
 
 ### Patch Changes
