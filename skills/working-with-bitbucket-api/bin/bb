@@ -263,6 +263,21 @@ bb_current_ref() {
   bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // "main"'
 }
 
+bb_read_body_file() {
+  # Read PR/comment body text from a file path, or stdin when path is "-".
+  # Mirrors `gh pr create --body-file` / `gh pr comment --body-file`.
+  local file="$1"
+  if [[ "$file" == "-" ]]; then
+    cat
+  else
+    if [[ ! -f "$file" ]]; then
+      echo >&2 "error: body file not found: $file"
+      exit 1
+    fi
+    cat "$file"
+  fi
+}
+
 bb_download_upload() {
   # Upload a file to the repo Downloads area via multipart/form-data.
   # bb_api_call can't do this: it always sends Content-Type: application/json,
@@ -756,7 +771,7 @@ HELP
 }
 
 cmd_pr_create() {
-  local title="" body="" head="" base="" reviewers=() close_branch=0 draft=0
+  local title="" body="" body_file="" head="" base="" reviewers=() close_branch=0 draft=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -764,18 +779,19 @@ cmd_pr_create() {
 Create a pull request.
 
 USAGE
-  bb pr create --title "..." [--body "..."] [--head <branch>] [--base <branch>]
+  bb pr create --title "..." [--body "..."|--body-file <path>] [--head <branch>] [--base <branch>]
                [--reviewer <user>] [--close-branch] [--draft] [--json]
 
 FLAGS
-  --title <text>      PR title (required)
-  --body <text>       PR description (CommonMark markdown — no GFM extensions)
-  --head <branch>     Source branch (default: current branch)
-  --base <branch>     Target branch (default: repo's default branch via API)
-  --reviewer <user>   Add reviewer (repeatable; see REVIEWER RESOLUTION below)
-  --close-branch      Close source branch after merge
-  --draft             Create PR in draft state
-  --json              Output raw JSON
+  --title <text>       PR title (required)
+  --body <text>        PR description (CommonMark markdown — no GFM extensions)
+  --body-file <path>   Read PR description from a file ("-" for stdin); mutually exclusive with --body
+  --head <branch>      Source branch (default: current branch)
+  --base <branch>      Target branch (default: repo's default branch via API)
+  --reviewer <user>    Add reviewer (repeatable; see REVIEWER RESOLUTION below)
+  --close-branch       Close source branch after merge
+  --draft              Create PR in draft state
+  --json               Output raw JSON
 
 REVIEWER RESOLUTION
   Accepts display name, nickname, UUID ({...}), or account_id (24-char hex or realm:uuid).
@@ -787,11 +803,13 @@ EXAMPLES
   bb pr create --title "Fix bug" --body "Fixes #42" --reviewer "Alice Smith"
   bb pr create --title "Feature" --head feature/x --base develop --close-branch
   bb pr create --title "WIP" --draft
+  bb pr create --title "Big change" --body-file body.md
 HELP
         exit 0
         ;;
       --title)        title="$2"; shift 2 ;;
       --body)         body="$2"; shift 2 ;;
+      --body-file)    body_file="$2"; shift 2 ;;
       --head)         head="$2"; shift 2 ;;
       --base)         base="$2"; shift 2 ;;
       --reviewer)     reviewers+=("$2"); shift 2 ;;
@@ -803,9 +821,15 @@ HELP
   done
 
   if [[ -z "$title" ]]; then
-    echo >&2 "usage: bb pr create --title \"...\" [--body \"...\"] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--draft]"
+    echo >&2 "usage: bb pr create --title \"...\" [--body \"...\"|--body-file path] [--head branch] [--base branch] [--reviewer user] [--close-branch] [--draft]"
     exit 1
   fi
+
+  if [[ -n "$body" && -n "$body_file" ]]; then
+    echo >&2 "error: --body and --body-file are mutually exclusive"
+    exit 1
+  fi
+  [[ -n "$body_file" ]] && body="$(bb_read_body_file "$body_file")"
 
   # Default head to current branch
   [[ -z "$head" ]] && head="$(git branch --show-current 2>/dev/null || echo "")"
@@ -1114,7 +1138,7 @@ HELP
 }
 
 cmd_pr_comment() {
-  local pr_id="" body="" file="" line="" resolve_id="" unresolve_id="" images=()
+  local pr_id="" body="" body_file="" file="" line="" resolve_id="" unresolve_id="" images=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -1127,6 +1151,7 @@ USAGE
 
 FLAGS
   --body <text>             Comment text in CommonMark markdown (required unless --image given)
+  --body-file <path>        Read comment text from a file ("-" for stdin); mutually exclusive with --body
   --image <path>            Attach an image (uploads to Downloads, appends ![](url)); repeatable
   --file <path>             File path for inline comment
   --line <num>              Line number for inline comment (requires --file)
@@ -1145,10 +1170,12 @@ EXAMPLES
   bb pr comment 42 --image before-after.png --body "Layout regression below:"
   bb pr comment 42 --resolve 12345
   bb pr comment 42 --unresolve 12345
+  bb pr comment 42 --body-file review.md
 HELP
         exit 0
         ;;
       --body)      body="$2"; shift 2 ;;
+      --body-file) body_file="$2"; shift 2 ;;
       --image)     images+=("$2"); shift 2 ;;
       --file)      file="$2"; shift 2 ;;
       --line)      line="$2"; shift 2 ;;
@@ -1164,6 +1191,12 @@ HELP
     echo >&2 "usage: bb pr comment <id> --body \"...\" [--file path] [--line num] [--resolve <comment_id>] [--unresolve <comment_id>] [--json]"
     exit 1
   fi
+
+  if [[ -n "$body" && -n "$body_file" ]]; then
+    echo >&2 "error: --body and --body-file are mutually exclusive"
+    exit 1
+  fi
+  [[ -n "$body_file" ]] && body="$(bb_read_body_file "$body_file")"
 
   local ws repo
   ws="$(bb_workspace)"

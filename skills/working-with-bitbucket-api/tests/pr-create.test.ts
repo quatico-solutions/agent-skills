@@ -1,5 +1,8 @@
 import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { writeFileSync, rmSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 import prCreateResponse from './fixtures/pr-create-response.json' with { type: 'json' }
@@ -92,6 +95,73 @@ describe('bb pr create', () => {
     const body = call.body as Record<string, unknown>
     assert.equal(body.description, 'Description')
     assert.equal(result.exitCode, 0)
+  })
+
+  it('Includes description with --body-file', async () => {
+    // Given the API accepts PR creation and a body file exists on disk
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'bb-prc-'))
+    const bodyFile = path.join(tmpDir, 'body.md')
+    writeFileSync(bodyFile, '## Summary\n\nMulti-line description.\n')
+
+    try {
+      // When I run bb pr create with --body-file
+      const result = await bb(
+        ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--body-file', bodyFile],
+        { port: server.port }
+      )
+
+      // Then the payload includes the file's contents as description
+      const call = server.getLastCall()
+      const body = call.body as Record<string, unknown>
+      assert.equal(body.description, '## Summary\n\nMulti-line description.')
+      assert.equal(result.exitCode, 0)
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('Reads --body-file from stdin when path is "-"', async () => {
+    // Given the API accepts PR creation
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+
+    // When I run bb pr create with --body-file - and pipe stdin
+    const result = await bb(
+      ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--body-file', '-'],
+      { port: server.port, input: 'From stdin\n' }
+    )
+
+    // Then the payload includes the piped content as description
+    const call = server.getLastCall()
+    const body = call.body as Record<string, unknown>
+    assert.equal(body.description, 'From stdin')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Errors when both --body and --body-file are given', async () => {
+    // When I run bb pr create with both --body and --body-file
+    const result = await bb(
+      ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--body', 'x', '--body-file', 'y.md'],
+      { port: server.port }
+    )
+
+    // Then it errors and does not create the PR
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /--body and --body-file are mutually exclusive/)
+    assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
+  })
+
+  it('Errors when --body-file path does not exist', async () => {
+    // When I run bb pr create with a missing --body-file
+    const result = await bb(
+      ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--body-file', '/no/such/body.md'],
+      { port: server.port }
+    )
+
+    // Then it errors and does not create the PR
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /body file not found/)
+    assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
   })
 
   it('Errors when a reviewer display name cannot be resolved', async () => {
