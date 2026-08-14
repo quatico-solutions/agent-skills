@@ -49,6 +49,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | Skill | Description |
 |-------|-------------|
 | [`bye`](skills/bye) | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
+| [`adopt-agentic-workflow`](skills/adopt-agentic-workflow) | Adopt the four-phase workflow (Discovery → Design → Development → Endgame): runs Plot's `/plot-init`, then maps our skills to the phases they serve |
 | [`branch-and-commit`](skills/branch-and-commit) | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
 | [`commit`](skills/commit) | When and what to commit: timing, atomic commits, git hooks, skip policies |
 | [`commit-notation`](skills/commit-notation) | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
