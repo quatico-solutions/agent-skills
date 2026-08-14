@@ -63,6 +63,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, image uploads, source browsing. Requires `install-dependencies.sh` |
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
+| [`reality-check`](skills/reality-check) | Adversarial verification: dispatch separate subagents to refute each claim, separating what was executed from what was only read |
 | [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 
 **Usage tips:**

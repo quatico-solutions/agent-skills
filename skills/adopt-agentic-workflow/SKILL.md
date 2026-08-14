@@ -68,7 +68,7 @@ Four phases, each turning one durable artifact into the next.
 | **Discovery** | a story (`docs/stories/`) or a ticket assessment | `triage-ticket` for an incoming ticket · `story-tracking` for multi-session work |
 | **Design** | an approved plan (`docs/plans/`) | `/plot-idea` → `challenge-the-plan` → `/plot-approve` |
 | **Development** | merged branches | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
-| **Endgame** | a verified release | `/plot-release rc` → verify the checklist → `/plot-release` |
+| **Endgame** | a verified release | `reality-check` before claiming done · `/plot-release rc` → verify the checklist → `/plot-release` |
 
 Discovery is optional: small, well-understood work goes straight to Design.
 
