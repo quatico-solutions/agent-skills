@@ -4,7 +4,7 @@ description: "Use when adopting the four-phase agentic workflow (Discovery → D
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Adopt the Four-Phase Agentic Workflow
