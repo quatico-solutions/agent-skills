@@ -7,8 +7,18 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.9.0",
+      "version": "3.10.0",
       "source": "./",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "adopt-agentic-workflow",
+      "description": "Use when adopting the four-phase agentic workflow (Discovery → Design → Development → Endgame) in a repository: installs Plot for the plan lifecycle, then wires this orgs skills to the phases they ...",
+      "version": "1.1.0",
+      "source": "./skills/adopt-agentic-workflow",
       "author": {
         "name": "Quatico Solutions AG",
         "email": ""
@@ -79,6 +89,16 @@
       "description": "Use when writing or reviewing any markdown file in this workspace. Quick reference for supported syntax (CommonMark + Bitbucket safe).",
       "version": "1.0.1",
       "source": "./skills/markdown",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "reality-check",
+      "description": "Use before claiming work is done, before merging, or when a claim matters and has not been executed: dispatches separate adversarial subagents to REFUTE each claim and report what they executed ver...",
+      "version": "1.1.0",
+      "source": "./skills/reality-check",
       "author": {
         "name": "Quatico Solutions AG",
         "email": ""

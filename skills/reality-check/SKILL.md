@@ -4,7 +4,7 @@ description: "Use before claiming work is done, before merging, or when a claim 
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Reality Check

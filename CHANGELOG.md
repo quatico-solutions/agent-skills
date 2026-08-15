@@ -1,5 +1,44 @@
 # @quatico-solutions/agent-skills
 
+## 3.10.0
+
+### Minor Changes
+
+- [#57](https://github.com/quatico-solutions/agent-skills/pull/57) [`922b276`](https://github.com/quatico-solutions/agent-skills/commit/922b276e3f1f6340ed735e2d920034d91b9c61a8) Thanks [@jwloka](https://github.com/jwloka)! - New skill `adopt-agentic-workflow`: set up the four-phase workflow in a repository.
+
+  Adopting Discovery → Design → Development → Endgame has meant pasting a long prompt into a fresh session — one that hardcoded parameters for two specific projects, cited a reference repo to copy-adapt from, pinned a Plot version, and mixed generic plan-lifecycle setup with our own conventions. It was validated twice and it worked, but it could only be maintained by editing prose and went stale with every Plot release; by the end it still named `plot 1.6.0` and required plan front-matter keys the parser no longer reads.
+
+  Plot now ships `/plot-init`, which probes a repo and sets up the plan lifecycle generically. This skill invokes that and adds only the connective layer: **which of our skills serves which phase**, where the Definition of Done lives, and how session logs get written.
+
+  The phase map is the point. `triage-ticket` does not know it is a Discovery tool; `commit-notation` does not know it belongs to Development; Plot knows its plan states but nothing about our skills. That mapping exists nowhere in either repo, and writing it into the hub is what turns a set of installed skills into a workflow.
+
+  Two things it deliberately does not do. It does not copy the `bb`-versus-`gh` command table into each target — that is now a pointer to `working-with-bitbucket-api`, because a copied table goes stale the day the tool changes and then two sources disagree. And it does not write session logs: `bye` reconstructs compacted history and classifies session types, which a plan-shaped tool cannot, so Plot's `plot-context.sh` supplies the facts and `bye` writes the log.
+
+  The dependency runs one way — this skill knows Plot, Plot never knows this skill.
+
+  <!--
+  bumps:
+    skills:
+      adopt-agentic-workflow: minor
+  -->
+
+- [#57](https://github.com/quatico-solutions/agent-skills/pull/57) [`eee4dd7`](https://github.com/quatico-solutions/agent-skills/commit/eee4dd7ba5e727d8a95264a6df5e319be4e4eb93) Thanks [@jwloka](https://github.com/jwloka)! - New skill `reality-check`: verify claims by trying to disprove them.
+
+  An agent inspecting its own mechanism will usually conclude it works, because the mental model it uses to read is the same one it used to write. Only execution can contradict that model — so this skill dispatches **separate** subagents, briefs each to _refute_ a claim rather than confirm it, and requires reports to separate what was **executed** from what was only **read**.
+
+  The shape was observed rather than designed. Two adversarial audits against a feature in a sibling repo each found something its author had already checked and cleared: a supposedly-atomic locking mechanism that provided no mutual exclusion at all (135 passing tests coexisted with it, because none exercised the contested case), and then, auditing the fix, a detection that could be fooled by a commit subject into offering to delete a branch holding real unmerged work. Both findings came from executing in a throwaway repo, not from reading.
+
+  It replaces a `reality-checker` agent definition that had to be copied and re-adapted per repo, carrying that repo's Definition of Done in its own text — which drifted, and when adapted wrongly flagged correct commits as violations. This reads the DoD at run time instead, or asks when none is written down.
+
+  Includes the revert test: for a claim of the form "X is fixed", revert the fix and confirm a test goes red. An unprotected fix is a finding in its own right — that check found an untested surface where reverting a validation guard left an entire suite green.
+
+  <!--
+  bumps:
+    skills:
+      reality-check: minor
+      adopt-agentic-workflow: patch
+  -->
+
 ## 3.9.0
 
 ### Minor Changes
