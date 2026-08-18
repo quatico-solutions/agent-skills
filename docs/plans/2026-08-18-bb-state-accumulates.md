@@ -5,8 +5,9 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** bug
+- **Delivered:** 2026-08-18
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 - **Review:** pr
 - **Impl:** same branch
