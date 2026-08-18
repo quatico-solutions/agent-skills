@@ -27,8 +27,9 @@
 - `UNKNOWN` stays a real value and is never reported as a pass: *could
   not read the builds* and *no build ever ran* remain different answers.
 - `bb pr view` reports the same facts for a single PR, spelled the same.
-- Whether Bitbucket exposes mergeability at all is **an open question the
-  second wave measures and reports** rather than one this plan assumes.
+- **Bitbucket exposes no mergeability at all** — measured, not assumed. Wave 2
+  reports the finding and ships no field: `mergeable` stays `unknown` on this
+  host, which was always the honest answer rather than a gap to be filled.
 
 ## Motivation
 
@@ -259,8 +260,9 @@ deliberate.
 
 ### Mergeability
 
-- `feature/bb-reports-pr-mergeability` — `mergeable` on both commands,
-  in the `conflicting | mergeable | unknown` vocabulary
+- `feature/bb-reports-pr-mergeability` — **measured 2026-08-18: no answer exists**, ships no field <!-- deferred: the API exposes no mergeability; see Wave 2 measurement. Nothing to build, not abandoned work -->
+  The wave's deliverable was the measurement itself, and it is recorded in
+  *Wave 2 measurement* above.
 
 Two waves, sequential. **Checks first**: it is the field with the
 clearer source, and it establishes the opt-in cost model that
@@ -314,6 +316,53 @@ gain.
   answer rather than a failure.
 - `pnpm test` in `skills/working-with-bitbucket-api/tests` passes.
 - A changeset is present.
+
+## Wave 2 measurement (2026-08-18, `quatico/ekzweb`) — no answer exists
+
+**Bitbucket's REST API v2 does not expose pull-request mergeability.** Wave 2
+begins with a measurement rather than an implementation precisely so this could
+be found before anything was built, and per *Done when*, finding that no answer
+exists is a successful outcome: `mergeable` stays `UNKNOWN` on this host
+permanently, and the wave ships no field.
+
+Measured against six open PRs with `bb` 1.9.0. Every place the fact could live
+was checked:
+
+| Where it could be | What is there |
+|---|---|
+| PR object (`/pullrequests/{id}`) | 23 keys; the only merge-related one is `merge_commit` |
+| `merge_commit` | `null` while open — a record of a **past** merge, not a prediction about a future one |
+| `links.merge` | exists, but `GET` returns `403 — This endpoint does not support token-based authentication`, and it is a POST-to-merge **action**, not a read |
+| `/diffstat` | the merge-base comparison (`topic=true`), but file statistics only — no conflict flag |
+| the PR diff | zero conflict markers; the diff is rendered against the merge base, so conflicts do not appear in it |
+| union of keys across all open PRs | `merge_commit` only — no `mergeable`, `conflicts`, or `merge_status` anywhere |
+
+### What this means
+
+The consumer's Bitbucket path keeps reporting `mergeable: "unknown"`, and that
+was always the honest answer rather than a gap to be filled. Its comment — *"a
+consumer must render those as plain text"* — stands for mergeability, and is now
+obsolete only for `checks`, which wave 1 delivered.
+
+**No derivation was attempted, and none should be.** Comparing branch heads
+would answer *is this branch behind?* — a different question. An empty diff
+would answer *is there anything to merge?* Either would produce a value that
+looks like the others, is spelled like the others, and means something else.
+That is the defect this whole plan exists to remove, so manufacturing it here
+would be the worst possible ending.
+
+The `403` is worth noting for anyone who repeats this: it says the endpoint
+rejects token auth, **not** that mergeability is unavailable. It is a
+permissions message on an action endpoint, and reading it as an answer to the
+mergeability question would be a mistake.
+
+### If this is ever revisited
+
+Bitbucket's UI does show conflict state, so the fact exists somewhere — behind
+an internal endpoint, or computed client-side. Neither is a public, documented,
+token-authenticated API, and `bb` does not build on undocumented endpoints. If
+Atlassian adds one, the field slots into `bb_pr_list_query`'s sibling position
+with the vocabulary already decided here.
 
 ## Wave 1 measurement (2026-08-18, `quatico/ekzweb`)
 
