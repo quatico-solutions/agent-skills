@@ -6,9 +6,10 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** feature
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
+- **Approved:** 2026-08-18, Jan Wloka, plan-PR #59 merged
 
 ## Approval
 
