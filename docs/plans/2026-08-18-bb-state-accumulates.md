@@ -218,7 +218,7 @@ changeset is present.
 
 ## Branches
 
-- `bug/bb-state-accumulates` — the plan, and the fix once a resolution is chosen
+- `bug/bb-state-accumulates` — → #60 **merged 2026-08-18** (squashed) — the plan and the fix, on one branch
 
 ## Notes
 
