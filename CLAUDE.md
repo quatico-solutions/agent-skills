@@ -109,3 +109,38 @@ When a skill includes a critical workflow (session teardown, credential handling
 
 - "Documentation Sync (CRITICAL)" above is prose-only — a candidate for a CI check / pre-push hook that fails when the README skills table doesn't match `skills/`.
 - Versioning is currently soft-gated: CI *warns* when a PR has no changeset, but doesn't fail. Hardening that into a failure would make it a gate.
+
+## Plot Config
+
+- **Branch prefixes:** idea/, feature/, bug/, docs/, infra/
+- **Plan directory:** docs/plans/
+- **Active index:** docs/plans/active/
+- **Delivered index:** docs/plans/delivered/
+- **Git host:** github
+- **Tracker:** plot
+- **Commit style:** arlo
+- **Plan template:** .plot/templates/plan.md
+
+Plot was in use here before it was configured — every key above records a path
+this repo already uses, so nothing moves. Commit style is `arlo` (`F -`, `R -`,
+`D -`, `b -` per [commit-notation](skills/commit-notation/SKILL.md)), not the
+`conventional` that auto-detection guesses.
+
+### Definition of Done
+
+A change is done when all three pass:
+
+1. `pnpm test` — skills parse (CI: `ci.yml`, every PR)
+2. `pnpm run validate` — skill frontmatter valid (CI: `ci.yml`, every PR)
+3. `pnpm test` in `skills/working-with-bitbucket-api/tests/` — the `bb`
+   integration suite on Linux **and** macOS/bash 3.2 (CI: `bb-tests.yml`,
+   only when the diff touches `bin/bb`)
+
+Plus a changeset for any skill-touching change, per [Versioning](#versioning).
+
+> **The changeset is a stricter standard than CI enforces.** `ci.yml` emits a
+> warning and exits 0 when one is missing — the soft gate named under "Gates
+> Over Rules" above. Treat it as required anyway: the release pipeline reads
+> changesets to bump versions, so a missing one ships a skill change under an
+> unchanged version number. Hardening the CI step into a failure would close
+> the gap.

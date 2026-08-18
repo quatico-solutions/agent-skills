@@ -21,3 +21,6 @@ coverage/
 # OMC agent tooling state (local only)
 .omc/
 **/.omc/
+
+# Plot: machine-written session state. Templates under .plot/ stay tracked.
+.plot/state/
