@@ -1,5 +1,35 @@
 # @quatico-solutions/agent-skills
 
+## 3.11.0
+
+### Minor Changes
+
+- [#61](https://github.com/quatico-solutions/agent-skills/pull/61) [`24f2673`](https://github.com/quatico-solutions/agent-skills/commit/24f26730bd73169c3af75eb61b0bb697da88691e) Thanks [@jwloka](https://github.com/jwloka)! - `bb pr list --json` gains a `checks` field reporting the head commit's build statuses
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+- [#60](https://github.com/quatico-solutions/agent-skills/pull/60) [`24decf8`](https://github.com/quatico-solutions/agent-skills/commit/24decf8e6444e7da093b5125d7d28fd3a8d6100e) Thanks [@jwloka](https://github.com/jwloka)! - `bb pr list` accumulates repeated `--state` and `--author` flags instead of silently keeping only the last
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+### Patch Changes
+
+- [`5b3be41`](https://github.com/quatico-solutions/agent-skills/commit/5b3be41ad473ae774426ff6419787bb9bf17a7a6) Thanks [@jwloka](https://github.com/jwloka)! - `bb` cannot report PR mergeability: Bitbucket's REST API v2 exposes no such field, measured against six open PRs. The PR object carries only `merge_commit` (null while open — a record of a past merge), `links.merge` is a POST action that rejects token auth, and `/diffstat` gives the merge-base comparison without a conflict flag. No derivation is attempted: comparing branch heads or reading an empty diff would answer a different question in the same words. Use `checks` for build status; mergeability stays unavailable on this host.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.10.0
 
 ### Minor Changes
