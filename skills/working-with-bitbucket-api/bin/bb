@@ -416,6 +416,64 @@ bb_format_diffstat() {
   ] | @tsv' | column -t -s $'\t'
 }
 
+# True when a NEWLINE-delimited list already contains an entry. Used to keep
+# repeated flags idempotent: `--state open --state open` is one state, not two.
+#
+# Newlines rather than spaces because an --author value is a display name and
+# may contain spaces ("Alice Smith"): splitting those on whitespace turns one
+# author into two that do not exist.
+bb_str_contains_line() {
+  local haystack="$1" needle="$2" line
+  local IFS=$'\n'
+  for line in ${haystack:-}; do
+    [[ "$line" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+# Build the pull-request query for a set of states and authors.
+#
+# This is the ONE place the state filter is constructed. There are two shapes —
+# `state=` parameters, and a `q=` filter expression when an author is involved —
+# and Bitbucket lets **q= silently override state=** when both appear. Measured:
+# `?q=state="OPEN"&state=MERGED` returns OPEN only, with no complaint.
+#
+# So a caller must never append `state=` alongside a `q=`: it looks like it
+# works, and quietly discards every state. Deciding that here, once, is the
+# point of this function — three inline constructions were free to drift, and
+# the drift is invisible until someone combines --author with two states.
+bb_pr_list_query() {
+  local states="$1" authors="$2"
+  local s a expr ors path
+  local IFS=$'\n'
+
+  if [[ -z "$authors" ]]; then
+    # No author: repeated state= parameters. Bitbucket returns the union,
+    # already sorted descending by updated_on — one call, nothing to re-sort.
+    path=""
+    for s in $states; do
+      path="${path}${path:+&}state=${s}"
+    done
+    printf '?%s' "$path"
+    return 0
+  fi
+
+  # An author forces the q= form, so the states must travel inside it too.
+  ors=""
+  for s in $states; do
+    ors="${ors:+$ors OR }state = \"${s}\""
+  done
+  expr="(${ors})"
+
+  ors=""
+  for a in $authors; do
+    ors="${ors:+$ors OR }author.nickname = \"${a}\""
+  done
+  expr="${expr} AND (${ors})"
+
+  printf '?q=%s' "$(printf '%s' "$expr" | jq -sRr @uri)"
+}
+
 # Map a comma-separated list of gh-style field names to a jq program that
 # projects each PR object into an object with exactly those keys (gh semantics:
 # `--json a,b` -> [{"a":…,"b":…},…]). Field names mirror `gh pr list --json`;
@@ -670,7 +728,12 @@ HELP
 # --- Subcommands: pr ---------------------------------------------------------
 
 cmd_pr_list() {
-  local state="OPEN" author=""
+  # Repeated flags accumulate rather than overwrite: `--state open --state
+  # merged` covers both. Space-delimited strings rather than arrays, so the
+  # whole thing stays bash 3.2 (see the compatibility note at the top).
+  # Empty means "not given" — the OPEN default is applied after parsing, so a
+  # caller passing no --state is unaffected.
+  local states="" authors=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -682,7 +745,12 @@ USAGE
 
 FLAGS
   --state <state>    Filter by state: open, merged, declined, superseded (default: open)
-  --author <name>    Filter by author (nickname or display name)
+                     May be repeated to cover several states:
+                       --state open --state merged
+                     covers both, in one API call. Order does not matter, and a
+                     repeated identical state is harmless.
+  --author <name>    Filter by author (nickname or display name).
+                     May be repeated to cover several authors.
   --json [<fields>]  Output JSON. Bare --json emits the full Bitbucket API objects.
                      An optional comma-separated field list projects each PR into
                      an object with just those keys (gh-style), e.g. --json number,headRefName.
@@ -715,13 +783,21 @@ HELP
         exit 0
         ;;
       --state)
-        state="$(bb_upper "$2")"; shift 2
-        case "$state" in
+        local one_state
+        one_state="$(bb_upper "$2")"; shift 2
+        case "$one_state" in
           OPEN|MERGED|DECLINED|SUPERSEDED) ;;
-          *) echo >&2 "error: invalid --state '$state' (must be open, merged, declined, or superseded)"; exit 1 ;;
+          *) echo >&2 "error: invalid --state '$one_state' (must be open, merged, declined, or superseded)"; exit 1 ;;
         esac
+        # Keep the validation strict. Bitbucket does not reject an unrecognised
+        # state — it silently drops the filter and returns everything (measured:
+        # 1678 rows where the default returns 5), so this check is the only
+        # thing between a typo and a plausible wrong answer.
+        bb_str_contains_line "$states" "$one_state" || states="${states:+$states$'\n'}$one_state"
         ;;
-      --author)  author="$2"; shift 2 ;;
+      --author)
+        bb_str_contains_line "$authors" "$2" || authors="${authors:+$authors$'\n'}$2"
+        shift 2 ;;
       --json)
         JSON_OUTPUT=1; shift
         # `pr list` takes no positional args, so a bare word after --json is the
@@ -741,28 +817,35 @@ HELP
     echo >&2 "error: --jq requires --json"; exit 1
   fi
 
+  # Apply the default only now, so "no --state given" stays distinguishable
+  # from an explicit one during parsing.
+  [[ -z "$states" ]] && states="OPEN"
+
   local ws repo path
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
-  if [[ -n "$author" ]]; then
-    # Try server-side filter by nickname first
-    local encoded_author
-    encoded_author="$(printf '%s' "$author" | jq -sRr @uri)"
-    path="/repositories/${ws}/${repo}/pullrequests?q=state+%3D+%22${state}%22+AND+author.nickname+%3D+%22${encoded_author}%22"
-  else
-    path="/repositories/${ws}/${repo}/pullrequests?state=${state}"
-  fi
+  # One helper builds the filter for both shapes — see bb_pr_list_query for why
+  # the q= and state= forms must not be mixed.
+  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors")"
 
   local result
   result="$(bb_paginate "$path")"
 
   # If author filter returned nothing, fall back to client-side display_name match
-  if [[ -n "$author" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
-    path="/repositories/${ws}/${repo}/pullrequests?state=${state}"
+  if [[ -n "$authors" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
+    # Refetch without the author filter, but across EVERY requested state — a
+    # recovery path that silently narrows the result fails the same way the bug
+    # it recovers from does.
+    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "")"
     result="$(bb_paginate "$path")"
-    local nfc_author
-    nfc_author="$(bb_nfc "$author")"
-    result="$(echo "$result" | jq --arg name "$nfc_author" '[.[] | select(.author.display_name == $name)]')"
+    local nfc_author a_nfc names_filter
+    names_filter=""
+    local IFS=$'\n'
+    for a_nfc in $authors; do
+      nfc_author="$(bb_nfc "$a_nfc")"
+      names_filter="${names_filter:+$names_filter,}$(printf '%s' "$nfc_author" | jq -Rs .)"
+    done
+    result="$(echo "$result" | jq --argjson names "[$names_filter]" '[.[] | select(.author.display_name as $d | $names | index($d))]')"
   fi
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
