@@ -4,8 +4,9 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** feature
+- **Delivered:** 2026-08-18
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 
 ## Approval
@@ -870,12 +871,20 @@ against `60522cf` (the merge of the plan PR):
 |------|--------|-------|-------|
 | `test-driven-development` | 416 | 358 | −58 |
 | `jest-testing-conventions` | 514 | 485 | −29 |
-| `working-with-jira-web` | 216 | 180 | −36 |
-| `handling-pull-requests` | 180 | 196 | **+16** |
+| `working-with-jira-web` | 216 | 184 | −32 |
+| `handling-pull-requests` | 180 | 199 | **+19** |
 | `triage-ticket` | 41 | 48 | +7 |
-| `working-with-bitbucket-web` | 211 | 219 | +8 |
+| `working-with-bitbucket-web` | 211 | 223 | +12 |
 | `working-with-bitbucket-api` | 203 | 203 | 0 |
-| **Total** | **1781** | **1689** | **−92** |
+| **Total** | **1781** | **1700** | **−81** |
+
+> **Corrected at delivery (2026-08-18).** The table above originally recorded
+> 1689/−92, measured mid-flight against `60522cf`. Three files moved again in the
+> final review commits (`b - Make the untrusted-content fence unforgeable`,
+> `b - Escape every third-party field`), so the figures that actually merged in #42
+> (`e06d963`) are the ones shown. The ≤1781 budget gate passes either way; the
+> correction matters because the plan is the durable record, and a verification
+> that re-reads a stale number verifies nothing.
 
 Outside the skill budget: `bin/bb` +23, `CLAUDE.md` +17, `branch-and-commit` +4. Honest
 total across everything touched: **−48**.
