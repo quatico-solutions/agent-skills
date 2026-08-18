@@ -19,8 +19,8 @@
 
 ## Changelog
 
-- Passing `--state` more than once no longer produces a filtered list that
-  silently ignores all but the last flag.
+- Passing `--state` more than once now covers every state given, rather than
+  silently keeping only the last. `--author` accumulates the same way.
 
 ## Motivation
 
@@ -83,39 +83,137 @@ whoever tries the obvious thing next.
 silently discarding most of it is not a defensible answer for any of the three
 readings below.
 
-**What is open — deliberately.** Three resolutions are defensible, and picking
-one is a judgement about `bb`'s intended surface rather than something this
-finding settles:
+**The resolution: accumulate.** Repeated `--state` flags collect into a set and
+the query covers all of them.
 
-| Option | Behaviour | Cost |
+Three resolutions were defensible when this was written — accumulate, reject a
+second flag, or reject plus an `all` token — and the two arguments against
+accumulation were cost and ordering. Measured against `quatico/ekzweb` on
+2026-08-18, both dissolve:
+
+| query | returned |
+|---|---|
+| `?state=OPEN` | 5, all OPEN |
+| `?state=OPEN&state=MERGED` | 1657, OPEN **and** MERGED, interleaved |
+
+Bitbucket accepts repeated `state=` parameters natively and returns the union,
+already sorted descending by `updated_on`. So accumulation is **one API call,
+not one per state**, and there is no concatenated result to re-sort — the host
+does it. Rejecting a second flag would mean `bb` refusing something the API
+underneath supports natively and for free.
+
+`--author` has the same defect (`author="$2"`, assignment not accumulation) and
+is fixed the same way in the same change: one rule for repeated flags across the
+command, rather than two flags with two behaviours.
+
+### Where the fix has to be right
+
+The state filter is built in **three** places, and a fix that only handles the
+obvious one reintroduces this very bug on the other two:
+
+| Site | Shape today | Multi-state form |
 |---|---|---|
-| **Accumulate** | Collect states, query the API once per state, concatenate | Most useful; changes the meaning of a currently-accepted invocation, and needs an answer for result ordering |
-| **Reject** | Second `--state` exits non-zero: "specify --state once" | Smallest change, no new semantics; a caller wanting several states writes the loop |
-| **Reject, plus an `all` token** | As above, and `--state all` covers open+merged+declined | Serves the actual use case that produced this report; adds a token `bb` does not have today |
+| plain (`bin/bb:663`) | `?state=${state}` | repeated `&state=` parameters |
+| author, server-side (`:661`) | `q=state = "X" AND author.nickname = "..."` | `(state = "X" OR state = "Y") AND author...` |
+| author, client-side fallback (`:671`) | `?state=${state}` again | repeated `&state=` parameters |
 
-The measurement that argues for the third: the downstream need was never *two*
-states, it was *all* of them. `gh pr list` spells that `--state all`, so a
-consumer moving between hosts expects the token to exist.
+**`q=` silently overrides `state=` when both are present.** Measured:
+`?q=state="OPEN"&state=MERGED` returns 5 PRs, OPEN only — the `state=` parameter
+is discarded without comment. An implementation that appends `&state=` parameters
+therefore works perfectly until `--author` is also passed, at which point every
+appended state vanishes and the caller gets a plausible, filtered, wrong list.
+That is the defect this plan exists to remove, reintroduced by its own fix, and
+it passes any test written against the non-author path.
 
-**Whether `superseded` belongs in `all`** is a real sub-question, not a detail:
-such a PR is replaced by a newer one for the same branch, so a consumer
-rendering one row per branch would show that branch twice. `gh`'s `all` has no
-equivalent state, so there is no cross-host precedent to follow.
+So **one helper owns the filter**: it takes the requested states and the optional
+author, and returns the correct query for the path in use. All three sites call
+it. The `q=`-versus-`state=` interaction is then decided once, in a place a
+reader can find, rather than living implicitly in three constructions that are
+free to drift.
 
-**Ordering, if accumulation wins.** Concatenating per-state responses gives an
-order that reflects the query, not the PRs. Bitbucket returns each state's page
-newest-first; across states that property is lost unless the merged result is
-re-sorted. A consumer filtering for "the first match for this branch" — which
-is what Plot's adapter does — depends on it.
+The client-side fallback fetches **all requested states**, not the first one. A
+recovery path that silently narrows the result is the same defect wearing a
+different hat.
+
+Accumulation is silent — no stderr note, no warning on a duplicate. It is the
+documented behaviour of the flag once this lands, and there is nothing
+exceptional left to report.
+
+### `bb`'s validation is load-bearing
+
+Bitbucket does not reject an unrecognised state; it silently ignores the filter.
+Measured: `?state=ALL` and `?state=BOGUS_NONSENSE` both return **1678** PRs
+across three states, where the unfiltered default returns 5. `ALL` is not a
+Bitbucket token — it is simply not understood, and an unparsed value drops the
+filter entirely.
+
+`bb`'s existing `OPEN|MERGED|DECLINED|SUPERSEDED` check is therefore the only
+thing standing between a typo and a 1678-row answer that looks like a result.
+It stays strict, and it should be understood as a guard rather than politeness:
+the API layer below has the same silent-wrong-answer behaviour this plan is
+about.
+
+This also settles the `all` token, though not in its favour. Since `ALL` means
+nothing to Bitbucket, `bb` would have to expand it client-side into the states
+it knows — which is accumulation with a shorthand spelling, not a separate
+mechanism. Not proposed here; it can be added later on top of accumulation
+without changing anything this plan decides.
+
+### Testing
+
+The defect is in **query construction**, so that is what the tests assert: the
+URL `bb` builds for each of the three sites — repeated `state=` parameters on the
+plain path, correct `OR` grouping on the author path, and the fallback covering
+every requested state. A test that only asserts on a mocked response would pass a
+wrong query whenever the fixture returns the right thing regardless of what was
+asked, which is exactly the failure mode here.
 
 ### Open Questions
 
-- [ ] Which of the three resolutions? (Accumulate / reject / reject-plus-`all`)
-- [ ] If `all` is added: does it include `superseded`?
-- [ ] If accumulation is added: is the concatenated result re-sorted, and by
-      what — `updated_on`, `created_on`, or id?
-- [ ] Does the same defect exist on other repeatable-looking flags? `--author`
-      uses the same assignment shape (`author="$2"`) and was not measured.
+- [ ] [Domain] **Would `--state all` include `superseded`?** Unmeasurable here:
+      `quatico/ekzweb` has zero SUPERSEDED PRs, so the four-state union and the
+      three-state one both return 1678 — identical, and therefore evidence of
+      nothing. The argument for excluding them is that a superseded PR is
+      replaced by a newer one for the same branch, so a consumer rendering one
+      row per branch would show that branch twice; `gh`'s `all` has no
+      equivalent state, so there is no cross-host precedent either. Needs a
+      repository that actually has some. Not blocking: `all` is not proposed
+      in this plan. — *deferred: needs a repo with superseded PRs*
+- [x] [Trade-offs] Which of the three resolutions? — *answered: accumulate.
+      Bitbucket accepts repeated `state=` natively, so the cost and ordering
+      objections were both measured away*
+- [x] [Technical] Is the concatenated result re-sorted, and by what? —
+      *answered: no concatenation happens. The host returns the union already
+      sorted descending by `updated_on`*
+- [x] [Technical] Does the same defect exist on `--author`? — *answered: yes,
+      same assignment shape, fixed in the same change*
+- [x] [Technical] Where does the fix have to be right? — *answered: three
+      construction sites, and `q=` silently overrides `state=` — so one helper
+      owns the filter rather than three inline fixes*
+
+## Done when
+
+Assertions on the **query `bb` builds**, since that is where the defect lives:
+
+- **`--state open --state merged` covers both**, in either order. The original
+  finding: order decided the answer, and neither answer was the right one.
+- **`--author` with two states does not drop either.** The pairing that matters:
+  a fix applied only to the plain path passes every other assertion here while
+  silently discarding states on the `q=` path — this bug, reintroduced by its
+  own fix.
+- **The client-side fallback covers all requested states.** Assert the second
+  request, not just the first; a recovery path that narrows the result fails the
+  same way as the bug.
+- **A repeated identical state is harmless** — `--state open --state open`
+  behaves as `--state open`, no error, no duplicate rows.
+- **An invalid state still exits non-zero.** Assert explicitly: the API silently
+  returns 1678 rows for an unrecognised value, so this check is the only guard.
+- **A single `--state` is byte-identical to today**, and the default with no
+  flag stays OPEN.
+
+Plus: `pnpm test` in `skills/working-with-bitbucket-api/tests/` green on Linux
+and macOS/bash 3.2, `--help` documents that both flags may be repeated, and a
+changeset is present.
 
 ## Branches
 
