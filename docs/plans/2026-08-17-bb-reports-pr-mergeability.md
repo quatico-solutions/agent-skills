@@ -11,6 +11,7 @@
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 - **Approved:** 2026-08-18, Jan Wloka, plan-PR #59 merged
 - **Started:** 2026-08-18, Jan Wloka, `feature/bb-reports-pr-checks`
+- **Started:** 2026-08-18, Jan Wloka, `feature/bb-reports-pr-mergeability`
 
 ## Approval
 
