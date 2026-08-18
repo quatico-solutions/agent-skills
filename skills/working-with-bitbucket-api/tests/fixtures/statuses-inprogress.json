@@ -1,0 +1,17 @@
+{
+  "page": 1,
+  "pagelen": 10,
+  "size": 1,
+  "values": [
+    {
+      "key": "Magnolia/continuous..L2-1947-wave2-setup",
+      "type": "build",
+      "state": "INPROGRESS",
+      "name": "jenkins-Magnolia-continuous-build-multi-EKZREL2-1947-wave2-setup-2",
+      "refname": null,
+      "commit": { "hash": "9d8105c49406e831bcb71774af638350d6ce5236", "type": "commit" },
+      "url": "https://jenkins.example.internal/job/Magnolia/job/continuous-build-multi/job/EKZREL2-1947-wave2-setup/2/",
+      "repository": { "type": "repository", "full_name": "testws/testrepo" }
+    }
+  ]
+}

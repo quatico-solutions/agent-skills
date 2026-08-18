@@ -1,0 +1,17 @@
+{
+  "page": 1,
+  "pagelen": 10,
+  "size": 1,
+  "values": [
+    {
+      "key": "Magnolia/continuous..EKZREL2-1974",
+      "type": "build",
+      "state": "SUCCESSFUL",
+      "name": "jenkins-Magnolia-continuous-build-multi-EKZREL2-1974-3",
+      "refname": null,
+      "commit": { "hash": "57318be74a3e1c9f0b2d4e6a8c0f2e4a6b8d0c2e", "type": "commit" },
+      "url": "https://jenkins.example.internal/job/Magnolia/job/continuous-build-multi/job/EKZREL2-1974/3/",
+      "repository": { "type": "repository", "full_name": "testws/testrepo" }
+    }
+  ]
+}

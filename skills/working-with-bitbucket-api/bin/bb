@@ -445,13 +445,91 @@ bb_pr_json_projection() {
       url)         frag="url: .links.html.href" ;;
       createdAt)   frag="createdAt: .created_on" ;;
       updatedAt)   frag="updatedAt: .updated_on" ;;
+      # Not a path into the PR object: bb_pr_attach_checks has already merged a
+      # `checks` key onto each PR (see bb_pr_needs_checks). Project it through.
+      checks)      frag="checks: .checks" ;;
       *)
-        echo >&2 "error: unknown field '$f' (supported: number, title, state, headRefName, baseRefName, isDraft, author, url, createdAt, updatedAt)"
+        echo >&2 "error: unknown field '$f' (supported: number, title, state, headRefName, baseRefName, isDraft, author, url, createdAt, updatedAt, checks)"
         return 1 ;;
     esac
     out="${out:+$out, }$frag"
   done
   printf '[.[] | { %s }]' "$out"
+}
+
+# True when a --json field list asks for a field that cannot be projected from
+# the PR object and must be fetched separately. Keeps the extra API calls
+# opt-in: a caller asking for `number,headRefName` pays nothing.
+bb_pr_needs_checks() {
+  local fields="$1" f
+  local -a list
+  IFS=',' read -ra list <<< "$fields"
+  for f in ${list[@]+"${list[@]}"}; do
+    [[ "$f" == "checks" ]] && return 0
+  done
+  return 1
+}
+
+# Collapse a commit's build statuses to one answer, in Bitbucket's own
+# vocabulary. Reads the /statuses response on stdin; prints one word.
+#
+# One red check means the set is not green, so a failure outranks anything
+# still running — the only judgement bb makes here, and it must not depend on
+# the order the API happened to list the statuses in.
+#
+# NONE and UNKNOWN are deliberately different answers. An empty `values` on a
+# successful call means no build ever ran (a fact about the repository); a call
+# that failed means the builds could not be read (a fact about this call). An
+# implementation that reports NONE on error passes every positive test while
+# announcing a clearance it never received.
+bb_pr_collapse_statuses() {
+  jq -r '
+    [.values[]?.state] as $s
+    | if   ($s | length) == 0            then "NONE"
+      elif ($s | any(. == "FAILED" or . == "STOPPED")) then
+        ($s | map(select(. == "FAILED" or . == "STOPPED")) | first)
+      elif ($s | any(. == "INPROGRESS")) then "INPROGRESS"
+      elif ($s | all(. == "SUCCESSFUL")) then "SUCCESSFUL"
+      else "UNKNOWN" end
+  ' 2>/dev/null || echo "UNKNOWN"
+}
+
+# Merge a `checks` key onto every PR in the list on stdin, one /statuses call
+# per PR. The head SHA comes from the PR object itself (source.commit.hash),
+# so no lookup is needed to find the commit.
+#
+# A PR whose statuses cannot be read gets UNKNOWN and the command carries on —
+# one unreadable PR must not fail a list of twenty.
+bb_pr_attach_checks() {
+  local ws="$1" repo="$2"
+  local prs sha checks_val i count out
+  prs="$(cat)"
+  count="$(echo "$prs" | jq 'length')"
+
+  if [[ "$count" -gt 20 ]]; then
+    echo >&2 "note: reading build statuses for $count pull requests ($count extra API calls)"
+  fi
+
+  out="$prs"
+  i=0
+  while [[ "$i" -lt "$count" ]]; do
+    sha="$(echo "$prs" | jq -r ".[$i].source.commit.hash // empty")"
+    if [[ -z "$sha" ]]; then
+      # No head SHA on the PR object: the builds cannot be located, which is an
+      # unreadable answer rather than an absent one.
+      checks_val="UNKNOWN"
+    else
+      local body
+      if body="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${sha}/statuses" 2>/dev/null)"; then
+        checks_val="$(echo "$body" | bb_pr_collapse_statuses)"
+      else
+        checks_val="UNKNOWN"
+      fi
+    fi
+    out="$(echo "$out" | jq --argjson i "$i" --arg c "$checks_val" '.[$i] += {checks: $c}')"
+    i=$((i + 1))
+  done
+  echo "$out"
 }
 
 # --- Subcommands: auth -------------------------------------------------------
@@ -610,9 +688,21 @@ FLAGS
                      an object with just those keys (gh-style), e.g. --json number,headRefName.
                      Supported fields (gh name -> value):
                        number, title, state, headRefName, baseRefName,
-                       isDraft, author, url, createdAt, updatedAt
+                       isDraft, author, url, createdAt, updatedAt, checks
                      Note: state values stay Bitbucket's (OPEN/MERGED/DECLINED/SUPERSEDED),
                      not gh's lowercase. mergedAt is not supported (absent on BB PR objects).
+
+                     checks reports the head commit's build statuses, collapsed
+                     to one word in Bitbucket's own vocabulary:
+                       SUCCESSFUL | FAILED | STOPPED | INPROGRESS | NONE | UNKNOWN
+                     A failure outranks anything still running. NONE and UNKNOWN
+                     are different answers and neither is a pass: NONE means no
+                     build ever ran, UNKNOWN means the builds could not be read.
+                     Consumers wanting gh's vocabulary map it themselves.
+
+                     checks costs one extra API call per PR (build statuses are
+                     per-commit), so it is computed only when named. Asking for
+                     other fields, or a bare --json, costs nothing extra.
   --jq <expr>        Filter the JSON output through jq (raw output, -r). Requires --json.
 
 EXAMPLES
@@ -680,7 +770,13 @@ HELP
     # Project to the requested fields first (gh order: projection, then --jq).
     if [[ -n "${JSON_FIELDS:-}" ]]; then
       local proj
+      # Validate the field list before spending any API call on it.
       proj="$(bb_pr_json_projection "$JSON_FIELDS")" || exit 1
+      # Fields that are not paths into the PR object are fetched and merged
+      # first, and only when asked for.
+      if bb_pr_needs_checks "$JSON_FIELDS"; then
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+      fi
       out="$(echo "$out" | jq "$proj")"
     fi
     if [[ -n "${JQ_EXPR:-}" ]]; then

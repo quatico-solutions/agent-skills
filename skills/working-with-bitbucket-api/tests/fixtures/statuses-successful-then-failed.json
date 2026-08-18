@@ -1,0 +1,39 @@
+{
+  "page": 1,
+  "pagelen": 10,
+  "size": 2,
+  "values": [
+    {
+      "key": "Magnolia/continuous..EKZREL2-1974-0",
+      "type": "build",
+      "state": "SUCCESSFUL",
+      "name": "jenkins-Magnolia-continuous-build-multi-EKZREL2-1974-3",
+      "refname": null,
+      "commit": {
+        "hash": "3e7b7676a885aefcb8b87ff68697edfef542afde",
+        "type": "commit"
+      },
+      "url": "https://jenkins.example.internal/job/Magnolia/job/continuous-build-multi/job/EKZREL2-1974/3/",
+      "repository": {
+        "type": "repository",
+        "full_name": "testws/testrepo"
+      }
+    },
+    {
+      "key": "Magnolia/continuous..FEKZREL2-1990-alert-1",
+      "type": "build",
+      "state": "FAILED",
+      "name": "jenkins-Magnolia-continuous-build-multi-feature%2FEKZREL2-1990-alert-5",
+      "refname": null,
+      "commit": {
+        "hash": "3e7b7676a885aefcb8b87ff68697edfef542afde",
+        "type": "commit"
+      },
+      "url": "https://jenkins.example.internal/job/Magnolia/job/continuous-build-multi/job/feature%252FEKZREL2-1990-alert/5/",
+      "repository": {
+        "type": "repository",
+        "full_name": "testws/testrepo"
+      }
+    }
+  ]
+}
