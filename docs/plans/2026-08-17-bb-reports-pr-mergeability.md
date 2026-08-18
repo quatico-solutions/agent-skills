@@ -293,6 +293,80 @@ gain.
 - `pnpm test` in `skills/working-with-bitbucket-api/tests` passes.
 - A changeset is present.
 
+## Wave 1 measurement (2026-08-18, `quatico/ekzweb`)
+
+Recorded before any fixture was written, per *The fixtures are built from a
+recorded live response* above. Measured with `bb` 1.8.0 against six open and six
+merged PRs.
+
+**The head SHA is in the PR object — the cost model holds.** `source.commit.hash`
+is present on every PR (`"9d8105c49406"`, 12-char short form). No extra lookup is
+needed to find the commit, so `checks` costs exactly **one `/statuses` call per
+PR** as the plan assumed. The short hash is accepted by `/statuses`; the response
+echoes the full 40-char hash back.
+
+The fixtures in `tests/fixtures/` are thinner than the real API: they carry
+`source: {branch: {name}}` and no `commit` at all. Any fixture used for this
+feature must be rebuilt from the response below.
+
+**The response is a paginated envelope**, which this plan did not anticipate:
+
+```json
+{"page": 1, "pagelen": 10, "size": 1, "values": [ ... ]}
+```
+
+`pagelen` is 10. A commit with more than ten statuses paginates, and an
+implementation reading only `values` from page 1 silently drops the rest — which
+can hide the one `FAILED` that decides the collapse. Either follow `next` or
+assert `size <= pagelen` and report `UNKNOWN` when it does not hold.
+
+One status object, verbatim (a `FAILED` build on `3e7b7676a885`):
+
+```json
+{
+  "key": "Magnolia/continuous..FEKZREL2-1990-alert",
+  "type": "build",
+  "state": "FAILED",
+  "name": "jenkins-Magnolia-continuous-build-multi-feature%2FEKZREL2-1990-alert-5",
+  "refname": null,
+  "commit": { "hash": "3e7b7676a885aefcb8b87ff68697edfef542afde", "type": "commit" },
+  "url": "https://jenkins-ci-ekzweb.internal.quatico.dev/job/Magnolia/...",
+  "repository": { "type": "repository", "full_name": "quatico/ekzweb" }
+}
+```
+
+**States observed live:** `INPROGRESS`, `SUCCESSFUL`, `FAILED` — Bitbucket's own
+vocabulary, confirming the decision to keep it. `STOPPED` was not observed; it
+stays in the collapse table on the API's documented say-so, not on measurement.
+
+**`NONE` is a real, observed case.** PR 1676's head commit returns HTTP 200 with
+`size: 0` and an empty `values` array. That is *no build ever ran* — a successful
+call with nothing in it — and it is why `NONE` and `UNKNOWN` cannot be collapsed:
+the transport succeeded, so an implementation keying on the HTTP status alone
+cannot tell them apart. It must key on the **envelope**, not the error path.
+
+| PR | `size` | states |
+|---|---|---|
+| 1689 | 1 | `INPROGRESS` |
+| 1688, 1687, 1609, 1549 | 1 | `SUCCESSFUL` |
+| 1686 | 1 | `FAILED` |
+| 1676 (merged) | **0** | — → `NONE` |
+
+**Every commit measured had at most one status**, so the precedence rule
+(failure outranks in-progress) was **not** exercised against real data. Its
+fixtures are necessarily synthetic — construct them by combining observed status
+objects, not by inventing the shape.
+
+### Incidental finding: `bb api` paths need a leading slash
+
+`bb api repositories/{ws}/{repo}/...` returns `HTTP 403 — Forbidden`; with a
+leading `/` the same path succeeds. The 403 is indistinguishable from a
+permissions failure and cost time here — the implementer would plausibly conclude
+Bitbucket forbids reading build statuses. `bb api --help` documents the leading
+slash in every example, so this is a usability defect, not a bug: a path without
+one could be rejected with a message naming the cause, or simply normalised.
+Out of scope for this plan; worth its own issue.
+
 ## Notes
 
 The trigger was a defect in a consumer, not in `bb`: a board showed a
