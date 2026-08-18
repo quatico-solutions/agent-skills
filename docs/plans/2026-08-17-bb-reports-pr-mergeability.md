@@ -231,12 +231,30 @@ deliberate.
 
 ### Checks
 
-- `feature/bb-reports-pr-checks` — → #61
+- `feature/bb-reports-pr-checks` — → #61 **merged 2026-08-18** (squashed)
   `checks` on `bb pr list --json`, from commit statuses, opt-in, with `none`
   and `unknown` distinguished. **`bb pr view` deferred:** it has no
   `--json <fields>` support at all — a bare raw-object dump that never calls
   the projection — so adding the field there means first building that CLI
   surface, which is a separate change rather than a field addition.
+
+> **Wave 1 merged as a squash, so `/plot-fleet` cannot see it.** PR #61 was
+> squash-merged, which lands the code on `main` as a fresh commit with no
+> parent link to the branch — and the branch was auto-deleted. The scan detects
+> merges by walking `git log --merges` for `Merge pull request #N from …`
+> subjects, so a squash is invisible to it and wave 1 keeps reading `open`,
+> holding wave 2 `blocked` indefinitely.
+>
+> This repo otherwise merges with merge commits (#55–#59); the squash was the
+> deviation, not a Plot defect. Note the scan still reports
+> `merge_detect=pr-merge` — its exhaustive-and-trustworthy value — because
+> those older merge commits exist: the signal distinguishes *has conforming
+> merge commits* from *has none*, not *merges that way now* from *merged that
+> way once*.
+>
+> Wave 1 is merged and on `main`; verify with `grep bb_pr_attach_checks
+> skills/working-with-bitbucket-api/bin/bb` rather than the pulse. Merge wave 2
+> with a merge commit to keep the fleet readable.
 
 ### Mergeability
 
