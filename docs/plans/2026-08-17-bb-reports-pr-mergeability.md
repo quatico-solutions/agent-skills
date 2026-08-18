@@ -231,7 +231,7 @@ deliberate.
 
 ### Checks
 
-- `feature/bb-reports-pr-checks` — → #61 **merged 2026-08-18** (squashed)
+- `feature/bb-reports-pr-checks` — → #61 **merged 2026-08-18** (squashed) <!-- deferred: merged in #61; squash left no merge commit for the scan to find, so this marks the wave complete rather than deferring real work -->
   `checks` on `bb pr list --json`, from commit statuses, opt-in, with `none`
   and `unknown` distinguished. **`bb pr view` deferred:** it has no
   `--json <fields>` support at all — a bare raw-object dump that never calls
