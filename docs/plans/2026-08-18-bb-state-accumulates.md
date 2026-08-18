@@ -5,11 +5,12 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** bug
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 - **Review:** pr
 - **Impl:** same branch
+- **Approved:** 2026-08-18, Jan Wloka, plan-PR #60 reviewed
 
 ## Approval
 
