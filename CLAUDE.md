@@ -120,6 +120,12 @@ When a skill includes a critical workflow (session teardown, credential handling
 - **Tracker:** plot
 - **Commit style:** arlo
 - **Plan template:** .plot/templates/plan.md
+- **Worker command:** none
+
+`Worker command: none` means the question was asked and answered:
+`/plot-dispatch` prepares and claims worktrees, and a human starts the
+session in each. It is a recorded decision, not a missing setting —
+which is what stops dispatch asking again every time.
 
 Plot was in use here before it was configured — every key above records a path
 this repo already uses, so nothing moves. Commit style is `arlo` (`F -`, `R -`,
