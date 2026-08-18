@@ -231,9 +231,12 @@ deliberate.
 
 ### Checks
 
-- `feature/bb-reports-pr-checks` — `checks` on `bb pr list --json` and
-  `bb pr view --json`, from commit statuses, opt-in, with `none` and
-  `unknown` distinguished
+- `feature/bb-reports-pr-checks` — → #61
+  `checks` on `bb pr list --json`, from commit statuses, opt-in, with `none`
+  and `unknown` distinguished. **`bb pr view` deferred:** it has no
+  `--json <fields>` support at all — a bare raw-object dump that never calls
+  the projection — so adding the field there means first building that CLI
+  surface, which is a separate change rather than a field addition.
 
 ### Mergeability
 
