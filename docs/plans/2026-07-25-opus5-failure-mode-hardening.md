@@ -4,9 +4,10 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** feature
 - **Delivered:** 2026-08-18
+- **Released:** 2026-07-28, v3.7.0
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 
 ## Approval

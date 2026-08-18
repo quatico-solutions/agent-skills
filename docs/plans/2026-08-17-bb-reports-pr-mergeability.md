@@ -6,9 +6,10 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** feature
 - **Delivered:** 2026-08-18
+- **Released:** 2026-08-18, v3.11.0
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 - **Approved:** 2026-08-18, Jan Wloka, plan-PR #59 merged
 - **Started:** 2026-08-18, Jan Wloka, `feature/bb-reports-pr-checks`

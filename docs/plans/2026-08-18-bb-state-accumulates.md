@@ -5,9 +5,10 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** bug
 - **Delivered:** 2026-08-18
+- **Released:** 2026-08-18, v3.11.0
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
 - **Review:** pr
 - **Impl:** same branch
