@@ -1,5 +1,16 @@
 # @quatico-solutions/agent-skills
 
+## 3.11.1
+
+### Patch Changes
+
+- [#64](https://github.com/quatico-solutions/agent-skills/pull/64) [`e703aca`](https://github.com/quatico-solutions/agent-skills/commit/e703aca175b8055c095d4ffb40ea835d30c1cfdf) Thanks [@jwloka](https://github.com/jwloka)! - `pnpm run release` no longer half-applies on a missing token, and its tag is now annotated so `git push --follow-tags` actually carries it
+
+  <!--
+  bumps:
+    skills: {}
+  -->
+
 ## 3.11.0
 
 ### Minor Changes
