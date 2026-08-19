@@ -14,7 +14,7 @@
     "changeset": "cp .changeset/_template \".changeset/$(date +%Y%m%d-%H%M%S).md\" && echo 'Created changeset — edit it now'",
     "version": "bash .dev/scripts/bump-skill-versions.sh && changeset version && bash .dev/scripts/sync-versions.sh",
     "validate": "bash .dev/scripts/validate-skills.sh",
-    "release": "pnpm run version && git add -A && git commit -m \"chore: release v$(jq -r .version package.json)\" && git tag \"v$(jq -r .version package.json)\" && echo 'Release committed and tagged. Run: git push --follow-tags'"
+    "release": "test -n \"$GITHUB_TOKEN\" || GITHUB_TOKEN=\"$(gh auth token 2>/dev/null)\" || true; test -n \"$GITHUB_TOKEN\" || { echo \"release: GITHUB_TOKEN is unset and 'gh auth token' failed. changeset version needs it to build changelog links, and it fails AFTER the skill versions are bumped — leaving a half-applied release. Export GITHUB_TOKEN or run 'gh auth login', then retry.\" >&2; exit 1; }; GITHUB_TOKEN=\"$GITHUB_TOKEN\" pnpm run version && git add -u && git add .changeset package.json CHANGELOG.md .claude-plugin .cursor-plugin skills && git commit -m \"chore: release v$(jq -r .version package.json)\" && git tag -a \"v$(jq -r .version package.json)\" -m \"Release v$(jq -r .version package.json)\" && echo \"Release committed and tagged. Run: git push --follow-tags\""
   },
   "packageManager": "pnpm@10.27.0+sha512.72d699da16b1179c14ba9e64dc71c9a40988cbdc65c264cb0e489db7de917f20dcf4d64d8723625f2969ba52d4b7e2a1170682d9ac2a5dcaeaab732b7e16f04a",
   "devDependencies": {

@@ -64,6 +64,24 @@ PR. Merging that PR bumps versions, updates `CHANGELOG.md`, regenerates
 `marketplace.json` (collection + per-skill entries), tags `vX.Y.Z` + per-skill
 tags, and publishes a GitHub Release. Installed plugins auto-update on refresh.
 
+**This is the normal path — prefer it.** `pnpm run release` does the same work
+locally, for when the workflow is unavailable. The two do not compose: running
+the local script consumes the changesets and tags the version, which leaves the
+bot's open `release: x.y.z` PR proposing a release that already happened. Close
+that PR rather than merging it, or it builds the same version twice. (This is
+not hypothetical — it happened on v3.11.0.)
+
+Running `pnpm run release` locally:
+
+- **`GITHUB_TOKEN` is required.** `changeset version` calls the GitHub API to
+  build changelog links. The script takes it from the environment, falls back to
+  `gh auth token`, and refuses to start without one — deliberately, because the
+  failure otherwise lands *after* `bump-skill-versions.sh` has already written
+  new `SKILL.md` versions, leaving a half-applied release to unpick by hand.
+- **Push the tag.** The script creates an annotated tag, so
+  `git push --follow-tags` carries it. A lightweight tag (plain `git tag`) is
+  silently skipped by that flag and the release lands untagged.
+
 ## Code of conduct
 
 This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Security
