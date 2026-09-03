@@ -39,12 +39,12 @@ npx skills add https://github.com/quatico-solutions/agent-skills.git --global --
 
 ## Skills
 
-The `quatico-skills` plugin bundles all 16 skills below, each linked to its
+The `quatico-skills` plugin bundles all 18 skills below, each linked to its
 directory. The table must stay in sync with the `skills/` directory.
 
 > **Moved skills:** `story-tracking` and `challenge-the-plan` now ship with **[plot-pm/plot](https://github.com/plot-pm/plot)** — stories and plans are sibling concepts, and plan interrogation is the design-phase companion, so both live with the Plot workflow.
 
-### quatico-skills (16 skills)
+### quatico-skills (18 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -56,6 +56,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`handling-pull-requests`](skills/handling-pull-requests) | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
 | [`jest-testing-conventions`](skills/jest-testing-conventions) | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | [`markdown`](skills/markdown) | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
+| [`pnpm`](skills/pnpm) | pnpm package workflows: lockfile conflicts and hygiene, verify unreleased changes via pack + overrides, patch, workspaces, toolchain |
 | [`show-your-work`](skills/show-your-work) | Executable demo documents proving completed work (showboat + rodney) |
 | [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
