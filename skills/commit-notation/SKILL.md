@@ -73,6 +73,27 @@ TICKET-123
 
 **Keep changes small**: Features/bugfixes should be ≤8 LoC for Validated level.
 
+### What the subject should name
+
+**A fix names the defect. A feature names the outcome.**
+
+These pull in opposite directions, and applying one rule to both produces
+euphemism. The outcome of a fix is "it works again", which tells a reader
+nothing.
+
+| | Weak | Strong |
+|---|---|---|
+| `B` | `B: Unblock the build that the new check stopped` | `B: Stop the license check failing every build on the docs package` |
+| `B` | `B: Ship types a consumer can compile against` | `B: Export the parser types that consumers need to type-check` |
+| `F` | `F: Add a script that writes the exports map` | `F: Generate the exports map from the barrel directories` |
+
+The tell in a weak fix subject is an **abstract subject carrying a relative
+clause** — "unblock the build *that* …", "ship the files *that* …". It
+reports that something improved without naming what was broken.
+
+Someone scanning `git log` for the cause of a red build should find it in a
+subject line. Name what fails, where, and how widely.
+
 ### Quick Checklist
 
 Copy and track progress:
@@ -81,6 +102,7 @@ Copy and track progress:
 - [ ] Single intention per commit
 - [ ] Risk level assessed (lowercase/UPPER/!!/\*\*)
 - [ ] Active voice summary
+- [ ] A fix names the defect; a feature names the outcome
 - [ ] Subject < 75 chars
 - [ ] Ticket on last line (if applicable)
 
