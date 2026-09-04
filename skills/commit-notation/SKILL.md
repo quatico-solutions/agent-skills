@@ -5,7 +5,7 @@ compatibility: claude-code, cursor
 license: MIT
 metadata:
   source: https://github.com/quatico-solutions/QuaticoCommitNotation
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Commit Notation

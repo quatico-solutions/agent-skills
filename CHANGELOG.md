@@ -1,5 +1,28 @@
 # @quatico-solutions/agent-skills
 
+## 3.12.0
+
+### Minor Changes
+
+- [#67](https://github.com/quatico-solutions/agent-skills/pull/67) [`58b1fe3`](https://github.com/quatico-solutions/agent-skills/commit/58b1fe3495d8589d35d0580f1f52bfceb4c01b75) Thanks [@eins78](https://github.com/eins78)! - Add the `pnpm` skill: lockfile conflict and hygiene recipes, local verification of unreleased library changes via pack and overrides, patching, workspace commands, toolchain rules, and a pitfall table.
+
+  <!--
+  bumps:
+    skills:
+      pnpm: minor
+    tuned-against: claude-sonnet-5
+  -->
+
+### Patch Changes
+
+- [#66](https://github.com/quatico-solutions/agent-skills/pull/66) [`0df7bdc`](https://github.com/quatico-solutions/agent-skills/commit/0df7bdc68c36308a88ac1858e28ff05a1d7c881d) Thanks [@eins78](https://github.com/eins78)! - commit-notation: a fix names the defect, a feature names the outcome — with the weak/strong subject examples that distinguish them
+
+  <!--
+  bumps:
+    skills:
+      commit-notation: patch
+  -->
+
 ## 3.11.1
 
 ### Patch Changes
