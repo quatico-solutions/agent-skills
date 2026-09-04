@@ -4,7 +4,7 @@ description: "Use when a task touches package.json, pnpm-lock.yaml, pnpm-workspa
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # pnpm
