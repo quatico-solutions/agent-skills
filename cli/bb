@@ -733,7 +733,7 @@ cmd_pr_list() {
   # whole thing stays bash 3.2 (see the compatibility note at the top).
   # Empty means "not given" — the OPEN default is applied after parsing, so a
   # caller passing no --state is unaffected.
-  local states="" authors=""
+  local states="" authors="" limit=50
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -741,7 +741,7 @@ cmd_pr_list() {
 List pull requests in the current repository.
 
 USAGE
-  bb pr list [--state <state>] [--author <name>] [--json [<fields>]] [--jq <expr>]
+  bb pr list [--state <state>] [--author <name>] [--limit <n>] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
   --state <state>    Filter by state: open, merged, declined, superseded (default: open)
@@ -751,6 +751,7 @@ FLAGS
                      repeated identical state is harmless.
   --author <name>    Filter by author (nickname or display name).
                      May be repeated to cover several authors.
+  --limit <n>        Maximum number of items to fetch (default: 50).
   --json [<fields>]  Output JSON. Bare --json emits the full Bitbucket API objects.
                      An optional comma-separated field list projects each PR into
                      an object with just those keys (gh-style), e.g. --json number,headRefName.
@@ -779,8 +780,16 @@ EXAMPLES
   bb pr list --author alice --json
   bb pr list --json number,headRefName,isDraft
   bb pr list --state open --json headRefName --jq '.[].headRefName'
+  bb pr list --limit 5
 HELP
         exit 0
+        ;;
+      --limit)
+        limit="$2"; shift 2
+        if [[ ! "$limit" =~ ^[0-9]+$ || "$limit" -eq 0 ]]; then
+          echo >&2 "error: --limit must be a positive number, got '$limit'"
+          exit 1
+        fi
         ;;
       --state)
         local one_state
@@ -829,7 +838,7 @@ HELP
   path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors")"
 
   local result
-  result="$(bb_paginate "$path")"
+  result="$(bb_paginate "$path" "$limit")"
 
   # If author filter returned nothing, fall back to client-side display_name match
   if [[ -n "$authors" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
@@ -837,7 +846,7 @@ HELP
     # recovery path that silently narrows the result fails the same way the bug
     # it recovers from does.
     path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "")"
-    result="$(bb_paginate "$path")"
+    result="$(bb_paginate "$path" "$limit")"
     local nfc_author a_nfc names_filter
     names_filter=""
     local IFS=$'\n'

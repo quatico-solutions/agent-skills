@@ -4,6 +4,7 @@ import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 import prListOpen from './fixtures/pr-list-open.json' with { type: 'json' }
 import prListMerged from './fixtures/pr-list-merged.json' with { type: 'json' }
+import prListFive from './fixtures/pr-list-five.json' with { type: 'json' }
 
 describe('bb pr list', () => {
   let server: MockServer
@@ -341,5 +342,82 @@ describe('bb pr list --json <fields> / --jq', () => {
     // Then jq reads the raw Bitbucket paths
     assert.equal(result.exitCode, 0)
     assert.equal(result.stdout, 'feature/login\nfix/readme-typo\n')
+  })
+})
+
+describe('bb pr list --limit', () => {
+  let server: MockServer
+
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => server.reset())
+
+  it('Caps the result at --limit, matching gh pr list -L/--limit', async () => {
+    // Given bitbucket has 5 open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListFive)
+
+    // When I ask for at most 2
+    const result = await bb('pr list --limit 2 --json', { port: server.port })
+
+    // Then only 2 come back, not all 5
+    assert.equal(result.exitCode, 0)
+    assert.equal(JSON.parse(result.stdout).length, 2)
+  })
+
+  it('Returns everything below the limit unchanged', async () => {
+    // Given bitbucket has 5 open pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListFive)
+
+    // When the limit is above the actual count
+    const result = await bb('pr list --limit 10 --json', { port: server.port })
+
+    // Then all 5 are returned
+    assert.equal(result.exitCode, 0)
+    assert.equal(JSON.parse(result.stdout).length, 5)
+  })
+
+  it('Rejects a non-numeric --limit', async () => {
+    // Given bitbucket has pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListFive)
+
+    // When --limit is not a number
+    const result = await bb('pr list --limit abc', { port: server.port })
+
+    // Then it fails loudly, same style as the --line validation on pr comment
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--limit must be a positive number, got 'abc'/)
+  })
+
+  it('Rejects a zero --limit', async () => {
+    // Given bitbucket has pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListFive)
+
+    // When --limit is 0 (gh: "invalid value for --limit: 0")
+    const result = await bb('pr list --limit 0', { port: server.port })
+
+    // Then it fails loudly instead of silently returning nothing
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--limit must be a positive number, got '0'/)
+  })
+
+  it('Rejects a negative --limit', async () => {
+    // Given bitbucket has pull requests
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListFive)
+
+    // When --limit is negative
+    const result = await bb('pr list --limit -1', { port: server.port })
+
+    // Then it fails loudly
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--limit must be a positive number, got '-1'/)
+  })
+
+  it('Documents --limit in --help', async () => {
+    // When I ask for help
+    const result = await bb('pr list --help', { port: server.port })
+
+    // Then --limit is documented, gh-style
+    assert.equal(result.exitCode, 0)
+    assert.match(result.stdout, /--limit <n>/)
   })
 })
