@@ -1,0 +1,41 @@
+{
+  "values": [
+    {
+      "id": 1, "title": "PR one", "state": "OPEN", "draft": false,
+      "author": { "display_name": "Alice Smith", "nickname": "alice" },
+      "source": { "branch": { "name": "feature/one" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": []
+    },
+    {
+      "id": 2, "title": "PR two", "state": "OPEN", "draft": false,
+      "author": { "display_name": "Alice Smith", "nickname": "alice" },
+      "source": { "branch": { "name": "feature/two" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": []
+    },
+    {
+      "id": 3, "title": "PR three", "state": "OPEN", "draft": false,
+      "author": { "display_name": "Alice Smith", "nickname": "alice" },
+      "source": { "branch": { "name": "feature/three" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": []
+    },
+    {
+      "id": 4, "title": "PR four", "state": "OPEN", "draft": false,
+      "author": { "display_name": "Alice Smith", "nickname": "alice" },
+      "source": { "branch": { "name": "feature/four" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": []
+    },
+    {
+      "id": 5, "title": "PR five", "state": "OPEN", "draft": false,
+      "author": { "display_name": "Alice Smith", "nickname": "alice" },
+      "source": { "branch": { "name": "feature/five" } },
+      "destination": { "branch": { "name": "main" } },
+      "reviewers": []
+    }
+  ],
+  "page": 1,
+  "size": 5
+}
