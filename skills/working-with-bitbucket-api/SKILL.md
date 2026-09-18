@@ -29,12 +29,18 @@ install, so Homebrew answers the question:
 
 ```bash
 bb --version                                    # missing counts as outdated
-brew list --formula quatico-solutions/tap/bb    # non-zero: this bb did NOT come from Homebrew
+command -v bb                                   # must print "$(brew --prefix)/bin/bb" — anything else is a foreign bb earlier on PATH
+readlink "$(brew --prefix)/bin/bb"              # non-zero: that path is not a Homebrew symlink, so Homebrew does not upgrade it
 brew outdated quatico-solutions/tap/bb          # prints the formula when newer (auto-updates the tap, at most once every 24h)
 ```
 
-**If `bb` is missing, or `brew list --formula` failed** (the `bb` on PATH is a copy, not a
-Homebrew install), install it — no user approval needed, this is safe and idempotent:
+`brew list --formula` is not the check: it reports the keg as installed even while the keg is
+unlinked and PATH still serves an old copied `bb`. The link and the PATH resolution are what
+say which binary actually runs.
+
+**If `bb` is missing, if `command -v bb` printed anything but `$(brew --prefix)/bin/bb`, or if
+`readlink` failed** (the `bb` that runs is a copy, not a Homebrew link), install it — no user
+approval needed, this is safe and idempotent:
 
 ```bash
 bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-solutions/tap/bb, migrates any old copy
