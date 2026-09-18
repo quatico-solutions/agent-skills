@@ -53,6 +53,7 @@ jobs:
           title: "release: ${{ steps.nextver.outputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
 
       - name: Assign release PR
         if: steps.changesets.outputs.pullRequestNumber

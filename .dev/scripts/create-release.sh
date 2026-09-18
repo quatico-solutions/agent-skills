@@ -41,6 +41,12 @@ done
 git push --tags
 echo "  ✓ Pushed tags"
 
+# Point the Homebrew tap at the tag just pushed. Never allowed to fail the
+# release: create-release.sh runs under `set -e`, and the GitHub Release has not
+# been created yet at this point.
+bash "$(dirname "$0")/bump-homebrew-formula.sh" || \
+  echo "  WARN: the Homebrew formula bump failed — bump the tap by hand"
+
 # Extract changelog section for this version
 changelog_file="$REPO_ROOT/CHANGELOG.md"
 if [ -f "$changelog_file" ]; then
