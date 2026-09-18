@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const BB_PATH = path.resolve(__dirname, '../../../bin/bb')
+const BB_PATH = path.resolve(__dirname, '../../../../../cli/bb')
 
 export interface BbResult {
   stdout: string

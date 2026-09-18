@@ -2,7 +2,7 @@
  * generate-coverage.ts — Post-processor for bash xtrace coverage
  *
  * Reads .xtrace.log (produced by bash -x with BASH_XTRACEFD),
- * counts hits per line in bin/bb, classifies lines as executable
+ * counts hits per line in cli/bb, classifies lines as executable
  * or non-executable, and outputs:
  *   - coverage/.resultset.json  (SimpleCov-compatible)
  *   - coverage/index.html       (standalone line-by-line report)
@@ -19,7 +19,8 @@ const __dirname = dirname(__filename);
 // Paths
 const testsDir = resolve(__dirname, "../..");
 const skillRoot = resolve(testsDir, "..");
-const bbPath = resolve(skillRoot, "bin/bb");
+const repoRoot = resolve(skillRoot, "../..");
+const bbPath = resolve(repoRoot, "cli/bb");
 const xtraceLog = resolve(testsDir, ".xtrace.log");
 const coverageDir = resolve(skillRoot, "coverage");
 
@@ -33,9 +34,9 @@ if (!existsSync(xtraceLog)) {
 }
 
 const logContent = readFileSync(xtraceLog, "utf-8");
-// Match lines like: +/path/to/bin/bb:42: <command>
+// Match lines like: +/path/to/cli/bb:42: <command>
 // The PS4 format is: +${BASH_SOURCE}:${LINENO}:
-const tracePattern = /^\+[^:]*\/bin\/bb:(\d+): /gm;
+const tracePattern = /^\+[^:]*\/cli\/bb:(\d+): /gm;
 let match: RegExpExecArray | null;
 while ((match = tracePattern.exec(logContent)) !== null) {
   const line = parseInt(match[1], 10);
@@ -188,7 +189,7 @@ const html = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-<h1>bin/bb coverage</h1>
+<h1>cli/bb coverage</h1>
 <div class="summary">
   <span class="pct">${percentage}%</span> covered —
   ${coveredLines.length} / ${executableLines.length} lines hit,

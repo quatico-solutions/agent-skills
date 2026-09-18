@@ -106,7 +106,7 @@ dev dependencies in this directory.
 `pnpm test:coverage` runs the same suite under a bash xtrace wrapper and writes
 a line-by-line report to `coverage/index.html` plus a `bb coverage: NN%` summary.
 
-This is a **developer aid, run by hand** — reach for it when refactoring `bin/bb`
+This is a **developer aid, run by hand** — reach for it when refactoring `cli/bb`
 or doing larger work on the CLI, to see which code paths the suite actually
 exercises before and after a change. It is intentionally **not** wired into CI
 and is **not** a gate: nothing fails on a coverage number, and the percentage is

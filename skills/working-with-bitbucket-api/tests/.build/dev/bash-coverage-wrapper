@@ -9,7 +9,7 @@
 
 REAL_BASH="$(which -a bash | grep -v "$0" | head -1)"
 
-if [[ "$1" == *"/bin/bb" ]]; then
+if [[ "$1" == *"/cli/bb" ]]; then
   XTRACE_LOG="${BB_XTRACE_LOG:-.xtrace.log}"
   exec 3>>"$XTRACE_LOG"
   export BASH_XTRACEFD=3
