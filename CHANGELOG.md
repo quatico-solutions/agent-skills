@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.13.1
+
+### Patch Changes
+
+- [#72](https://github.com/quatico-solutions/agent-skills/pull/72) [`81df1a7`](https://github.com/quatico-solutions/agent-skills/commit/81df1a76ee9dc0febe0b76117047f3103612d38c) Thanks [@eins78](https://github.com/eins78)! - `bb pr list` gains `--limit <n>` (default: 50), matching `gh pr list --limit`. Previously the command had no way to cap or raise the number of results — it silently stopped at an undocumented, hardcoded ceiling with no flag to change it. A non-positive or non-numeric value is rejected with `--limit must be a positive number, got '<value>'`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.13.0
 
 ### Minor Changes
