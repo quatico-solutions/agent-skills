@@ -51,7 +51,7 @@ on:
 env:
   # Paths that make the suite worth running. The workflow itself is included so a change
   # to CI is exercised by CI. Defined once; both jobs read it.
-  BB_PATH_RE: '^(skills/working-with-bitbucket-api/|\.github/workflows/bb-tests\.yml$)'
+  BB_PATH_RE: '^(cli/bb$|skills/working-with-bitbucket-api/|\.github/workflows/bb-tests\.yml$)'
 
 defaults:
   run:
@@ -84,7 +84,7 @@ jobs:
             echo "bb CLI touched — running the integration suite."
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes under skills/working-with-bitbucket-api — nothing to test."
+            echo "No changes to the bb CLI or its tests — nothing to test."
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -146,7 +146,7 @@ jobs:
             echo "bb CLI touched — running the integration suite."
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes under skills/working-with-bitbucket-api — nothing to test."
+            echo "No changes to the bb CLI or its tests — nothing to test."
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -161,7 +161,7 @@ jobs:
           cache-dependency-path: skills/working-with-bitbucket-api/tests/pnpm-lock.yaml
 
       # Put macOS's own bash 3.2 ahead of anything the runner image preinstalls, so
-      # `#!/usr/bin/env bash` in bin/bb resolves to it.
+      # `#!/usr/bin/env bash` in cli/bb resolves to it.
       - name: Pin bash to the macOS system shell
         if: steps.scope.outputs.run == 'true'
         run: |

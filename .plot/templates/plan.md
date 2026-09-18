@@ -65,7 +65,7 @@
 
 - [ ] `pnpm test` passes — skills parse
 - [ ] `pnpm run validate` passes — skill frontmatter valid
-- [ ] `bb` suite green on Linux **and** macOS/bash 3.2 — only if the diff touches `bin/bb`
+- [ ] `bb` suite green on Linux **and** macOS/bash 3.2 — only if the diff touches `cli/bb`
 - [ ] Changeset added with a `bumps:` block, and `tuned-against:` where the change is model-specific
 - [ ] `README.md` skills table matches `skills/` — required when adding or removing a skill
 

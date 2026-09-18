@@ -73,7 +73,7 @@ At release, `pnpm run version` consumes the changesets: `bump-skill-versions.sh`
 - Every skill has `SKILL.md` (frontmatter + instructions) and `README.md` (development notes)
 - Optional: `REFERENCE.md`, `install-dependencies.sh`, `diagrams/`
 - Skills with `install-dependencies.sh` must be macOS + Homebrew, idempotent
-- **Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and always will (bash 4 went GPLv3), so no `declare -A`, no `${var^^}`/`${var,,}`, no `mapfile`; and under `set -u`, expand possibly-empty arrays as `${arr[@]+"${arr[@]}"}`. Gated for `bin/bb` by the `bb-tests-macos` CI job, which pins `/bin/bash`; the other scripts rely on this rule
+- **Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and always will (bash 4 went GPLv3), so no `declare -A`, no `${var^^}`/`${var,,}`, no `mapfile`; and under `set -u`, expand possibly-empty arrays as `${arr[@]+"${arr[@]}"}`. Gated for `cli/bb` by the `bb-tests-macos` CI job, which pins `/bin/bash`; the other scripts rely on this rule
 - When adding a new skill, place it in the top-level `skills/` directory
 
 ### Frontmatter Rules
@@ -140,7 +140,7 @@ A change is done when all three pass:
 2. `pnpm run validate` — skill frontmatter valid (CI: `ci.yml`, every PR)
 3. `pnpm test` in `skills/working-with-bitbucket-api/tests/` — the `bb`
    integration suite on Linux **and** macOS/bash 3.2 (CI: `bb-tests.yml`,
-   only when the diff touches `bin/bb`)
+   only when the diff touches `cli/bb`)
 
 Plus a changeset for any skill-touching change, per [Versioning](#versioning).
 

@@ -32,7 +32,7 @@ model family, never a dated snapshot) when a change is model-specific. CI only
 **3. Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and
 always will (bash 4 went GPLv3): no `declare -A`, no `${var^^}`/`${var,,}`, no
 `mapfile`. Under `set -u`, expand possibly-empty arrays as
-`${arr[@]+"${arr[@]}"}`. Gated for `bin/bb` by the `bb-tests-macos` CI job,
+`${arr[@]+"${arr[@]}"}`. Gated for `cli/bb` by the `bb-tests-macos` CI job,
 which pins `/bin/bash`; every other script relies on this rule alone.
 
 **4. Never use YAML block scalars in SKILL.md frontmatter.** No `>-`, `>`, `|-`,
@@ -57,7 +57,7 @@ A change is done when all three pass:
 2. `pnpm run validate` — skill frontmatter valid
 3. `pnpm test` in `skills/working-with-bitbucket-api/tests/` — the `bb`
    integration suite on Linux **and** macOS/bash 3.2, when the diff touches
-   `bin/bb`
+   `cli/bb`
 
 Plus a changeset, per rule 2.
 

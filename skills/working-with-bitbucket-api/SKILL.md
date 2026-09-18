@@ -13,36 +13,41 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 > **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
 
-> **Homebrew is an official dependency of the installer.** `install-dependencies.sh` installs `jq` via brew and copies `bb` into `$(brew --prefix)/bin` (on PATH for every Homebrew user). Non-Homebrew setups: `BB_INSTALL_DIR=<writable-dir-on-your-PATH> ./install-dependencies.sh` — and provide `jq` yourself.
+> **Homebrew is an official dependency.** `bb` installs from Quatico's tap: `brew install quatico-solutions/tap/bb`, which also pulls `jq`. `install-dependencies.sh` runs that for you and migrates any older copied install. Always use the fully qualified name — a bare `bb` matches an unrelated cask in homebrew-cask.
 
 > **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
 
 ---
 
-## Step 0 (gate): confirm `bb` is installed, current, AND this skill's — before any command
+## Step 0 (gate): confirm `bb` is installed and current — before any command
 
 Before any `bb` command, check more than "does it run". A `bb` that merely works can be an
-**older build** — installed by a previous version of this skill — that silently lacks newer
-subcommands or flags. The command then fails in a way that looks like an API or auth problem
-when the real fix is a reinstall. Verify the version first:
+**older release** that silently lacks newer subcommands or flags. The command then fails in a
+way that looks like an API or auth problem when the real fix is an upgrade. Homebrew owns the
+install, so Homebrew answers the question:
 
 ```bash
-bb --version                              # running version (missing counts as outdated)
-grep -m1 BB_VERSION "{{SKILL_DIR}}/bin/bb"   # the version THIS skill ships
+bb --version                              # missing counts as outdated
+brew update --auto-update                 # refresh the tap, at most once every 24h
+brew outdated quatico-solutions/tap/bb    # prints the formula when a newer one exists
 ```
 
-**If `bb` is missing or its version differs from the skill's `BB_VERSION`,** reinstall — no
-user approval needed, this is safe and idempotent:
+**If `bb` is missing,** install it — no user approval needed, this is safe and idempotent:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"   # copies this skill's bin/bb -> $(brew --prefix)/bin/bb, checks jq
+bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-solutions/tap/bb
 ```
 
-Re-run `bb --version` to confirm it matches, then check auth with `bb auth status`. If not
-logged in, tell the user to run `bb auth login`.
+**If `brew outdated` printed the formula,** upgrade it:
 
-**Never diagnose a `bb` command or auth error before ruling out a version mismatch** —
-reinstall from this skill first. Do NOT silently fall back to `curl` or browser automation.
+```bash
+brew upgrade quatico-solutions/tap/bb
+```
+
+Then check auth with `bb auth status`. If not logged in, tell the user to run `bb auth login`.
+
+**Never diagnose a `bb` command or auth error before ruling out a version mismatch.** Do NOT
+silently fall back to `curl` or browser automation.
 
 > **Exception:** If the user explicitly prefers browser automation, or if the project's CLAUDE.md says to use `working-with-bitbucket-web`, honor that preference.
 

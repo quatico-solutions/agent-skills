@@ -2,76 +2,74 @@
 # Install working-with-bitbucket-api dependencies (macOS + Homebrew)
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FORMULA="quatico-solutions/tap/bb"
 
 echo "Installing working-with-bitbucket-api dependencies..."
 
-# Homebrew is an OFFICIAL dependency: it provides jq and the install dir
-# $(brew --prefix)/bin (user-writable, on PATH for every Homebrew user).
-# Non-Homebrew setups (e.g. Linux): set BB_INSTALL_DIR to a writable dir
-# that is on your PATH, and provide jq yourself.
-if [[ -n "${BB_INSTALL_DIR:-}" ]]; then
-    BIN_DIR="$BB_INSTALL_DIR"
-    echo "BB_INSTALL_DIR set — installing to ${BIN_DIR} (make sure it is on your PATH)"
-    if ! command -v jq &> /dev/null; then
-        echo "ERROR: jq is required — install it with your package manager."
-        exit 1
-    fi
-    echo "jq: already installed ($(jq --version))"
-else
-    if ! command -v brew &> /dev/null; then
-        echo "ERROR: Homebrew is required (https://brew.sh) — it provides jq and the install dir \$(brew --prefix)/bin."
-        echo "       Non-Homebrew setups: BB_INSTALL_DIR=<dir-on-PATH> $0"
-        exit 1
-    fi
-    BIN_DIR="$(brew --prefix)/bin"
-
-    # jq (JSON processor — used by bb for API response parsing)
-    if ! command -v jq &> /dev/null; then
-        echo "Installing jq..."
-        brew install jq
-    else
-        echo "jq: already installed ($(jq --version))"
-    fi
+# Homebrew is an OFFICIAL dependency. It installs jq, owns the install directory,
+# and keeps bb current through `brew upgrade`.
+if ! command -v brew &> /dev/null; then
+    echo "ERROR: Homebrew is required (https://brew.sh)."
+    echo "       Install it, then re-run this script."
+    exit 1
 fi
 
-# perl + Unicode::Normalize (system-provided on macOS, used for NFC normalization in bb)
+# perl + Unicode::Normalize (system-provided on macOS, used for NFC normalization in bb).
+# A formula cannot check this, so it stays here.
 if perl -MUnicode::Normalize -e '1' 2>/dev/null; then
-    echo "perl + Unicode::Normalize: available ($(perl -v | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1))"
+    echo "perl + Unicode::Normalize: available"
 else
     echo "ERROR: perl with Unicode::Normalize is required but not available"
     echo "  On macOS this ships with the system. Check your perl installation."
     exit 1
 fi
 
-# Install bb by COPY into ${BIN_DIR} — not ~/bin (not on macOS default
-# PATH) and not a symlink: skills live in version-based plugin cache dirs
-# that vanish on update, so symlinks into them dangle. A copy can go stale
-# instead — the skill's Step 0 version gate re-runs this installer.
-mkdir -p "${BIN_DIR}"
+# Remove a file, preferring the reversible option.
+remove_file() {
+    if command -v trash &> /dev/null; then
+        trash "$1" && echo "  moved to Trash: $1"
+    else
+        rm -f "$1" && echo "  removed: $1"
+    fi
+}
 
-# Clean up the legacy ~/bin/bb symlink from earlier skill versions
-if [[ -L "$HOME/bin/bb" ]]; then
-    echo "bb: removing legacy ~/bin/bb symlink..."
-    trash "$HOME/bin/bb"
-elif [[ -e "$HOME/bin/bb" ]]; then
-    echo "WARNING: $HOME/bin/bb exists and is not a symlink — not touching it."
-    echo "         If it shadows ${BIN_DIR}/bb on your PATH, remove it yourself."
+# Migration. Earlier versions of this skill COPIED bb into the Homebrew prefix and,
+# before that, symlinked it into ~/bin. Homebrew refuses to link over a file it does
+# not own, so the copy has to go first. A Homebrew-installed bb is a SYMLINK into the
+# Cellar — that is how these two are told apart.
+BIN_DIR="$(brew --prefix)/bin"
+if [[ -e "$BIN_DIR/bb" && ! -L "$BIN_DIR/bb" ]]; then
+    echo "bb: removing the pre-Homebrew copy at $BIN_DIR/bb..."
+    remove_file "$BIN_DIR/bb"
 fi
 
-install -m 0755 "${SCRIPT_DIR}/bin/bb" "${BIN_DIR}/bb"
-echo "bb: installed to ${BIN_DIR}/bb"
+if [[ -L "$HOME/bin/bb" ]]; then
+    echo "bb: removing the legacy ~/bin/bb symlink..."
+    remove_file "$HOME/bin/bb"
+elif [[ -e "$HOME/bin/bb" ]]; then
+    echo "WARNING: $HOME/bin/bb exists and is not a symlink — not touching it."
+    echo "         If it shadows $BIN_DIR/bb on your PATH, remove it yourself."
+fi
+
+# Install or upgrade. The name is fully qualified on purpose: it taps, trusts and
+# installs in one step, and a bare `bb` would find an unrelated cask.
+if brew list --formula "$FORMULA" &> /dev/null; then
+    echo "bb: already installed — upgrading if a newer version exists..."
+    brew upgrade "$FORMULA" || true
+else
+    brew install "$FORMULA"
+fi
 
 # Verify
 echo ""
 echo "Verifying installation..."
-"${BIN_DIR}/bb" --version
+bb --version
 resolved="$(command -v bb || true)"
-if [[ "$resolved" != "${BIN_DIR}/bb" ]]; then
-    echo "WARNING: 'bb' on PATH resolves to '${resolved:-nothing}', not ${BIN_DIR}/bb."
+if [[ "$resolved" != "$BIN_DIR/bb" ]]; then
+    echo "WARNING: 'bb' on PATH resolves to '${resolved:-nothing}', not $BIN_DIR/bb."
     echo "         Check your PATH order (is Homebrew's shellenv set up?)."
 fi
-"${BIN_DIR}/bb" auth status 2>/dev/null || echo "  (not logged in — run: bb auth login)"
+bb auth status 2>/dev/null || echo "  (not logged in — run: bb auth login)"
 
 echo ""
 echo "All dependencies installed. Ready to use 'bb' CLI."
