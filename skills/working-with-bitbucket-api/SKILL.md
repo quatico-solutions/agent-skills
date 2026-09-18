@@ -22,20 +22,22 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 ## Step 0 (gate): confirm `bb` is installed and current — before any command
 
 Before any `bb` command, check more than "does it run". A `bb` that merely works can be an
-**older release** that silently lacks newer subcommands or flags. The command then fails in a
-way that looks like an API or auth problem when the real fix is an upgrade. Homebrew owns the
+**older release** that silently lacks newer subcommands or flags, or a leftover copy that
+Homebrew never installed and so never upgrades. Either way the command then fails in a way that
+looks like an API or auth problem when the real fix is an install or upgrade. Homebrew owns the
 install, so Homebrew answers the question:
 
 ```bash
-bb --version                              # missing counts as outdated
-brew update --auto-update                 # refresh the tap, at most once every 24h
-brew outdated quatico-solutions/tap/bb    # prints the formula when a newer one exists
+bb --version                                    # missing counts as outdated
+brew list --formula quatico-solutions/tap/bb    # non-zero: this bb did NOT come from Homebrew
+brew outdated quatico-solutions/tap/bb          # prints the formula when newer (auto-updates the tap, at most once every 24h)
 ```
 
-**If `bb` is missing,** install it — no user approval needed, this is safe and idempotent:
+**If `bb` is missing, or `brew list --formula` failed** (the `bb` on PATH is a copy, not a
+Homebrew install), install it — no user approval needed, this is safe and idempotent:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-solutions/tap/bb
+bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-solutions/tap/bb, migrates any old copy
 ```
 
 **If `brew outdated` printed the formula,** upgrade it:

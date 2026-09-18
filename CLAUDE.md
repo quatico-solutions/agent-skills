@@ -8,6 +8,7 @@ A single plugin (`quatico-skills`) over a flat skill pool:
 
 ```
 skills/          ← 16 skills (flat pool, one dir per skill)
+cli/             ← bb, the Bitbucket CLI source; Homebrew installs it, this is not the installed copy
 .claude-plugin/  ← marketplace.json + plugin.json
 .cursor-plugin/  ← marketplace.json + plugin.json
 ```
