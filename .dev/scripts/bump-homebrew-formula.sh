@@ -70,12 +70,43 @@ if ! git clone --depth 1 "$TAP_SSH" "$work"; then
 fi
 
 branch="formula-bump/bb-${version}"
-git -C "$work" switch -c "$branch"
+# Checked, because this script runs without `set -e` so that every give-up path
+# can report and exit 0. An unchecked failure here would leave HEAD on the
+# clone's main, commit there, and fail the push with a refspec error instead.
+if ! git -C "$work" switch -c "$branch"; then
+  echo "  WARN: could not create $branch in the clone — skipping the formula bump"
+  exit 0
+fi
 
 formula="$work/Formula/bb.rb"
+if [ ! -f "$formula" ]; then
+  echo "  WARN: $formula does not exist — skipping the formula bump"
+  exit 0
+fi
+
+# Assert each edit landed. `sed` exits 0 when its pattern matches nothing, so a
+# change to the formula's line shape would silently edit neither line — and the
+# `diff --quiet` below would then report "already at this version" and exit 0.
+# That is a failure wearing a success message, and the release would stop
+# bumping without anyone noticing. Grep for the values instead of trusting sed.
 sed -E -i.bak "s|^  url \".*\"$|  url \"${url}\"|" "$formula"
 sed -E -i.bak "s|^  sha256 \".*\"$|  sha256 \"${sha}\"|" "$formula"
 rm -f "$formula.bak"
+
+if ! grep -qF "  url \"${url}\"" "$formula"; then
+  echo "  ERROR: the url line was not rewritten — the formula's shape has changed."
+  echo "         Expected a line matching '  url \"...\"'. Bump by hand:"
+  echo "           url    $url"
+  echo "           sha256 $sha"
+  exit 0
+fi
+if ! grep -qF "  sha256 \"${sha}\"" "$formula"; then
+  echo "  ERROR: the sha256 line was not rewritten — the formula's shape has changed."
+  echo "         Expected a line matching '  sha256 \"...\"'. Bump by hand:"
+  echo "           url    $url"
+  echo "           sha256 $sha"
+  exit 0
+fi
 
 if git -C "$work" diff --quiet; then
   echo "  Formula already at ${version} — nothing to push"
