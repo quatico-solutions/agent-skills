@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.13.0
+
+### Minor Changes
+
+- [#69](https://github.com/quatico-solutions/agent-skills/pull/69) [`9e70902`](https://github.com/quatico-solutions/agent-skills/commit/9e709029ca83eacd0e785115e46b16c19fb77023) Thanks [@eins78](https://github.com/eins78)! - bb installs from the Quatico Homebrew tap instead of being copied into the brew prefix
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
 ## 3.12.0
 
 ### Minor Changes
