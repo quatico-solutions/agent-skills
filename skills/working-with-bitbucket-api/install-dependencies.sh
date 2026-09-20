@@ -2,7 +2,7 @@
 # Install working-with-bitbucket-api dependencies (macOS + Homebrew)
 set -euo pipefail
 
-FORMULA="quatico-solutions/tap/bb"
+FORMULA="quatico-solutions/tap/quatico-bb"
 
 echo "Installing working-with-bitbucket-api dependencies..."
 
