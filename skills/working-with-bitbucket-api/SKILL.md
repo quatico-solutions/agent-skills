@@ -13,7 +13,13 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 
 > **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
 
-> **Homebrew is an official dependency.** `bb` installs from Quatico's tap: `brew install quatico-solutions/tap/bb`, which also pulls `jq`. `install-dependencies.sh` runs that for you and migrates any older copied install. Always use the fully qualified name — a bare `bb` matches an unrelated cask in homebrew-cask.
+> **Homebrew is an official dependency.** `bb` installs from Quatico's tap by the short name `quatico-bb`. Trust the tap once, then `brew install quatico-bb` (or run `install-dependencies.sh`, which does it for you and migrates any older copied install):
+>
+>     brew tap quatico-solutions/tap
+>     brew trust --tap quatico-solutions/tap
+>     brew install quatico-bb
+>
+> The fully qualified `brew install quatico-solutions/tap/quatico-bb` also works and auto-taps + auto-trusts. Do **not** use a bare `bb` — that name resolves to an unrelated cask in homebrew-cask (an agent IDE from getbb.app).
 
 > **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
 
@@ -31,7 +37,7 @@ install, so Homebrew answers the question:
 bb --version                                    # missing counts as outdated
 command -v bb                                   # must print "$(brew --prefix)/bin/bb" — anything else is a foreign bb earlier on PATH
 readlink "$(brew --prefix)/bin/bb"              # non-zero: that path is not a Homebrew symlink, so Homebrew does not upgrade it
-brew outdated quatico-solutions/tap/bb          # prints the formula when newer (auto-updates the tap, at most once every 24h)
+brew outdated quatico-bb          # prints the formula when newer (auto-updates the tap, at most once every 24h)
 ```
 
 `brew list --formula` is not the check: it reports the keg as installed even while the keg is
@@ -43,13 +49,13 @@ say which binary actually runs.
 approval needed, this is safe and idempotent:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-solutions/tap/bb, migrates any old copy
+bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-bb, migrates any old copy
 ```
 
 **If `brew outdated` printed the formula,** upgrade it:
 
 ```bash
-brew upgrade quatico-solutions/tap/bb
+brew upgrade quatico-bb
 ```
 
 Then check auth with `bb auth status`. If not logged in, tell the user to run `bb auth login`.
