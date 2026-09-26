@@ -39,12 +39,12 @@ npx skills add https://github.com/quatico-solutions/agent-skills.git --global --
 
 ## Skills
 
-The `quatico-skills` plugin bundles all 18 skills below, each linked to its
+The `quatico-skills` plugin bundles all 19 skills below, each linked to its
 directory. The table must stay in sync with the `skills/` directory.
 
 > **Moved skills:** `story-tracking` and `challenge-the-plan` now ship with **[plot-pm/plot](https://github.com/plot-pm/plot)** — stories and plans are sibling concepts, and plan interrogation is the design-phase companion, so both live with the Plot workflow.
 
-### quatico-skills (18 skills)
+### quatico-skills (19 skills)
 
 | Skill | Description |
 |-------|-------------|
@@ -65,6 +65,7 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
 | [`reality-check`](skills/reality-check) | Adversarial verification: dispatch separate subagents to refute each claim, separating what was executed from what was only read |
+| [`dedicated-browser`](skills/dedicated-browser) | A separate browser for your agent, with its own saved logins: Chrome for Testing on a local port, connected through Playwright MCP. You sign in only to what the agent should reach; it never gets your everyday browser. macOS, interactive use |
 | [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 
 **Usage tips:**
