@@ -1,0 +1,288 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# dedicated-browser: a separate browser for your agent, with its own saved logins.
+#
+# Usage: dedicated-browser <command>
+#   setup    Install the browser, start it, print the MCP server config for your agent
+#   start    Start the browser (does nothing if it already runs)
+#   status   Is it running, which version, which pages are open
+#   stop     Quit the browser (its logins stay in the profile)
+#   update   Install the current stable browser version (the browser must be stopped)
+#
+# Exit codes of `status`:
+#   0  running, and the debugging port answers as this browser
+#   1  not running (or not installed)
+#   2  something answers on the port, but it is not this browser: another profile, or another host
+#
+# Two settings, both optional, both environment variables:
+#   DEDICATED_BROWSER_PORT   debugging port (default 9393)
+#   DEDICATED_BROWSER_HOME   install directory, holds the browser app and its profile
+#                            (default ~/Library/Application Support/dedicated-browser)
+#
+# Everything browser-specific lives in backend-<name>.sh next to this file.
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SELF="${SELF_DIR}/$(basename "${BASH_SOURCE[0]}")"
+
+DB_PORT="${DEDICATED_BROWSER_PORT:-9393}"
+DB_HOME="${DEDICATED_BROWSER_HOME:-${HOME}/Library/Application Support/dedicated-browser}"
+DB_PROFILE="${DB_HOME}/profile"
+DB_BACKEND="${DEDICATED_BROWSER_BACKEND:-chrome}"
+CDP="http://127.0.0.1:${DB_PORT}"
+LATEST_CACHE="${DB_HOME}/.latest-stable"
+
+case "${DB_PORT}" in
+  '' | *[!0-9]*)
+    echo "DEDICATED_BROWSER_PORT must be a number, got '${DB_PORT}'." >&2
+    exit 2
+    ;;
+esac
+
+if [[ ! -f "${SELF_DIR}/backend-${DB_BACKEND}.sh" ]]; then
+  echo "Unknown backend '${DB_BACKEND}': ${SELF_DIR}/backend-${DB_BACKEND}.sh does not exist." >&2
+  exit 2
+fi
+# shellcheck source-path=SCRIPTDIR source=backend-chrome.sh
+source "${SELF_DIR}/backend-${DB_BACKEND}.sh"
+
+usage() {
+  sed -n '/^# dedicated-browser:/,/^$/p' "${SELF}" | sed 's/^# \{0,1\}//'
+}
+
+is_number() {
+  case "${1:-}" in
+    '' | *[!0-9]*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+major_of() { printf '%s' "${1%%.*}"; }
+
+# --- the debugging port -------------------------------------------------------------------
+
+cdp_get() { curl -fsS --max-time 2 "${CDP}/json/$1" 2>/dev/null; }
+
+# sed, not grep: Chrome pretty-prints `": "`, and sed exits 0 on no match so `set -e` and
+# pipefail cannot abort the assignment.
+json_field() {
+  sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" | head -1
+}
+
+# One line per open page: title and URL without query or fragment (they can carry tokens).
+list_pages() {
+  cdp_get list | awk '
+    /^ *"title":/ { t = $0; sub(/^ *"title": *"/, "", t); sub(/",? *$/, "", t) }
+    /^ *"type":/  { ty = $0; sub(/^ *"type": *"/, "", ty); sub(/",? *$/, "", ty) }
+    /^ *"url":/   { u = $0; sub(/^ *"url": *"/, "", u); sub(/",? *$/, "", u); sub(/[?#].*/, "", u)
+                    if (ty == "page") printf "  %s  <%s>\n", t, u }
+  '
+}
+
+# --- "you are behind the current stable" ------------------------------------------------------
+# A browser that never updates falls behind, and some login pages then refuse it. This only ever
+# tells; it never downloads anything. The published stable version is looked up at most once a day.
+
+latest_stable() {
+  local now cached_at="" cached_version="" latest
+  now="$(date +%s)"
+  if [[ -f "${LATEST_CACHE}" ]]; then
+    read -r cached_at cached_version < "${LATEST_CACHE}" || true
+    if is_number "${cached_at}" && [[ -n "${cached_version}" ]] && (( now - cached_at < 86400 )); then
+      printf '%s' "${cached_version}"
+      return 0
+    fi
+  fi
+  if latest="$(backend_latest_version)" && [[ -n "${latest}" ]]; then
+    mkdir -p "${DB_HOME}"
+    printf '%s %s\n' "${now}" "${latest}" > "${LATEST_CACHE}"
+    printf '%s' "${latest}"
+    return 0
+  fi
+  # Offline: an old answer still proves the browser is at least that far behind.
+  [[ -n "${cached_version}" ]] && { printf '%s' "${cached_version}"; return 0; }
+  return 1
+}
+
+warn_if_behind() {
+  local installed latest
+  installed="$(backend_installed_version)"
+  [[ -n "${installed}" ]] || return 0
+  latest="$(latest_stable)" || return 0
+  is_number "$(major_of "${installed}")" && is_number "$(major_of "${latest}")" || return 0
+  if (( $(major_of "${installed}") < $(major_of "${latest}") )); then
+    echo "note: $(backend_app_label) $(major_of "${installed}") is behind the current stable $(major_of "${latest}")." >&2
+    echo "      Run '${SELF} update' when convenient." >&2
+  fi
+}
+
+# --- commands -----------------------------------------------------------------------------
+
+require_installed() {
+  if [[ -z "$(backend_installed_version)" ]]; then
+    echo "$(backend_app_label) is not installed. Run: ${SELF} setup" >&2
+    return 1
+  fi
+}
+
+cmd_status() {
+  local response ws_url
+  if ! response="$(cdp_get version)"; then
+    if [[ -z "$(backend_installed_version)" ]]; then
+      echo "not installed. Run: ${SELF} setup" >&2
+    else
+      echo "not running on 127.0.0.1:${DB_PORT}. Run: ${SELF} start" >&2
+    fi
+    return 1
+  fi
+
+  ws_url="$(printf '%s' "${response}" | json_field webSocketDebuggerUrl)"
+  if [[ -z "${ws_url}" ]]; then
+    echo "127.0.0.1:${DB_PORT} answered, but not like a browser. Is another program using this port?" >&2
+    return 2
+  fi
+  if [[ "${ws_url}" != ws://127.0.0.1:${DB_PORT}/* ]]; then
+    echo "127.0.0.1:${DB_PORT} points somewhere else: ${ws_url}" >&2
+    echo "The agent's MCP server may be configured for a remote browser." >&2
+    return 2
+  fi
+  # Someone else's browser can answer on our port (a Chrome the human started with debugging on).
+  # The agent must not treat that as the dedicated browser: it would be driving their own logins.
+  if [[ -z "$(backend_main_pids "${DB_PORT}")" ]]; then
+    echo "127.0.0.1:${DB_PORT} is answered by a browser that is not the dedicated one (a different profile)." >&2
+    echo "Do not use it. Quit that browser, or set DEDICATED_BROWSER_PORT to another port." >&2
+    return 2
+  fi
+
+  echo "running: $(printf '%s' "${response}" | json_field Browser) on 127.0.0.1:${DB_PORT}"
+  echo "profile: ${DB_PROFILE}"
+  echo "pages:"
+  list_pages | awk 'END { if (NR == 0) print "  (none)" } { print }'
+  warn_if_behind
+}
+
+cmd_start() {
+  require_installed
+  if cdp_get version >/dev/null; then
+    if [[ -n "$(backend_main_pids "${DB_PORT}")" ]]; then
+      echo "already running on 127.0.0.1:${DB_PORT}"
+      warn_if_behind
+      return 0
+    fi
+    echo "127.0.0.1:${DB_PORT} is already answered by a different browser, not the dedicated one." >&2
+    echo "Quit that browser, or set DEDICATED_BROWSER_PORT to another port." >&2
+    return 1
+  fi
+  if [[ -n "$(backend_main_pids)" ]]; then
+    echo "The dedicated browser is open but does not answer on port ${DB_PORT}." >&2
+    echo "It was probably opened by hand, or it is stuck. Run '${SELF} stop', then start again." >&2
+    return 1
+  fi
+
+  backend_launch
+  local _
+  for _ in {1..30}; do
+    if cdp_get version >/dev/null; then
+      echo "started $(backend_app_label) $(backend_installed_version) on 127.0.0.1:${DB_PORT}"
+      warn_if_behind
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "The browser started but did not answer on 127.0.0.1:${DB_PORT} within 15 seconds." >&2
+  echo "If a macOS keychain prompt is showing, answer it, then run '${SELF} status'." >&2
+  return 1
+}
+
+cmd_stop() {
+  local pids pid
+  pids="$(backend_main_pids)"
+  if [[ -z "${pids}" ]]; then
+    echo "not running"
+    return 0
+  fi
+  # SIGTERM lets the browser quit normally, which is what writes the logins to disk.
+  for pid in ${pids}; do
+    kill -TERM "${pid}" 2>/dev/null || true
+  done
+  local _
+  for _ in {1..30}; do
+    if [[ -z "$(backend_main_pids)" ]] && ! cdp_get version >/dev/null; then
+      echo "stopped"
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "The browser did not quit within 15 seconds (pid ${pids})." >&2
+  return 1
+}
+
+cmd_update() {
+  local installed latest
+  if [[ -n "$(backend_main_pids)" ]]; then
+    echo "The browser is running. Updating replaces it, and the human may be in the middle of a login." >&2
+    echo "Ask them, then run '${SELF} stop' first." >&2
+    return 1
+  fi
+  installed="$(backend_installed_version)"
+  latest="$(backend_latest_version)" || { echo "Could not look up the current version (offline?)." >&2; return 1; }
+  if [[ "${installed}" == "${latest}" ]]; then
+    echo "already current: $(backend_app_label) ${installed}"
+    return 0
+  fi
+  backend_install "${latest}"
+  mkdir -p "${DB_HOME}"
+  printf '%s %s\n' "$(date +%s)" "${latest}" > "${LATEST_CACHE}"
+  echo "updated ${installed:-nothing} -> $(backend_installed_version). Logins stay in the profile. Run '${SELF} start'."
+}
+
+cmd_setup() {
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "dedicated-browser supports macOS only." >&2
+    return 1
+  fi
+  if ! command -v npx >/dev/null 2>&1; then
+    echo "npx is missing. The agent's MCP server runs through it. Install Node.js first: brew install node" >&2
+    return 1
+  fi
+  if [[ -n "$(backend_installed_version)" ]]; then
+    echo "$(backend_app_label) $(backend_installed_version) is already installed. '${SELF} update' upgrades it."
+  else
+    backend_install
+  fi
+  cmd_start
+
+  cat <<EOF
+
+Next, connect your agent. Register the MCP server under this name; it keeps the browser's tools
+apart from any other browser your agent has.
+
+  Claude Code:
+    claude mcp add -s user dedicated-browser -- npx @playwright/mcp@latest --cdp-endpoint ${CDP}
+
+  Cursor (~/.cursor/mcp.json):
+    { "mcpServers": { "dedicated-browser": {
+        "command": "npx",
+        "args": ["@playwright/mcp@latest", "--cdp-endpoint", "${CDP}"] } } }
+
+Then restart your agent.
+
+In the browser window that just opened:
+  1. macOS may ask whether $(backend_app_label) may use its "Safe Storage" key in your keychain.
+     Click Always Allow. It is what protects the saved logins on disk.
+  2. Sign in to the systems you want the agent to reach. Nothing else needs a login here.
+EOF
+}
+
+case "${1:-}" in
+  setup) cmd_setup ;;
+  start) cmd_start ;;
+  status) cmd_status ;;
+  stop) cmd_stop ;;
+  update) cmd_update ;;
+  -h | --help | help) usage ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
