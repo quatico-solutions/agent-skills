@@ -51,7 +51,24 @@ candidate scripts, but only a human knows which gate a merge.
 If `/plot-init` reports that a Plot Config already exists, skip to step 2. This
 skill is additive over an existing Plot setup.
 
-### 2. Write the phase-to-skill map into the hub
+### 2. Make sure Claude Code actually loads the hub
+
+Claude Code loads `CLAUDE.md` on its own; it never loads `AGENTS.md`. If
+`/plot-init` used `CLAUDE.md` as the hub, skip this step. If it used
+`AGENTS.md`, check `CLAUDE.md`:
+
+- **Missing:** create it with exactly one line: `@AGENTS.md`.
+- **A prose pointer** ("see AGENTS.md", "read AGENTS.md before working here"):
+  replace it with the import line `@AGENTS.md`. An agent can skim past a
+  sentence; it cannot skip an import.
+- **Own rules already in it:** add `@AGENTS.md` as the first line, keep the
+  rest, and tell the user the file now holds two rule sources — merging them
+  is theirs to decide, not this skill's.
+
+A hub an agent does not load cannot govern anything written into it in the
+next step.
+
+### 3. Write the phase-to-skill map into the hub
 
 This is the core of this skill. Append to the hub doc (`CLAUDE.md` or
 `AGENTS.md` — whichever `/plot-init` used), adapted to what the repo actually
@@ -82,7 +99,7 @@ the other way?", it belongs in a log.
 Append only. Preserve every existing rule verbatim; this repo's hub may carry
 conventions that predate any of this.
 
-### 3. Wire the session-log seam
+### 4. Wire the session-log seam
 
 If this repo keeps session logs (`docs/sessionlogs/` or similar) and `bye` is
 in use, add the section `bye` looks for:
@@ -105,7 +122,7 @@ Record decisions and their **rejected alternatives** here, not in the plan.
 `bye` writes the log; Plot only supplies the facts. Do not build a second
 log-writer.
 
-### 4. Record the Definition of Done
+### 5. Record the Definition of Done
 
 `/plot-init` proposes candidate scripts; this step states the DoD as a rule the
 repo can be held to. Put it in the hub, in this repo's own terms:
@@ -119,7 +136,7 @@ repo can be held to. Put it in the hub, in this repo's own terms:
 
 Ask; do not infer. A DoD nobody agreed to is a DoD nobody follows.
 
-### 5. Point at host and commit conventions — do not restate them
+### 6. Point at host and commit conventions — do not restate them
 
 Where the repo is on Bitbucket, note that `working-with-bitbucket-api` covers
 PR operations and that `gh` is not available. Where commit conventions exist,
@@ -131,7 +148,7 @@ the day the tool changes, and then two sources disagree. Plot's own
 translation themselves — the note is for agents that reach for `gh` out of
 habit.
 
-### 6. Offer a dry run
+### 7. Offer a dry run
 
 The lifecycle is best learnt by walking it once, and this adoption is a
 convenient subject:
@@ -143,7 +160,7 @@ convenient subject:
 **Caveat:** if Plot was installed as a plugin this session, its slash commands
 activate only in a *new* session. Say so rather than letting the user hit it.
 
-### 7. Summarise, including what you deferred
+### 8. Summarise, including what you deferred
 
 State what was installed, what the user must still do (DoD confirmation,
 plugin activation, anything unwritable), and what the next action is. **List
@@ -173,3 +190,4 @@ than one that reports it.
 | Answering the Definition of Done for the user | A DoD nobody agreed to is not followed | Ask, always |
 | Re-running over an existing Plot setup | Duplicate config sections | Check `/plot-init`'s report first; this skill is additive |
 | Promising slash commands work immediately after a plugin install | They activate next session; the user hits a wall | Say so in the summary |
+| Hub is `AGENTS.md`, but `CLAUDE.md` only points at it in prose | Claude Code never loads `AGENTS.md` on its own; the phase map goes unread | Step 2: put `@AGENTS.md` in `CLAUDE.md` as an import, not a sentence |
