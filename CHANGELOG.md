@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.14.0
+
+### Minor Changes
+
+- [#78](https://github.com/quatico-solutions/agent-skills/pull/78) [`690fd57`](https://github.com/quatico-solutions/agent-skills/commit/690fd577fdb2a379e2d34b262eda1ffd736031fd) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - bye: refresh PR, CI, ticket and branch state from their live sources before listing anything as pending or done in the summary or sessionlog.
+
+  <!--
+  bumps:
+    skills:
+      bye: minor
+  -->
+
 ## 3.13.1
 
 ### Patch Changes
