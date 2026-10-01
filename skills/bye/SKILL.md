@@ -50,6 +50,16 @@ After restoring history, classify the session:
 
 1. **Determine scope** — everything between last /bye (or session start) and now. Verify each item was discussed in THIS conversation.
 2. **Assess work** — files created, files modified, decisions made, research done, tasks completed, tasks remaining.
+   **Then refresh live state before calling anything open or done.** The
+   conversation's picture of PRs, builds, tickets and branches is a snapshot
+   from when they were last looked at, and they keep moving while a session
+   sits idle — a wrap-up once listed a PR as "awaiting review and merge" hours
+   after it had been merged. For every item the summary or sessionlog will call
+   pending, done or blocked, check its source now: the PR's state
+   (`gh pr view` / `bb pr view`), the CI status of the latest commit, the
+   ticket's status in the tracker, the branch after `git fetch`. Drop what is
+   already done; mark what cannot be checked as *unverified*. Never carry a
+   status forward from memory.
 3. **Sessionlog needed?** Would anything important be lost if we clear this
    session now? Commits already capture *what* changed and *when*. A sessionlog
    is only worth creating for context not in the committed artifacts.
