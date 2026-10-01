@@ -28,7 +28,7 @@ Automates the workflow of analyzing uncommitted changes, grouping them into atom
 
 ### 2. Delegation to `/commit-notation`
 
-**Decision:** Invoke `/commit-notation` skill for each commit group to determine risk level
+**Decision:** Apply `/commit-notation`'s risk criteria to each commit group to determine risk level
 
 **Rationale:**
 - Avoids reimplementing complex risk logic (lowercase vs UPPERCASE vs !!)
@@ -41,7 +41,7 @@ Automates the workflow of analyzing uncommitted changes, grouping them into atom
 
 ### 3. Provably Safe Commits Can Span Many Files
 
-**Decision:** Lowercase commits (a, r, d, e, t, c) are NOT split by file count
+**Decision:** Lowercase commits (r, d, e, t) are NOT split by file count
 
 **Rationale:**
 - IDE renames touching 50 files are provably safe (type-checked)
@@ -107,25 +107,9 @@ Automates the workflow of analyzing uncommitted changes, grouping them into atom
 
 ## Implementation Patterns
 
-### Skill Tool Invocation
+### Applying commit-notation
 
-```typescript
-// For each commit group, invoke /commit-notation
-const context = {
-  intention: "F",
-  filesChanged: 2,
-  linesOfCode: 15,
-  testCoverage: "Unit tests added and passing",
-  changeNature: "Added email validation function",
-  toolAssisted: "Manual implementation"
-};
-
-// Use Skill tool with structured context
-// skill: "commit-notation"
-// args: "<context as formatted text>"
-
-// Parse response for annotation (e.g., "F", "a", "R!!")
-```
+Load the `commit-notation` skill once (Skill tool), then apply its risk-level tables to each group's context: intention, file count, LoC, test status, tool-assisted. The Skill tool loads instructions; it does not return an annotation.
 
 ### Interview Question Pattern
 
@@ -253,7 +237,7 @@ const context = {
 ## References
 
 **Related skills:**
-- `/commit-notation` - Risk level determination (invoked by this skill)
+- `/commit-notation` - Risk level determination (its criteria are applied by this skill)
 - `/commit` - Atomic commit principles
 - `/handling-pull-requests` - PR creation workflow
 

@@ -1,5 +1,8 @@
 import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { writeFileSync, rmSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 import prSingle from './fixtures/pr-single.json' with { type: 'json' }
@@ -45,6 +48,65 @@ describe('bb pr edit', () => {
     const body = putCalls[0].body as Record<string, unknown>
     assert.equal(body.description, 'NewDescription')
     assert.equal(result.exitCode, 0)
+  })
+
+  it('PUTs with description read from --body-file', async () => {
+    // Given the API returns the current PR and a body file exists on disk
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('PUT', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'bb-pre-'))
+    const bodyFile = path.join(tmpDir, 'body.md')
+    writeFileSync(bodyFile, '## Summary\n\nMulti-line description.\n')
+
+    try {
+      // When I run bb pr edit 42 --body-file <path>
+      const result = await bb(['pr', 'edit', '42', '--body-file', bodyFile], { port: server.port })
+
+      // Then the PUT payload contains the file's contents as description
+      const putCalls = server.getCallsTo('PUT', '/pullrequests/42')
+      assert.equal(putCalls.length, 1, 'Should send one PUT')
+      const body = putCalls[0].body as Record<string, unknown>
+      assert.equal(body.description, '## Summary\n\nMulti-line description.')
+      assert.equal(result.exitCode, 0)
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('Reads --body-file from stdin when path is "-"', async () => {
+    // Given the API returns the current PR and accepts the update
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('PUT', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr edit 42 --body-file - and pipe stdin
+    const result = await bb(['pr', 'edit', '42', '--body-file', '-'], { port: server.port, input: 'From stdin\n' })
+
+    // Then the PUT payload contains the piped content as description
+    const putCalls = server.getCallsTo('PUT', '/pullrequests/42')
+    assert.equal(putCalls.length, 1, 'Should send one PUT')
+    const body = putCalls[0].body as Record<string, unknown>
+    assert.equal(body.description, 'From stdin')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Errors when both --body and --body-file are given', async () => {
+    // When I run bb pr edit with both --body and --body-file
+    const result = await bb(['pr', 'edit', '42', '--body', 'x', '--body-file', 'y.md'], { port: server.port })
+
+    // Then it errors and does not update the PR
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /--body and --body-file are mutually exclusive/)
+    assert.equal(server.getCallsTo('PUT', '/pullrequests/42').length, 0)
+  })
+
+  it('Errors when --body-file path does not exist', async () => {
+    // When I run bb pr edit with a missing --body-file
+    const result = await bb(['pr', 'edit', '42', '--body-file', '/no/such/body.md'], { port: server.port })
+
+    // Then it errors and does not update the PR
+    assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /body file not found/)
+    assert.equal(server.getCallsTo('PUT', '/pullrequests/42').length, 0)
   })
 
   it('PUTs a new destination branch with --base', async () => {

@@ -265,7 +265,7 @@ bb_current_ref() {
 
 bb_read_body_file() {
   # Read PR/comment body text from a file path, or stdin when path is "-".
-  # Mirrors `gh pr create --body-file` / `gh pr comment --body-file`.
+  # Mirrors gh's --body-file on `pr create`, `pr edit` and `pr comment`.
   local file="$1"
   if [[ "$file" == "-" ]]; then
     cat
@@ -1083,7 +1083,7 @@ HELP
 }
 
 cmd_pr_edit() {
-  local pr_id="" title="" body="" base="" draft_flag="" add_reviewers=() remove_reviewers=()
+  local pr_id="" title="" body="" body_file="" base="" draft_flag="" add_reviewers=() remove_reviewers=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -1091,12 +1091,13 @@ cmd_pr_edit() {
 Edit a pull request. Update title, description, target branch, draft status, or reviewers.
 
 USAGE
-  bb pr edit <id> [--title "..."] [--body "..."] [--base <branch>]
+  bb pr edit <id> [--title "..."] [--body "..."|--body-file <path>] [--base <branch>]
              [--ready] [--draft] [--add-reviewer <user>] [--remove-reviewer <user>] [--json]
 
 FLAGS
   --title <text>            New PR title
   --body <text>             New PR description (CommonMark markdown — no GFM extensions)
+  --body-file <path>        Read new PR description from a file ("-" for stdin); mutually exclusive with --body
   --base <branch>           Change target/destination branch
   --ready                   Mark draft PR as ready for review
   --draft                   Convert PR back to draft
@@ -1112,6 +1113,7 @@ REVIEWER RESOLUTION
 EXAMPLES
   bb pr edit 42 --title "New title"
   bb pr edit 42 --base develop
+  bb pr edit 42 --body-file body.md
   bb pr edit 42 --ready
   bb pr edit 42 --draft
   bb pr edit 42 --add-reviewer "Alice Smith"
@@ -1121,6 +1123,7 @@ HELP
         ;;
       --title)           title="$2"; shift 2 ;;
       --body)            body="$2"; shift 2 ;;
+      --body-file)       body_file="$2"; shift 2 ;;
       --base)            base="$2"; shift 2 ;;
       --ready)           draft_flag="false"; shift ;;
       --draft)           draft_flag="true"; shift ;;
@@ -1133,9 +1136,15 @@ HELP
   done
 
   if [[ -z "$pr_id" ]]; then
-    echo >&2 "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"] [--base branch] [--ready] [--draft] [--add-reviewer user] [--remove-reviewer user]"
+    echo >&2 "usage: bb pr edit <id> [--title \"...\"] [--body \"...\"|--body-file path] [--base branch] [--ready] [--draft] [--add-reviewer user] [--remove-reviewer user]"
     exit 1
   fi
+
+  if [[ -n "$body" && -n "$body_file" ]]; then
+    echo >&2 "error: --body and --body-file are mutually exclusive"
+    exit 1
+  fi
+  [[ -n "$body_file" ]] && body="$(bb_read_body_file "$body_file")"
 
   local ws repo
   ws="$(bb_workspace)"

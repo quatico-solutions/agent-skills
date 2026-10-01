@@ -16,7 +16,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
 
-**Violating the letter of the rules is violating the spirit of the rules.**
+Follow the steps as written; the exceptions below are the only ones.
 
 ## When to Use
 
@@ -31,7 +31,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Configuration files
 - Pure refactoring (no behavior change)
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+Anything not on this list follows TDD. To skip it anyway, ask your human partner first.
 
 ## The Iron Law
 
@@ -40,8 +40,6 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
 Write code before the test? Delete it. Start over. Implement fresh from tests.
-
-Tempted to skip this? That impulse is the thing the rule is for.
 
 ## Red-Green-Refactor
 
@@ -148,7 +146,7 @@ Vague name, tests mock not code
 
 ### Verify RED - Watch It Fail
 
-**MANDATORY. Never skip.**
+Run it and confirm it fails, every time — that is the only evidence the test checks the right thing.
 
 ```bash
 npm test path/to/test.test.ts
@@ -203,7 +201,7 @@ Don't add features, refactor other code, or "improve" beyond the test.
 
 ### Verify GREEN - Watch It Pass
 
-**MANDATORY.**
+Run it and confirm it passes, every time.
 
 ```bash
 npm test path/to/test.test.ts
@@ -309,7 +307,7 @@ Before marking work complete:
 - [ ] AAA pattern in all tests
 - [ ] One behavior per test
 
-Can't check all boxes? You skipped TDD. Start over.
+A box you can't check is a gap to report or close, not a reason to restart.
 
 Checked all boxes? Stop. Do not add an eleventh check of your own.
 
@@ -345,7 +343,6 @@ When adding mocks or test utilities, read [testing-anti-patterns.md](testing-ant
 | Skill | Use For |
 |-------|---------|
 | **jest-testing-conventions** | Jest-specific patterns (jest.fn/spyOn/mock, fake timers) |
-| **systematic-debugging** | When bugs slip through |
 | **show-your-work** | Long-running or multi-cycle work — produce an artefact, not a claim |
 
 ## Final Rule

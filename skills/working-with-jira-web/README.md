@@ -49,7 +49,7 @@ Same pattern as `working-with-bitbucket-web`: requires native browser integratio
 - Links work properly
 - Single operation vs. dozens of fragile interactions
 
-**Note:** Same technique documented in `working-with-bitbucket-web` skill. Duplication intentional for discoverability.
+**Note:** This technique is no longer used here — JIRA edits go through the Atlassian MCP tools. Only `working-with-bitbucket-web` injects HTML.
 
 ### 2026-01-21 MCP Discovery (Major)
 

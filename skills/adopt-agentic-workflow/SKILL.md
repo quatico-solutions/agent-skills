@@ -92,7 +92,7 @@ in use, add the section `bye` looks for:
 
 Include the Plot context for this session in the log:
 
-    skills/plot/scripts/plot-context.sh
+    <plot-skill-dir>/scripts/plot-context.sh   # Plot's plot-context.sh, in the Plot skill's scripts/ directory
 
 It reports the governing plan, its phase, its wave, and its PRs as JSON. An
 empty `plan_slug` means the branch belongs to no plan — say that rather than
