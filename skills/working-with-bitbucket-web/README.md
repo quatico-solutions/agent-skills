@@ -95,7 +95,7 @@ JavaScript injection of complete HTML structure, bypassing WYSIWYG entirely
 - Lists render correctly without duplicates
 - Single operation vs. fragile multi-step interactions
 
-**Note:** Same technique documented in `working-with-jira-web` skill. Duplication intentional for discoverability.
+**Note:** Only Bitbucket uses this technique; `working-with-jira-web` goes through the Atlassian MCP tools and does not inject HTML.
 
 ## Version History
 

@@ -1,10 +1,6 @@
 ---
 name: bye
-description: >-
-  Use when the user says /bye, "wrap up", "end session", or similar.
-  Reconstructs full session history including compacted context,
-  creates a sessionlog (if the project has a sessionlog directory),
-  commits changes, and summarizes next steps.
+description: "Use when the user says /bye, \"wrap up\", \"end session\", or similar. Reconstructs full session history including compacted context, creates a sessionlog (if the project has a sessionlog directory), commits changes, and summarizes next steps."
 globs: []
 license: MIT
 metadata:
@@ -20,14 +16,14 @@ compatibility: Designed for Claude Code and Cursor
 
 If running in a project with a local `CLAUDE.md` or `AGENTS.md`, check for a **"Session Wrap Up"** heading. If found, follow those additional instructions alongside (and in addition to) the steps below. That section is also where the project declares its sessionlog directory — see [sessionlog-template.md](${CLAUDE_SKILL_DIR}/sessionlog-template.md).
 
-## CRITICAL: Restore Full Session History First
+## Restore Full Session History First
 
-**Nothing proceeds until full history is reconstructed.** Context compaction hides earlier work — you must recover it or the sessionlog will be incomplete.
+Reconstruct full history before anything else: context compaction hides earlier work, and without it the sessionlog will be incomplete.
 
-1. Use a subagent to analyze the session file (see [subagent-tasks.md](${CLAUDE_SKILL_DIR}/subagent-tasks.md))
+1. For long or compacted sessions, delegate session-file analysis to a subagent (see [subagent-tasks.md](${CLAUDE_SKILL_DIR}/subagent-tasks.md))
 2. Follow the tool-specific restoration guide:
    - **Claude Code:** [claude-code-session-restoration.md](${CLAUDE_SKILL_DIR}/claude-code-session-restoration.md)
-   - **Cursor:** [cursor-session-restoration.md](${CLAUDE_SKILL_DIR}/cursor-session-restoration.md)
+   - **Cursor:** no restoration procedure yet. Use the current conversation and `git log`, and note "restoration limited (Cursor)" in the summary.
 3. Combine restored history with current context before continuing
 
 If restoration finds **no prior work beyond current context**, proceed — but log that restoration was attempted.
@@ -92,7 +88,7 @@ After restoring history, classify the session:
 | Modified files I didn't touch | **ASK** — likely parallel session |
 | .env, credentials, secrets | **NEVER**, warn user |
 
-Commit message: `[Brief description]\n\nSession wrap-up: YYYY-MM-DD`
+Commit message: follow the project's commit convention (CLAUDE.md / AGENTS.md, or the `commit-notation` skill) when one is declared, and add `Session wrap-up: YYYY-MM-DD` as the last body line. Otherwise use `[Brief description]\n\nSession wrap-up: YYYY-MM-DD`.
 
 Push if remote tracking exists.
 

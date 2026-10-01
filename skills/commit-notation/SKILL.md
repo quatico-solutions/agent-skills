@@ -66,7 +66,7 @@ TICKET-123
 
 ## Writing Commit Messages
 
-1. **Determine intention**: F, B, R, D, T, E, or *
+1. **Determine intention**: F, B, R, D, T, E, or WIP
 2. **Assess risk level**: How verified is this change?
 3. **Find ticket number**: See below
 4. **Format**: `[prefix] Summary` with ticket on last line
@@ -98,7 +98,7 @@ subject line. Name what fails, where, and how widely.
 
 Copy and track progress:
 
-- [ ] Intention identified (F/B/R/D/T/E/*)
+- [ ] Intention identified (F/B/R/D/T/E/WIP)
 - [ ] Single intention per commit
 - [ ] Risk level assessed (lowercase/UPPER/!!/\*\*)
 - [ ] Active voice summary
