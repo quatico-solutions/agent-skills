@@ -41,6 +41,8 @@ versions" JSON), unpacks it with `ditto`, clears the quarantine flag and starts 
 [Playwright MCP](https://github.com/microsoft/playwright-mcp) with `--cdp-endpoint`, registered
 under the server name `dedicated-browser`.
 
+**The download is trusted through HTTPS only.** Google publishes no checksums for CfT: the version JSON lists only a URL per platform. The storage server's `x-goog-hash` comes from the same origin, so it detects corruption, not tampering. CfT 154 is ad-hoc signed (`codesign -dv` shows `TeamIdentifier=not set`), so no publisher check is possible either; Puppeteer's and Playwright's browser downloads have the same limit. The ad-hoc signature is also why the keychain trusts each build by code hash and asks again after every update.
+
 Why CDP and not letting Playwright MCP launch the browser (`--executable-path` +
 `--user-data-dir`), or its `--extension` mode:
 
