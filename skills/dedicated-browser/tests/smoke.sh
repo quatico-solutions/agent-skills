@@ -87,8 +87,11 @@ expect_output() { # <fixed string> <description> <command...>
   if printf '%s' "${out}" | grep -q -F -- "${needle}"; then ok "${desc}"; else bad "${desc} (no '${needle}' in: ${out})"; fi
 }
 
-# A hung cookie call means a keychain prompt is waiting for a human.
-cookie() { perl -e 'alarm 25; exec @ARGV' node "${HERE}/cookie.mjs" "${PORT}" "$1" 2>&1 || echo "hung-or-failed"; }
+# A hung cookie call means a keychain prompt is waiting for a human. With the real keychain, a human
+# is expected to answer it, which can take a typed password: 120 seconds instead of 25.
+COOKIE_TIMEOUT=25
+[[ "${REAL_KEYCHAIN}" == true ]] && COOKIE_TIMEOUT=120
+cookie() { perl -e "alarm ${COOKIE_TIMEOUT}; exec @ARGV" node "${HERE}/cookie.mjs" "${PORT}" "$1" 2>&1 || echo "hung-or-failed"; }
 
 port_9222_owner() { lsof -nP -iTCP:9222 -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 OWNER_9222_BEFORE="$(port_9222_owner)"
