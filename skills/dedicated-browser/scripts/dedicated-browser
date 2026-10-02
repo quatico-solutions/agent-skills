@@ -194,18 +194,38 @@ cmd_start() {
   return 1
 }
 
+# True when the process listening on the debugging port is this profile's browser. A quit sent
+# through the port is safe only then: another browser answering there must never be told to quit.
+port_is_ours() {
+  local listener pid
+  listener="$(lsof -nP -iTCP:"${DB_PORT}" -sTCP:LISTEN -t 2>/dev/null | head -1 || true)"
+  [[ -n "${listener}" ]] || return 1
+  for pid in $(backend_main_pids); do
+    [[ "${pid}" == "${listener}" ]] && return 0
+  done
+  return 1
+}
+
 cmd_stop() {
-  local pids pid
+  local pids pid _
   pids="$(backend_main_pids)"
   if [[ -z "${pids}" ]]; then
     echo "not running"
     return 0
   fi
-  # SIGTERM lets the browser quit normally, which is what writes the logins to disk.
-  for pid in ${pids}; do
+  # Quitting through the port writes the logins to disk; SIGTERM does not (see backend_quit).
+  if port_is_ours; then
+    backend_quit
+    for _ in {1..20}; do
+      [[ -z "$(backend_main_pids)" ]] && break
+      sleep 0.5
+    done
+  fi
+  # Fallback for a browser that does not answer on the port, or did not quit within 10 seconds.
+  # It may lose cookies set in its last 30 seconds.
+  for pid in $(backend_main_pids); do
     kill -TERM "${pid}" 2>/dev/null || true
   done
-  local _
   for _ in {1..30}; do
     if [[ -z "$(backend_main_pids)" ]] && ! cdp_get version >/dev/null; then
       echo "stopped"

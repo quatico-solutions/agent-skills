@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chrome for Testing backend for dedicated-browser. Sourced by ./dedicated-browser, never run directly.
 #
-# A backend answers six questions about "the agent's browser". The CLI holds no browser-specific
+# A backend answers seven questions about "the agent's browser". The CLI holds no browser-specific
 # knowledge of its own, so a second backend (Safari Technology Preview, say) is a sibling file
 # named backend-<name>.sh that defines the same functions. See README.md, "Adding a backend".
 #
@@ -10,6 +10,7 @@
 #   backend_latest_version       version the vendor currently ships as stable, non-zero if unknown
 #   backend_install [VERSION]    install VERSION (default: latest) into $DB_HOME, replacing any older copy
 #   backend_launch               start the browser detached, with the profile and debugging port
+#   backend_quit                 ask the browser on the debugging port to quit the way its Quit menu does
 #   backend_main_pids            pid of the running browser process for THIS profile, empty if none
 #
 # The caller sets DB_HOME (install dir), DB_PROFILE and DB_PORT before sourcing.
@@ -111,6 +112,14 @@ backend_launch() {
     --disable-features=Translate \
     &>/dev/null &
   disown
+}
+
+# Opening chrome://quit runs the same shutdown as the Quit menu item, and that writes cookies to
+# disk. SIGTERM does not: Chrome writes new cookies on a 30-second timer, and on SIGTERM it lost a
+# cookie set just before the stop in 15 of 17 runs. The debugging port's plain HTTP endpoint opens
+# the page, so no websocket client is needed. The caller checks first that the port is ours.
+backend_quit() {
+  curl -fsS --max-time 3 -X PUT "http://127.0.0.1:${DB_PORT}/json/new?chrome://quit" >/dev/null 2>&1 || true
 }
 
 # Chrome's helper processes (renderer, GPU, ...) repeat --user-data-dir in their argv but carry

@@ -123,8 +123,17 @@ ln -s "${HOME_A}/Google Chrome for Testing.app" "${HOME_B}/Google Chrome for Tes
 expect_status 0 "decoy browser starts" db_b start
 expect_status 2 "status refuses the decoy" db_a_on_decoy_port status
 expect_status 1 "start refuses the decoy port" db_a_on_decoy_port start
+# stop quits through the port only when the port is ours. Here it is not: home-a's own browser gets
+# SIGTERM instead, and the decoy must keep running. stop waits 15 seconds for the port to close.
+db_a_on_decoy_port stop >/dev/null 2>&1 || true
+if curl -fsS --max-time 3 "http://127.0.0.1:${DECOY_PORT}/json/version" | grep -q '"Browser"'; then
+  ok "stop leaves a different browser on the port running"
+else
+  bad "stop leaves a different browser on the port running"
+fi
 expect_status 0 "decoy stops" db_b stop
-expect_status 0 "real browser still reports running" db status
+expect_status 0 "real browser starts again" db start
+expect_status 0 "real browser reports running" db status
 
 echo "4. behind-stable note"
 printf '%s 999.0.0.1\n' "$(date +%s)" > "${HOME_A}/.latest-stable"
