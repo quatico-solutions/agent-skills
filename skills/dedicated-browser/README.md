@@ -1,5 +1,7 @@
 # dedicated-browser
 
+**Beta (0.1.0).** Feedback welcome: open an issue at https://github.com/quatico-solutions/agent-skills/issues.
+
 Development notes. What the skill does and how to use it is in [SKILL.md](SKILL.md).
 
 ## What it is for
