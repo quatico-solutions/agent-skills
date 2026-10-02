@@ -179,13 +179,14 @@ Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152,
 | a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | not unattended: the new build prompts, see below |
 | port 9222 has the same owner before and after | pass | pass |
 
+Run on 2026-10-02 on a Mac (macOS 26.5, Apple silicon) with `smoke.sh --real-keychain` and a human clicking Always Allow, while another Chrome for Testing held port 9222. Full run: 33 of 34; every keychain and update check passed, including the cookie surviving the update. The one failure was `npm install`, because the npm registry was unreachable. Run again with `--quick`: 33 of 33, including step 3. The keychain prompted twice, once for 154 at the first cookie write and once for 152 at step 6.
+
 Checked by hand: shellcheck clean and a `/bin/bash` 3.2 syntax check (2026-10-02). On 2026-09-26, on macOS 15: `claude -p --strict-mcp-config` with only the `dedicated-browser` server drove the browser to a page, and Playwright MCP attached without starting a second browser; Vercel's `agent-browser --cdp` attached too.
 
-**Keychain, measured in the VM.** Chrome for Testing keeps its key in the login keychain as "Chromium Safe Storage". The item's access list names the build that created it by code hash. On a fresh keychain the first start shows no prompt, and later starts of the same build show none either. A different build, including the one `update` installs, makes macOS ask again: `SecurityAgent` runs and cookie access blocks until someone answers. The prompt on the author's Mac at the first start fits an item that another Chromium build had created; that cause is not verified.
+**Keychain, measured in the VM and on the Mac.** Chrome for Testing keeps its key in the login keychain as "Chromium Safe Storage". The item's access list names each trusted build by code hash. On a fresh keychain the first start shows no prompt, and later starts of the same build show none either. A different build, including the one `update` installs, makes macOS ask again: `SecurityAgent` runs and cookie access blocks until someone answers. Always Allow adds that build to the list for good: on the Mac, 154 did not ask again after its one prompt. Every Chromium build that uses this item name shares the key. On the Mac the item already existed, created on 2026-03-30 by another Chromium build, so the first start prompted too.
 
 **Not covered, and needs a human at the machine:**
 
-- The cookie surviving an update with the real keychain. The VM shows the prompt, but nobody answered it.
 - The window on the screen. Playwright's screenshots show the page drawn, but `screencapture` in the VM fails without the Screen Recording permission.
 - The agent itself: Claude Code or Cursor calling the Playwright MCP tools in a clean VM.
 - Intel Macs: the `mac-x64` download URL is built the same way but was not run.
