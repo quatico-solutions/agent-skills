@@ -88,6 +88,8 @@ try {
     await page.screenshot({ path: screenshot });
     await page.goto('https://example.com/');
     check((await page.title()) === 'Example Domain', 'a real website loads (example.com)');
+    // FedCM's page API exists on https pages unless the launch flags turn the feature off.
+    check((await page.evaluate(() => typeof window.IdentityCredential)) === 'undefined', 'FedCM is off (no IdentityCredential on an https page)');
   } else {
     await page.goto(app);
     check((await who()) === `Signed in as ${USER}`, 'after the restart the server still sees the cookie');

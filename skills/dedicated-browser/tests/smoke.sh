@@ -93,6 +93,19 @@ COOKIE_TIMEOUT=25
 [[ "${REAL_KEYCHAIN}" == true ]] && COOKIE_TIMEOUT=120
 cookie() { perl -e "alarm ${COOKIE_TIMEOUT}; exec @ARGV" node "${HERE}/cookie.mjs" "${PORT}" "$1" 2>&1 || echo "hung-or-failed"; }
 
+# Read one setting from home-a's profile, e.g. `pref signin.allowed`. Prints the value as JSON
+# ("false", "true", "undefined" when absent). Chrome writes the file on quit.
+pref() {
+  osascript -l JavaScript - "${HOME_A}/profile/Default/Preferences" "$1" 2>/dev/null <<'JXA' || echo "unreadable"
+function run(argv) {
+  ObjC.import('Foundation');
+  let value = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null).js);
+  for (const key of argv[1].split('.')) value = value == null ? undefined : value[key];
+  return String(JSON.stringify(value));
+}
+JXA
+}
+
 port_9222_owner() { lsof -nP -iTCP:9222 -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 OWNER_9222_BEFORE="$(port_9222_owner)"
 
@@ -124,6 +137,10 @@ if [[ "$(cookie set)" == "set" ]]; then ok "cookie planted"; else bad "cookie pl
 expect_status 0 "stop" db stop
 expect_status 1 "status after stop: not running" db status
 if curl -fsS --max-time 1 "http://127.0.0.1:${PORT}/json/version" >/dev/null 2>&1; then bad "port closed after stop"; else ok "port closed after stop"; fi
+v="$(pref signin.allowed)"
+if [[ "${v}" == false ]]; then ok "profile: Chrome's own sign-in is off"; else bad "profile: Chrome's own sign-in is off (signin.allowed = ${v})"; fi
+v="$(pref profile.password_manager_leak_detection)"
+if [[ "${v}" == false ]]; then ok "profile: password breach check is off"; else bad "profile: password breach check is off (= ${v})"; fi
 expect_status 0 "start again" db start
 if [[ "$(cookie get)" == "survived" ]]; then ok "cookie survived stop/start"; else bad "cookie survived stop/start"; fi
 
