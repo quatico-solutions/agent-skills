@@ -48,15 +48,18 @@ directory. The table must stay in sync with the `skills/` directory.
 
 | Skill | Description |
 |-------|-------------|
-| [`bye`](skills/bye) | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
 | [`adopt-agentic-workflow`](skills/adopt-agentic-workflow) | Adopt the four-phase workflow (Discovery → Design → Development → Endgame): runs Plot's `/plot-init`, then maps our skills to the phases they serve |
 | [`branch-and-commit`](skills/branch-and-commit) | Intelligently groups uncommitted changes into atomic commits with proper notation, creates feature branches, and prepares for PR |
+| [`bye`](skills/bye) | Session wrap-up: document accomplishments, handle git commits, summarize next steps. Vendored from [eins78/skills](https://github.com/eins78/skills/tree/main/skills/bye) |
 | [`commit`](skills/commit) | When and what to commit: timing, atomic commits, git hooks, skip policies |
 | [`commit-notation`](skills/commit-notation) | Quatico's commit notation (Arlo's v1 + extensions) for structured commit messages. [Source](https://github.com/quatico-solutions/QuaticoCommitNotation) |
+| [`dedicated-browser`](skills/dedicated-browser) | A separate browser for your agent, with its own saved logins: Chrome for Testing on a local port, connected through Playwright MCP. You sign in only to what the agent should reach; it never gets your everyday browser. macOS, interactive use. **Beta**, feedback welcome |
 | [`handling-pull-requests`](skills/handling-pull-requests) | PR workflow guidance: creating PRs, addressing review feedback, reply conventions |
 | [`jest-testing-conventions`](skills/jest-testing-conventions) | Jest unit testing: jest.fn/spyOn/mock, clear/reset/restore, AAA pattern, fake timers |
 | [`markdown`](skills/markdown) | CommonMark + Bitbucket syntax reference — no GFM task lists or strikethrough |
 | [`pnpm`](skills/pnpm) | pnpm package workflows: lockfile conflicts and hygiene, verify unreleased changes via pack + overrides, patch, workspaces, toolchain |
+| [`reality-check`](skills/reality-check) | Adversarial verification: dispatch separate subagents to refute each claim, separating what was executed from what was only read |
+| [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 | [`show-your-work`](skills/show-your-work) | Executable demo documents proving completed work (showboat + rodney) |
 | [`test-driven-development`](skills/test-driven-development) | TDD workflow: Red-Green-Refactor, Iron Laws, rationalizations, anti-patterns |
 | [`triage-ticket`](skills/triage-ticket) | Triage JIRA tickets (bugs or feature requests): assess readiness, scope, risks, propose solutions |
@@ -64,9 +67,6 @@ directory. The table must stay in sync with the `skills/` directory.
 | [`working-with-bitbucket-api`](skills/working-with-bitbucket-api) | Bitbucket Cloud API via `bb` CLI — PR operations, image uploads, source browsing. Requires `install-dependencies.sh` |
 | [`working-with-bitbucket-web`](skills/working-with-bitbucket-web) | Bitbucket web UI navigation (elements, rich text editor, comment threads) |
 | [`working-with-jira-web`](skills/working-with-jira-web) | JIRA web UI navigation (create issues, fill forms, link tickets, wiki markup) |
-| [`reality-check`](skills/reality-check) | Adversarial verification: dispatch separate subagents to refute each claim, separating what was executed from what was only read |
-| [`dedicated-browser`](skills/dedicated-browser) | A separate browser for your agent, with its own saved logins: Chrome for Testing on a local port, connected through Playwright MCP. You sign in only to what the agent should reach; it never gets your everyday browser. macOS, interactive use. **Beta**, feedback welcome |
-| [`schweizer-schreibweise`](skills/schweizer-schreibweise) | Swiss Standard German (DE-CH) writing conventions: orthography (ss not ß), typography (guillemets, apostrophe thousands, CHF prefix), grammar, and Helvetismen vocabulary |
 
 **Usage tips:**
 
