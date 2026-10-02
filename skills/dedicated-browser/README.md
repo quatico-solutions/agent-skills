@@ -21,6 +21,7 @@ README.md                   this file
 scripts/dedicated-browser   the CLI: setup | start | stop | status | update   (bash 3.2)
 scripts/backend-chrome.sh   everything Chrome-specific, sourced by the CLI
 tests/smoke.sh              end-to-end test on a real Mac (manual)
+tests/vm-smoke.sh           runs smoke.sh in a throwaway macOS VM (tart, Apple silicon)
 tests/cookie.mjs            helper for smoke.sh: plant / read a cookie over the debugging port
 ```
 
@@ -82,9 +83,9 @@ the port is the one started for this profile (its argv holds both the profile pa
 Otherwise a Chrome the human started with debugging on could answer, and the agent would drive
 their everyday logins. `status` exits 2 in that case. The smoke test covers it.
 
-**No stop by app name.** `stop` finds the main process by profile path (helper processes carry
-`--type=` and are skipped) and sends SIGTERM, so another Chrome for Testing on the machine is
-never touched and the browser quits normally, which is what writes the logins to disk.
+**No stop by app name.** `stop` finds the main process by profile path (helper processes carry `--type=` and are skipped), so another Chrome for Testing on the machine is never touched.
+
+**`stop` quits through the port, not by signal.** When the process listening on the port is this profile's browser (checked with `lsof`), `stop` opens `chrome://quit` through the port's HTTP endpoint. That runs the Quit menu's shutdown, which writes cookies to disk. SIGTERM is only the fallback: Chrome writes new cookies on a 30-second timer, and on SIGTERM it lost a cookie set just before the stop in 15 of 17 runs on a clean VM. `chrome://quit` kept it in 6 of 6.
 
 ## Kept from chrome-browser, and cut
 
@@ -122,6 +123,7 @@ Not implemented. The seam is `backend-<name>.sh`, selected with `DEDICATED_BROWS
 | `backend_latest_version` | what the vendor ships as stable; non-zero if unknown |
 | `backend_install [VERSION]` | install into `$DB_HOME`, replacing an older copy |
 | `backend_launch` | start it detached, with `$DB_PROFILE` and `$DB_PORT` |
+| `backend_quit` | quit it through `$DB_PORT` the way its Quit menu does, so logins reach disk |
 | `backend_main_pids [PORT]` | the main process of *this profile*, optionally only if it owns PORT |
 
 The CLI's own `status` also reads `/json/version` from the debugging port. **A Safari backend
@@ -158,32 +160,28 @@ No user-facing recommendation is made either way yet.
 
 ## Testing
 
-`tests/smoke.sh` runs the real scripts against a fresh temp directory on port 9444. It refuses
-port 9222 and checks that whoever holds 9222 is unchanged at the end. Unattended it runs a *copy*
-of the scripts with two extra flags, `--use-mock-keychain --password-store=basic`, so a keychain
-prompt cannot block it. `--real-keychain` runs the scripts as shipped and needs a human to click
-Always Allow.
+`tests/smoke.sh` runs the real scripts against a fresh temp directory on port 9444. It refuses port 9222 and checks that whoever holds 9222 is unchanged at the end. Unattended it runs a *copy* of the scripts with two extra flags, `--use-mock-keychain --password-store=basic`, so a keychain prompt cannot block it. `--real-keychain` runs the scripts as shipped; a human must click Always Allow whenever macOS asks.
 
-Run on 2026-09-26, macOS 15 on Apple silicon, CfT 154 and 152 (unattended mode):
+`tests/vm-smoke.sh` runs `smoke.sh` in a throwaway macOS VM with [tart](https://tart.run) on an Apple silicon Mac, so the host's browsers and keychain cannot change the result. It passes its options on to `smoke.sh`. `--real-keychain --quick` runs unattended there, because a fresh keychain shows no prompt on the first start. Without `--quick`, step 5 waits for the prompt that every update brings, and nobody is there to click it.
 
-| Covered | Result |
-|---|---|
-| `setup`: real download, install, start | pass |
-| `status`, second `start` is a no-op, the port answers | pass |
-| a cookie survives `stop` and `start` | pass |
-| a browser with another profile on the port is refused by `status` (exit 2) and `start` | pass |
-| the behind-stable note, and `update` refusing while the browser runs | pass |
-| a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass |
-| port 9222 has the same owner before and after | pass |
-| shellcheck clean; `/bin/bash` 3.2 syntax check | pass |
-| MCP wiring: `claude -p --strict-mcp-config` with only the `dedicated-browser` server drove the browser to a page; Playwright MCP attached and did not start a second browser | pass, by hand |
-| Vercel `agent-browser --cdp` attaches | pass, by hand |
+Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152:
+
+| Covered | Mock keychain | Real keychain |
+|---|---|---|
+| `setup`: real download, install, start; `status`; a second `start` is a no-op | pass | pass |
+| a cookie set just before `stop` survives `stop` and `start` | pass | pass |
+| a browser with another profile on the port: `status` exits 2, `start` refuses, `stop` leaves it running | pass | pass |
+| the behind-stable note, and `update` refusing while the browser runs | pass | pass |
+| a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | prompt, see below |
+| port 9222 has the same owner before and after | pass | pass |
+
+Checked by hand: shellcheck clean and a `/bin/bash` 3.2 syntax check (2026-10-02). On 2026-09-26, on macOS 15: `claude -p --strict-mcp-config` with only the `dedicated-browser` server drove the browser to a page, and Playwright MCP attached without starting a second browser; Vercel's `agent-browser --cdp` attached too.
+
+**Keychain, measured in the VM.** Chrome for Testing keeps its key in the login keychain as "Chromium Safe Storage". The item's access list names the build that created it by code hash. On a fresh keychain the first start shows no prompt, and later starts of the same build show none either. A different build, including the one `update` installs, makes macOS ask again: `SecurityAgent` runs and cookie access blocks until someone answers. The prompt on the author's Mac at the first start fits an item that another Chromium build had created; that cause is not verified.
 
 **Not covered, and needs a human at the machine:**
 
-- The real keychain path. A first run without mock flags raised the macOS prompt and blocked all
-  cookie access until answered. Whether the prompt comes back after a browser update is unknown:
-  the update step above ran with mock flags.
+- The cookie surviving an update with the real keychain. The VM shows the prompt, but nobody answered it.
 - Intel Macs: the `mac-x64` download URL is built the same way but was not run.
 - Cursor: which skill-directory variable it substitutes, and the `mcp.json` snippet.
 - `setup` on a machine without Node.

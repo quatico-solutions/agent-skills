@@ -60,12 +60,10 @@ step 2 with the human.
    official `playwright` plugin, gives tools named differently, and that plugin's server starts its
    own separate Chromium instead of attaching to this one.
 3. Ask the human to do two things in the browser window that opened:
-   - click **Always Allow** if macOS asks about "Chrome for Testing Safe Storage". It protects the
-     saved logins on disk;
+   - click **Always Allow** if macOS asks about "Chromium Safe Storage". It protects the saved logins on disk;
    - sign in to the systems the agent should reach. Nothing else needs a login here.
 
-**If browser calls hang after the first start**, that keychain prompt is waiting on the human's
-screen. Cookie access blocks until it is answered. Ask them to look for it.
+**If browser calls hang after the first start or after an update**, that keychain prompt is waiting on the human's screen. Cookie access blocks until it is answered. Ask them to look for it.
 
 ## Using the browser
 
@@ -95,7 +93,7 @@ closes a browser they may be using. With their agreement:
 dedicated-browser stop && dedicated-browser update && dedicated-browser start
 ```
 
-Logins stay in the profile across the update.
+Logins stay in the profile across the update. The keychain sees the new build as a different program, so on the first page that needs the logins macOS asks about "Chromium Safe Storage" again. Tell the human before you start, and ask them to click **Always Allow**.
 
 ## Troubleshooting
 
