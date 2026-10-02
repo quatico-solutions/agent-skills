@@ -98,15 +98,28 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | Chrome for Testing, a separate profile, headed | the point of the skill |
 | `--disable-backgrounding-occluded-windows`, `--disable-renderer-backgrounding`, `--disable-background-timer-throttling` | A window covered by the editor is macOS's "occluded". Chrome then stops drawing frames and every Playwright click times out on "visible, enabled and stable". |
 | `--no-first-run`, `--no-default-browser-check`, `--disable-search-engine-choice-screen`, `--disable-infobars` | no dialogs in the agent's way |
+| `--disable-popup-blocking`, `--disable-hang-monitor` | sign-in pop-ups that a page opens from script still work; no "Page unresponsive" dialog in the agent's way |
+| `--disable-breakpad`, `--disable-component-update`, `--disable-sync`, `--metrics-recording-only` | background work a person never sees; component updates are already off in Chrome for Testing |
+| `--disable-features=` `Translate`, `MediaRouter`, `DialMediaRouteProvider`, `OptimizationHints`, `AutofillServerCommunication` | no translate bubble, no Cast discovery on the local network, fewer requests to Google |
 | exit codes 0/1/2 for health; no python anywhere in the scripts | a version-manager `python3` shim exists on `PATH` yet fails; `sed` and `defaults` cannot |
 | page gotchas, "never drive the debugging port by hand", "do not switch to a lookalike MCP" | mistakes agents kept making |
+
+| Added | Why |
+|---|---|
+| `--disable-features=AimEnabled` | no AI Mode button in the address bar; replaces `AiModeOmniboxEntryPoint` and `OmniboxAiModeEntryPointVariations`, which Chrome 154 no longer has |
+| `--disable-features=LensOverlay` | no Google Lens overlay or "Search with Lens" entry points |
+| `--disable-features=FedCm` | no browser "Sign in to <site> with <provider>" dialog; a "Sign in with Google" button may then do nothing. A control run on CfT 154 showed `IdentityCredential` present by default and gone with this flag. |
+| `--allow-browser-signin=false` | no "Sign in to Chrome as …" bubble after a Google login and no sync promos; signing in to Google websites still works. Chrome for Testing ships Google's sign-in credentials, so this sign-in is on by default. |
+| profile setting `profile.password_manager_leak_detection = false`, written before each start | no "password found in a data breach" warnings; replaces `PasswordCheck`. Saving passwords still works. No flag controls this in Chrome 154. |
 
 | Cut | Why |
 |---|---|
 | LaunchAgent, `restart` through launchctl, log files in `/tmp` | start at login and remote use are out of scope. `stop` + `start` restarts it. |
 | Fallback to Chrome stable, `CHROME_CDP_PREFER` | replaced by the warning above |
-| `--password-store=basic --use-mock-keychain` | a server convenience: it avoids the prompt by giving up protection at rest |
-| server-quieting flags (background networking, component update, sync, metrics, phishing detection, crash reporter, popup blocking, hang monitor, most `--disable-features`) | they suit unattended machines. On a person's Mac they only make the browser less like a normal one. `--disable-features=Translate` stays. |
+| `--password-store=basic --use-mock-keychain` | the mock keychain encrypts the profile's cookies (the logins) with a fixed key that Chromium publishes. `--password-store` only matters on Linux. |
+| `--disable-prompt-on-repost` | a reload of a page that came from a form would re-send the form without asking (Chromium's `NavigationControllerImpl::Reload`) |
+| `--disable-background-networking`, `--disable-client-side-phishing-detection` | Safe Browsing stays current while the profile holds live logins and the agent visits any site |
+| `--disable-features=` `TranslateUI`, `PasswordCheck`, `PasswordManagerOnboarding`, `TabOrganization`, `AiModeOmniboxEntryPoint`, `OmniboxAiModeEntryPointVariations`, `GlobalMediaControls` | none of these names exists in Chrome for Testing 154 (checked in the source at the 154 tag and in the binary), so Chrome ignores them. Replacements are in "Added"; tab organization is gone from Chrome. |
 | symlinks into `~/.local/bin` | plugin cache paths are versioned and change on update, so the links go stale. SKILL.md calls the script by `${CLAUDE_SKILL_DIR}`. |
 | `@puppeteer/browsers` through `npx` | a plain download from the public CfT storage needs no Node for the browser itself |
 | separate health, tabs and restart scripts | folded into `status`, `stop` and `start` |
@@ -167,13 +180,14 @@ Step 3 drives the browser the way the agent's MCP server does: `tests/interact.m
 
 `tests/vm-smoke.sh` runs `smoke.sh` in a throwaway macOS VM with [tart](https://tart.run) on an Apple silicon Mac, so the host's browsers and keychain cannot change the result. It passes its options on to `smoke.sh` and copies the screenshots out of the VM. `--real-keychain --quick` runs unattended there, because a fresh keychain shows no prompt on the first start. Without `--quick`, step 6 waits for the prompt that every update brings, and nobody is there to click it.
 
-Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152, playwright-core 1.63.0: 43 of 43 checks pass with the mock keychain, 33 of 33 with `--real-keychain --quick`.
+Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152, playwright-core 1.63.0, with the flag set above: 46 of 46 checks pass with the mock keychain. `--real-keychain --quick` passed 33 of 33 in the VM before the flag changes, and 36 of 36 on a Mac after them.
 
 | Covered | Mock keychain | Real keychain |
 |---|---|---|
 | `setup`: real download, install, start; `status`; a second `start` is a no-op | pass | pass |
 | a cookie set just before `stop` survives `stop` and `start` | pass | pass |
-| Playwright over the debugging port: typing, clicks and a page script work; a server-set cookie and localStorage survive `stop` and `start`; example.com loads; the browser keeps running after Playwright disconnects | pass | pass |
+| the profile records Chrome's own sign-in as off (`signin.allowed`) and the breach check as off | pass | pass |
+| Playwright over the debugging port: typing, clicks and a page script work; a server-set cookie and localStorage survive `stop` and `start`; example.com loads with FedCM's `IdentityCredential` absent; the browser keeps running after Playwright disconnects | pass | pass |
 | a browser with another profile on the port: `status` exits 2, `start` refuses, `stop` leaves it running | pass | pass |
 | the behind-stable note, and `update` refusing while the browser runs | pass | pass |
 | a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | not unattended: the new build prompts, see below |
