@@ -39,9 +39,7 @@ which pins `/bin/bash`; every other script relies on this rule alone.
 `|` — Cursor does not parse them. `description` is a single-line quoted string;
 `metadata.version` is 3-part semver.
 
-**5. Update README.md whenever skill membership changes.** The skills table must
-match the contents of `skills/`. Adding or removing a skill without touching the
-table leaves the two out of sync, and nothing checks it.
+**5. Update README.md whenever skill membership changes.** The skills table must match the contents of `skills/`, one row per skill, in alphabetical order by skill name. Add a new skill's row at its place in that order, not at the end. Adding or removing a skill without touching the table leaves the two out of sync, and nothing checks it.
 
 **6. Prefer gates over rules.** A rule is prose an agent can rationalise around;
 a gate is a hard stop with objective verification (a hook, a CI check). The
