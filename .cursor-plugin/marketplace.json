@@ -7,7 +7,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.14.0",
+      "version": "3.15.0",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -59,6 +59,16 @@
       "description": "Format git commit messages using Quaticos notation (Arlos v1 with extensions). Use when: committing changes, making commits, creating commits, writing commit messages, reviewing commits, or analyzi...",
       "version": "1.0.1",
       "source": "./skills/commit-notation",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
+      "name": "dedicated-browser",
+      "description": "Use when the agent needs a web browser that is signed in to systems the human chose: a separate Chrome for Testing with its own saved logins, so the agent never touches the humans everyday browser....",
+      "version": "0.1.0",
+      "source": "./skills/dedicated-browser",
       "author": {
         "name": "Quatico Solutions AG",
         "email": ""
