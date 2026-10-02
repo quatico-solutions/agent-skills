@@ -111,5 +111,6 @@ Logins stay in the profile across the update. The keychain sees the new build as
 - **Two Chrome windows open when the agent works:** the tools in use are not
   `mcp__dedicated-browser__*`, and some other Playwright server started its own browser. Stop
   and tell the human.
+- **A "Sign in with Google" (or other provider) button does nothing:** this browser turns off FedCM, the browser's own sign-in dialog, on purpose. Look for the site's other sign-in path (a link to the provider's login page, or email and password), or ask the human to sign in.
 - **Anything else the skill does not cover:** report it at
   https://github.com/quatico-solutions/agent-skills instead of working around it silently.

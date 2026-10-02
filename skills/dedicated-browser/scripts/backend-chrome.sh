@@ -89,16 +89,66 @@ backend_install() {
   echo "Installed Chrome for Testing $(backend_installed_version) in ${DB_HOME}" >&2
 }
 
+# Each name was checked against the Chrome for Testing 154 source and binary: Chrome ignores a name
+# it does not know, so a stale one would only look like it works. Re-check after a major update.
+#   Translate                     no "Translate this page?" bubble over the page
+#   MediaRouter,                  no Cast device discovery on the local network, which can raise
+#   DialMediaRouteProvider        macOS network prompts
+#   OptimizationHints             no Optimization Guide downloads from Google
+#   AutofillServerCommunication   no form-field lookups sent to Google's autofill server
+#   AimEnabled                    no AI Mode button in the address bar
+#   LensOverlay                   no Google Lens overlay or "Search with Lens" entry points
+#   FedCm                         no browser "Sign in to <site> with <provider>" dialog; sites fall
+#                                 back to their own sign-in pop-up or redirect, or offer none
+CFT_DISABLED_FEATURES="Translate,MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
+
+# Settings written into the profile before each start, because no flag sets them. Chrome reads them
+# at startup; a change the human makes in Settings is undone at the next start.
+#   profile.password_manager_leak_detection = false   no "password found in a data breach" warnings;
+#                                                      saving passwords still works
+backend_prepare_profile() {
+  local prefs="${DB_PROFILE}/Default/Preferences"
+  mkdir -p "${DB_PROFILE}/Default"
+  [[ -f "${prefs}" ]] || printf '{}\n' > "${prefs}"
+  # JavaScript for Automation ships with macOS and parses Chrome's JSON exactly, nulls included.
+  osascript -l JavaScript - "${prefs}" >/dev/null <<'JXA'
+function run(argv) {
+  ObjC.import('Foundation');
+  const path = argv[0];
+  const prefs = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null).js);
+  prefs.profile = prefs.profile || {};
+  if (prefs.profile.password_manager_leak_detection === false) return;
+  prefs.profile.password_manager_leak_detection = false;
+  $(JSON.stringify(prefs)).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null);
+}
+JXA
+}
+
 # The flag set never changes between launches. That matters for one flag in particular: a profile's
 # saved logins are sealed with whichever password store was in effect, so switching later would
-# make them look lost. There is deliberately no --password-store=basic / --use-mock-keychain here:
-# the real macOS keychain protects the cookies at rest.
+# make them look lost.
 #
-# Kept on purpose: the three frame-throttling flags. A window covered by another window makes
-# macOS report it hidden; Chrome then stops firing animation frames and every Playwright click
-# times out on "visible, enabled and stable" although the page is fine.
+# The three frame-throttling flags: a window covered by another window makes macOS report it
+# hidden; Chrome then stops firing animation frames and every Playwright click times out on
+# "visible, enabled and stable" although the page is fine.
+#
+# --disable-popup-blocking lets sign-in pop-ups that a page opens from script, after a delay, work;
+# a pop-up opened by a click works anyway, because Playwright's clicks count as user clicks.
+# --disable-hang-monitor keeps the "Page unresponsive" dialog out of the agent's way; a page with a
+# slow unload handler can then hold its tab open. --disable-breakpad, --disable-component-update
+# (already Chrome for Testing's default), --disable-sync and --metrics-recording-only stop
+# background work a person never sees. --allow-browser-signin=false turns off Chrome's own sign-in:
+# no "Sign in to Chrome as ..." bubble after a Google login, no sync promos. Signing in to Google
+# websites works as usual.
+#
+# Not here, on purpose:
+#   --use-mock-keychain, --password-store=basic   the real keychain protects the cookies at rest
+#   --disable-prompt-on-repost                    a reload would re-send a form without asking
+#   --disable-background-networking,              Safe Browsing stays current while the profile
+#   --disable-client-side-phishing-detection      holds live logins and the agent visits any site
 backend_launch() {
   mkdir -p "${DB_PROFILE}"
+  backend_prepare_profile
   "$(backend_binary)" \
     --remote-debugging-port="${DB_PORT}" \
     --user-data-dir="${DB_PROFILE}" \
@@ -106,10 +156,17 @@ backend_launch() {
     --no-default-browser-check \
     --disable-search-engine-choice-screen \
     --disable-infobars \
+    --disable-popup-blocking \
+    --disable-hang-monitor \
     --disable-backgrounding-occluded-windows \
     --disable-renderer-backgrounding \
     --disable-background-timer-throttling \
-    --disable-features=Translate \
+    --disable-breakpad \
+    --disable-component-update \
+    --disable-sync \
+    --metrics-recording-only \
+    --allow-browser-signin=false \
+    --disable-features="${CFT_DISABLED_FEATURES}" \
     &>/dev/null &
   disown
 }
