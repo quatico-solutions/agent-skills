@@ -10,14 +10,15 @@ set -euo pipefail
 #   tests/vm-smoke.sh                      unattended run, mock-keychain copy of the scripts
 #   tests/vm-smoke.sh --real-keychain --quick
 #                                          the scripts as shipped, against the VM's fresh keychain.
-#                                          Without --quick, step 5 fails: every update brings the
+#                                          Without --quick, step 6 fails: every update brings the
 #                                          keychain prompt back, and nobody is there to click it.
 #   tests/vm-smoke.sh --keep --quick       keep the VM afterwards, to look around in it
 #
 # Clones SMOKE_VM_IMAGE (default: Cirrus Labs' macOS Tahoe base image) into a throwaway VM, starts
 # it without a window, copies this skill in and runs smoke.sh there through `tart exec`. The image
 # logs its user in at boot, so the browser gets a real desktop session, and it ships Node. The VM is
-# deleted at the end unless --keep is given.
+# deleted at the end unless --keep is given. Screenshots from smoke.sh's Playwright step are copied
+# to SMOKE_VM_ARTIFACTS (default: a new directory under $TMPDIR), and the path is printed.
 #
 # Disk: a clone shares its blocks with the image, but everything the VM writes lands on the host.
 # The run refuses to start below SMOKE_VM_MIN_FREE_GB (default 10) free. When tart has no copy of
@@ -87,6 +88,14 @@ COPYFILE_DISABLE=1 tar -C "${SKILL_DIR}" -cf - scripts tests \
 echo "vm-smoke: running smoke.sh ${SMOKE_ARGS[*]:-}"
 status=0
 # shellcheck disable=SC2016
-tart exec "${VM}" /bin/bash -c 'export PATH="/opt/homebrew/bin:${PATH}"; cd ~/dedicated-browser && exec /bin/bash tests/smoke.sh "$@"' \
+tart exec "${VM}" /bin/bash -c 'export PATH="/opt/homebrew/bin:${PATH}" SMOKE_ARTIFACTS="${HOME}/smoke-artifacts"; cd ~/dedicated-browser && exec /bin/bash tests/smoke.sh "$@"' \
   smoke ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} || status=$?
+
+ARTIFACTS="${SMOKE_VM_ARTIFACTS:-$(mktemp -d "${TMPDIR:-/tmp}/dedicated-browser-vm-smoke.XXXXXX")}"
+mkdir -p "${ARTIFACTS}"
+if tart exec "${VM}" /bin/sh -c 'cd ~/smoke-artifacts 2>/dev/null && tar -cf - .' | tar -C "${ARTIFACTS}" -xf - 2>/dev/null; then
+  echo "vm-smoke: screenshots in ${ARTIFACTS}"
+else
+  echo "vm-smoke: no screenshots came back from the VM" >&2
+fi
 exit "${status}"

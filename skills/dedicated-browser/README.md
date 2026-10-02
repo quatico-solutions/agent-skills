@@ -23,6 +23,7 @@ scripts/backend-chrome.sh   everything Chrome-specific, sourced by the CLI
 tests/smoke.sh              end-to-end test on a real Mac (manual)
 tests/vm-smoke.sh           runs smoke.sh in a throwaway macOS VM (tart, Apple silicon)
 tests/cookie.mjs            helper for smoke.sh: plant / read a cookie over the debugging port
+tests/interact.mjs          helper for smoke.sh: drive a local web app with Playwright over the port
 ```
 
 Two settings, both environment variables: `DEDICATED_BROWSER_PORT` (default **9393**) and
@@ -162,17 +163,20 @@ No user-facing recommendation is made either way yet.
 
 `tests/smoke.sh` runs the real scripts against a fresh temp directory on port 9444. It refuses port 9222 and checks that whoever holds 9222 is unchanged at the end. Unattended it runs a *copy* of the scripts with two extra flags, `--use-mock-keychain --password-store=basic`, so a keychain prompt cannot block it. `--real-keychain` runs the scripts as shipped; a human must click Always Allow whenever macOS asks.
 
-`tests/vm-smoke.sh` runs `smoke.sh` in a throwaway macOS VM with [tart](https://tart.run) on an Apple silicon Mac, so the host's browsers and keychain cannot change the result. It passes its options on to `smoke.sh`. `--real-keychain --quick` runs unattended there, because a fresh keychain shows no prompt on the first start. Without `--quick`, step 5 waits for the prompt that every update brings, and nobody is there to click it.
+Step 3 drives the browser the way the agent's MCP server does: `tests/interact.mjs` attaches Playwright (`playwright-core`, installed into the temp directory) over the debugging port and uses the profile's default context. It serves a small web app on 127.0.0.1, types a user name into its form and clicks Sign in; the server answers with a real `Set-Cookie`. It clicks a page-script button three times, writes localStorage and loads example.com. After `stop` and `start` it checks that the server still sees the session cookie and that localStorage is still there. Both phases save a screenshot, to `SMOKE_ARTIFACTS` when that is set.
 
-Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152:
+`tests/vm-smoke.sh` runs `smoke.sh` in a throwaway macOS VM with [tart](https://tart.run) on an Apple silicon Mac, so the host's browsers and keychain cannot change the result. It passes its options on to `smoke.sh` and copies the screenshots out of the VM. `--real-keychain --quick` runs unattended there, because a fresh keychain shows no prompt on the first start. Without `--quick`, step 6 waits for the prompt that every update brings, and nobody is there to click it.
+
+Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152, playwright-core 1.63.0: 43 of 43 checks pass with the mock keychain, 33 of 33 with `--real-keychain --quick`.
 
 | Covered | Mock keychain | Real keychain |
 |---|---|---|
 | `setup`: real download, install, start; `status`; a second `start` is a no-op | pass | pass |
 | a cookie set just before `stop` survives `stop` and `start` | pass | pass |
+| Playwright over the debugging port: typing, clicks and a page script work; a server-set cookie and localStorage survive `stop` and `start`; example.com loads; the browser keeps running after Playwright disconnects | pass | pass |
 | a browser with another profile on the port: `status` exits 2, `start` refuses, `stop` leaves it running | pass | pass |
 | the behind-stable note, and `update` refusing while the browser runs | pass | pass |
-| a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | prompt, see below |
+| a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | not unattended: the new build prompts, see below |
 | port 9222 has the same owner before and after | pass | pass |
 
 Checked by hand: shellcheck clean and a `/bin/bash` 3.2 syntax check (2026-10-02). On 2026-09-26, on macOS 15: `claude -p --strict-mcp-config` with only the `dedicated-browser` server drove the browser to a page, and Playwright MCP attached without starting a second browser; Vercel's `agent-browser --cdp` attached too.
@@ -182,6 +186,8 @@ Checked by hand: shellcheck clean and a `/bin/bash` 3.2 syntax check (2026-10-02
 **Not covered, and needs a human at the machine:**
 
 - The cookie surviving an update with the real keychain. The VM shows the prompt, but nobody answered it.
+- The window on the screen. Playwright's screenshots show the page drawn, but `screencapture` in the VM fails without the Screen Recording permission.
+- The agent itself: Claude Code or Cursor calling the Playwright MCP tools in a clean VM.
 - Intel Macs: the `mac-x64` download URL is built the same way but was not run.
 - Cursor: which skill-directory variable it substitutes, and the `mcp.json` snippet.
 - `setup` on a machine without Node.

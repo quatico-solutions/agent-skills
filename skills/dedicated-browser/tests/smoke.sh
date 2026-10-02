@@ -2,19 +2,23 @@
 set -euo pipefail
 
 # End-to-end test for dedicated-browser on a real Mac. Not part of `pnpm test`: it needs a GUI
-# session, Node 22+, the network, and downloads Chrome for Testing (about 150 MB, three times
-# unless --quick).
+# session, Node 22+ with npm, the network, and downloads Chrome for Testing (about 150 MB, three
+# times unless --quick). Step 3 installs playwright-core into the temp directory and drives the
+# browser with it, as the agent's MCP server does.
 #
 #   tests/smoke.sh                 unattended: runs a patched COPY of the scripts that adds
 #                                  --use-mock-keychain --password-store=basic, so no macOS
 #                                  keychain prompt can block it. Everything else is the real code.
-#   tests/smoke.sh --real-keychain run the scripts as shipped. A keychain prompt appears on the
-#                                  first cookie write; a human must click Always Allow.
+#   tests/smoke.sh --real-keychain run the scripts as shipped. macOS asks about "Chromium Safe
+#                                  Storage" when a different Chrome build created that keychain
+#                                  item, and after every update; a human must click Always Allow.
 #   tests/smoke.sh --quick         skip the update-path steps (saves two downloads)
 #
-# Everything lives in a fresh temp directory on port 9444 (SMOKE_PORT to change it). Port 9222 is
+# Everything lives in a fresh temp directory on port 9444 (SMOKE_PORT to change it); a decoy browser
+# uses the next port and step 3's local web app the one after. Port 9222 is
 # refused: it is the de facto default, and a browser somebody else uses may hold it. The test
-# records who owns 9222 first and checks at the end that nothing changed.
+# records who owns 9222 first and checks at the end that nothing changed. Step 3's screenshots go
+# to SMOKE_ARTIFACTS when it is set, and are deleted with the temp directory otherwise.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_SCRIPTS="${HERE}/../scripts"
@@ -31,16 +35,19 @@ done
 
 PORT="${SMOKE_PORT:-9444}"
 DECOY_PORT=$((PORT + 1))
-if [[ "${PORT}" == 9222 || "${DECOY_PORT}" == 9222 ]]; then
+APP_PORT=$((PORT + 2)) # step 3's local web app
+if [[ "${PORT}" == 9222 || "${DECOY_PORT}" == 9222 || "${APP_PORT}" == 9222 ]]; then
   echo "refusing to use port 9222" >&2
   exit 2
 fi
 command -v node >/dev/null || { echo "node is required" >&2; exit 2; }
+command -v npm >/dev/null || { echo "npm is required" >&2; exit 2; }
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/dedicated-browser-smoke.XXXXXX")"
 HOME_A="${TMP}/home-a"
 HOME_B="${TMP}/home-b"
-mkdir -p "${HOME_A}" "${HOME_B}"
+ARTIFACTS="${SMOKE_ARTIFACTS:-${TMP}/artifacts}"
+mkdir -p "${HOME_A}" "${HOME_B}" "${ARTIFACTS}"
 
 # Which scripts run: the shipped ones, or a copy with the two mock-keychain flags added.
 SCRIPTS="${SRC_SCRIPTS}"
@@ -96,7 +103,7 @@ trap cleanup EXIT
 
 echo "dedicated-browser smoke test: port ${PORT}, temp ${TMP}"
 if [[ "${REAL_KEYCHAIN}" == true ]]; then
-  echo "REAL KEYCHAIN: a macOS prompt will appear. Click Always Allow when it does."
+  echo "REAL KEYCHAIN: a macOS prompt may appear. Click Always Allow when it does."
 else
   echo "unattended: mock-keychain copy of the scripts. The keychain path itself is NOT covered."
 fi
@@ -117,7 +124,35 @@ if curl -fsS --max-time 1 "http://127.0.0.1:${PORT}/json/version" >/dev/null 2>&
 expect_status 0 "start again" db start
 if [[ "$(cookie get)" == "survived" ]]; then ok "cookie survived stop/start"; else bad "cookie survived stop/start"; fi
 
-echo "3. another browser on the port is not mistaken for ours"
+echo "3. Playwright drives it: a form, clicks, a server-set cookie, localStorage, a real website"
+# interact.mjs prints "ok <what>" / "FAIL <what>" per check; a crash without such a line still counts.
+run_interact() { # <phase> <screenshot>
+  local out status=0 line
+  out="$(perl -e 'alarm 90; exec @ARGV' node "${TMP}/playwright/interact.mjs" "${PORT}" "${APP_PORT}" "$1" "$2" 2>&1)" || status=$?
+  while IFS= read -r line; do
+    case "${line}" in
+      "ok "*) ok "${line#ok }" ;;
+      "FAIL "*) bad "${line#FAIL }" ;;
+    esac
+  done <<< "${out}"
+  if [[ "${status}" != 0 ]] && ! grep -q '^FAIL ' <<< "${out}"; then
+    bad "interact.mjs $1 (exit ${status}: $(head -1 <<< "${out}"))"
+  fi
+}
+mkdir -p "${TMP}/playwright"
+if npm install --prefix "${TMP}/playwright" --no-audit --no-fund --loglevel=error playwright-core >/dev/null 2>&1; then
+  ok "installed playwright-core $(node -p "require('${TMP}/playwright/node_modules/playwright-core/package.json').version")"
+  cp "${HERE}/interact.mjs" "${TMP}/playwright/"
+  run_interact login "${ARTIFACTS}/1-signed-in.png"
+  expect_status 0 "the browser keeps running after Playwright disconnects" db status
+  expect_status 0 "stop" db stop
+  expect_status 0 "start" db start
+  run_interact check "${ARTIFACTS}/2-after-restart.png"
+else
+  bad "npm install playwright-core"
+fi
+
+echo "4. another browser on the port is not mistaken for ours"
 # A second profile (home-b) answers on the decoy port; home-a must refuse to treat it as its own.
 ln -s "${HOME_A}/Google Chrome for Testing.app" "${HOME_B}/Google Chrome for Testing.app"
 expect_status 0 "decoy browser starts" db_b start
@@ -135,7 +170,7 @@ expect_status 0 "decoy stops" db_b stop
 expect_status 0 "real browser starts again" db start
 expect_status 0 "real browser reports running" db status
 
-echo "4. behind-stable note"
+echo "5. behind-stable note"
 printf '%s 999.0.0.1\n' "$(date +%s)" > "${HOME_A}/.latest-stable"
 expect_output "behind the current stable 999" "status prints the update note" db status
 expect_status 0 "the note does not change the exit status" db status
@@ -143,7 +178,7 @@ expect_status 1 "update refuses while the browser runs" db update
 rm -f "${HOME_A}/.latest-stable"
 
 if [[ "${QUICK}" == false ]]; then
-  echo "5. update keeps the logins"
+  echo "6. update keeps the logins"
   expect_status 0 "stop before swapping the app" db stop
   STABLE_MAJOR="$(DEDICATED_BROWSER_HOME="${HOME_A}" /bin/bash -c ". '${SCRIPTS}/backend-chrome.sh'; backend_latest_version" | cut -d. -f1)"
   OLD_MAJOR=$((STABLE_MAJOR - 2))
@@ -169,7 +204,7 @@ if [[ "${QUICK}" == false ]]; then
   fi
 fi
 
-echo "6. port 9222 untouched"
+echo "7. port 9222 untouched"
 if [[ "$(port_9222_owner)" == "${OWNER_9222_BEFORE}" ]]; then ok "port 9222 has the same owner as before"; else bad "port 9222 owner changed"; fi
 
 echo
