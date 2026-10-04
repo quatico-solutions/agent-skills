@@ -19,7 +19,6 @@ Proven LLM-friendly patterns we kept:
 - Iron Law framing (non-negotiable rules)
 - Good/Bad code example blocks
 - Red Flags section (stop conditions)
-- Common Rationalizations table (excuse vs reality)
 - Verification Checklist
 - "When Stuck" troubleshooting table
 

@@ -120,10 +120,10 @@ BEFORE adding any method to production class:
 **The violation:**
 ```typescript
 // BAD: Mock breaks test logic
-test('detects duplicate server', () => {
+test('detects duplicate server', async () => {
   // Mock prevents config write that test depends on!
-  vi.mock('ToolCatalog', () => ({
-    discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
+  jest.mock('ToolCatalog', () => ({
+    discoverAndCacheTools: jest.fn().mockResolvedValue(undefined)
   }));
 
   await addServer(config);
@@ -139,9 +139,9 @@ test('detects duplicate server', () => {
 **The fix:**
 ```typescript
 // GOOD: Mock at correct level
-test('detects duplicate server', () => {
+test('detects duplicate server', async () => {
   // Mock the slow part, preserve behavior test needs
-  vi.mock('MCPServerManager'); // Just mock slow server startup
+  jest.mock('MCPServerManager'); // Just mock slow server startup
 
   await addServer(config);  // Config written
   await addServer(config);  // Duplicate detected

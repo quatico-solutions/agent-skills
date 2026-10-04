@@ -1,6 +1,6 @@
 ---
 name: show-your-work
-description: "Use when the user says \"show your work\", \"make a demo\", \"prove it works\", \"demonstrate the feature\", \"capture the evidence\", \"showboat\", or \"rodney\". Also triggers on: demo this, demo time, show what you built, show me the results, prove your changes work, record what you did, write up what you built, document the results, demonstrate the fix, demonstrate what changed."
+description: "Use when the user asks to show, demo, or document completed work as a reproducible evidence document (showboat/rodney). Triggers: \"show your work\", \"make a demo\", \"demo this\", \"demonstrate the feature\", \"demonstrate the fix\", \"capture the evidence\", \"show what you built\", \"show me the results\", \"record what you did\", \"document the results\", \"showboat\", \"rodney\". For checking whether a claim is actually true (\"prove it works\"), use reality-check instead."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -11,7 +11,7 @@ metadata:
 
 Build a reproducible demo document that proves completed work — tests passing, UI correct, changes verified.
 
-**Tools:** **showboat** (docs) + **rodney** or project-native tools (screenshots). Setup: `./install-dependencies.sh`. Commands: `showboat --help`, `rodney --help`.
+**Tools:** **showboat** (docs) + **rodney** or project-native tools (screenshots). Setup: `./install-dependencies.sh`. Both are fetched on demand by `uvx` — invoke them as `uvx showboat …` and `uvx rodney …` (`uvx showboat --help`, `uvx rodney --help`).
 
 ## When to Use
 
@@ -27,7 +27,7 @@ Build a reproducible demo document that proves completed work — tests passing,
 ## Workflow Checklist
 
 ```
-- [ ] showboat --help (verify tool available)
+- [ ] uvx showboat --help (verify tool available)
 - [ ] showboat init docs/demos/YYYY-MM-DD-<slug>.md "Title"
 - [ ] showboat note — what changed and why
 - [ ] showboat exec — test runs, build output, key commands
@@ -71,7 +71,7 @@ If no PR exists or the user declines attachment, offer to share as a gist. Ask v
 1. Create gist with markdown only: `gh gist create [--public] <demo>.md`
 2. If the demo has images:
    - Clone: `gh gist clone <id> /tmp/gist-<id>`
-   - Copy demo as `readme.md` (auto-pinned to top since 2025-03) and images into clone
+   - Copy demo as `readme.md` (gists list `readme.md` first) and images into clone
    - `git add`, commit, push
    - Update `readme.md` image refs to raw URLs: `https://gist.githubusercontent.com/<user>/<id>/raw/<sha>/<file>`
    - Push updated markdown, then `trash /tmp/gist-<id>`
@@ -86,7 +86,7 @@ Gist file sort order: `!#-.` → digits → `_` → alpha. Name the demo `readme
 | Demo in `tmp/` when it should be committed | Default to `docs/demos/`; `tmp/` only for non-git destinations |
 | Duplicating tool flags in this skill | Run `--help` at runtime |
 | Passing images to `gh gist create` | Binary files rejected — clone gist repo, push images via git |
-| Demo file sorts below images in gist | Name the demo `readme.md` — auto-pinned to top since 2025-03 |
+| Demo file sorts below images in gist | Name the demo `readme.md` (gists list `readme.md` first) |
 
 ## Integration with Other Skills
 

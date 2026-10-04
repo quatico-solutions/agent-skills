@@ -103,7 +103,7 @@ Generated with Claude Code
 2. **Determine target branch** — check the repo's default branch (usually `develop` for Quatico repos). Use `--base` if it differs from the repo default.
 3. **Fill description** using template above
 4. **Add reviewers** as identified
-5. **Create PR**: `bb pr create --title "..." --body "..." --base develop --reviewer "Name"`
+5. **Create PR**: `bb pr create --title "..." --body "..." [--base <branch>] --reviewer "Name"`
 6. **Verify** with `bb pr view <id>` — **check the `Dest:` line** to confirm the target branch is correct
 
 > All Bitbucket operations go through the `bb` CLI — see **working-with-bitbucket-api** for setup, flags and caveats.
@@ -166,7 +166,7 @@ Example: *🤖 – Claude*
 
 - Be concise and direct
 - Reference specific code changes if applicable
-- Use platform's rich text editor carefully (see platform skill)
+- Write CommonMark (see `markdown`); in the browser fallback, follow `working-with-bitbucket-web` for the editor
 
 ### Attaching Screenshots
 
@@ -182,7 +182,6 @@ can include. Attach them with `bb pr comment --image` — see **working-with-bit
 | `working-with-bitbucket-api` | **Primary**: all Bitbucket operations via `bb` CLI |
 | `commit-notation` | Commit messages (F:, B:, R:, etc.) |
 | `markdown` | CommonMark formatting for PR descriptions and comments |
-| `writing-clearly-and-concisely` | PR descriptions and comments |
 | `working-with-bitbucket-web` | Last resort: SSO-gated pages only |
 
 ---
@@ -193,7 +192,6 @@ can include. Attach them with `bb pr comment --image` — see **working-with-bit
 |---------|-----|
 | Fixing comments one-by-one | Read ALL first, then batch changes |
 | Forgetting AI signature | Always add `🤖 – Claude` to AI comments |
-| Using markdown bullets in rich text | Use toolbar buttons or platform skill guidance |
 | Not pushing after replying | Push after all replies done |
-| PR targeting wrong branch | Always verify `Dest:` in `bb pr view` output. Fix with `bb pr edit <id> --base develop` |
-| Assuming `main` is the target | Quatico repos use `develop`. Always pass `--base develop` or verify auto-detection |
+| PR targeting wrong branch | Always verify `Dest:` in `bb pr view` output. Fix with `bb pr edit <id> --base <branch>` |
+| Assuming the target branch | Omit `--base` to use the repo default, or pass it when the PR should target another branch; then verify `Dest:` |

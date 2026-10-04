@@ -187,7 +187,7 @@ These are the highest-frequency Helvetismen in professional Swiss writing. Alway
 ### Full Glossary
 
 For complete vocabulary, read:
-- `references/glossary.md` — ~200 core business and everyday terms, categorized by domain
+- `references/glossary.md` — ~80 core business and everyday terms, categorized by domain
 - `references/glossary-full.md` — ~1,200 merged entries from OpenThesaurus, Wikipedia, and Wiktionary
 
 **When to load the glossary:** Load `references/glossary.md` when writing or reviewing Swiss German text that goes beyond the top-20 terms above. Load `references/glossary-full.md` only when comprehensive coverage is needed or when a specific term is not found in the core glossary.
