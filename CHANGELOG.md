@@ -1,5 +1,47 @@
 # @quatico-solutions/agent-skills
 
+## 3.16.0
+
+### Minor Changes
+
+- [#80](https://github.com/quatico-solutions/agent-skills/pull/80) [`b6f40d5`](https://github.com/quatico-solutions/agent-skills/commit/b6f40d5fa7eaa7c6d5d045489af11d1b49a26417) Thanks [@eins78](https://github.com/eins78)! - Prompt audit against Claude Opus 5.5: `bb pr edit` gains `--body-file` (parity with `gh pr edit`); fix stale `bb` subcommand names in the skill, retire the A/C intentions from branch-and-commit, reconcile contradictions between skills, and restate test-driven-development's pressure language as plain rules that smaller models still follow
+
+  <!--
+  bumps:
+    skills:
+      branch-and-commit: minor
+      commit-notation: patch
+      handling-pull-requests: patch
+      typescript-strict-patterns: patch
+      test-driven-development: patch
+      jest-testing-conventions: patch
+      show-your-work: patch
+      working-with-bitbucket-api: minor
+      working-with-bitbucket-web: patch
+      bye: patch
+      adopt-agentic-workflow: patch
+      schweizer-schreibweise: patch
+    tuned-against: claude-opus-5-5
+  -->
+
+### Patch Changes
+
+- [#77](https://github.com/quatico-solutions/agent-skills/pull/77) [`3001d63`](https://github.com/quatico-solutions/agent-skills/commit/3001d635fe5df3a49dbadca75d948391465dee4e) Thanks [@michaelaemisegger](https://github.com/michaelaemisegger)! - `adopt-agentic-workflow` now checks that `CLAUDE.md` actually loads the hub when `AGENTS.md` is the hub `/plot-init` chose. Claude Code loads `CLAUDE.md` on its own but never `AGENTS.md`, so a repo whose hub is `AGENTS.md` needs `CLAUDE.md` to import it (`@AGENTS.md`) — a prose pointer ("see AGENTS.md") is easy to skim past and leaves the phase-to-skill map effectively invisible to the agent. New step 2 creates the import line if `CLAUDE.md` is missing, replaces a prose pointer with it, or adds it above existing rules and flags the duplication for the user to resolve. Common Mistakes gains a matching entry.
+
+  <!--
+  bumps:
+    skills:
+      adopt-agentic-workflow: patch
+  -->
+
+- [#75](https://github.com/quatico-solutions/agent-skills/pull/75) [`5895c28`](https://github.com/quatico-solutions/agent-skills/commit/5895c281eb069d6e410492cabb5ff0b93ef5f3a8) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - Rename the Homebrew formula from `bb` to `quatico-bb`. The bare name `bb` collides with an unrelated homebrew-cask (getbb.app IDE), so the short install name can never be `bb`. Update the install command in the skill docs and `install-dependencies.sh` to `quatico-bb`, and update the release pipeline's formula-bump script (`Formula/quatico-bb.rb`, branch `formula-bump/quatico-bb-*`). A keg installed under the old name moves to `quatico-bb` on the next `brew update` (the tap's `formula_renames.json`), or right away with `brew migrate bb`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.15.0
 
 ### Minor Changes

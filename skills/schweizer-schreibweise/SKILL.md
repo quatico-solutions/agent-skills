@@ -4,7 +4,7 @@ description: "Use when writing or reviewing German-language content for Swiss au
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
 ---
 
 # Schweizer Schreibweise
