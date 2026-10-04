@@ -5,7 +5,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   source: "Adopted from eins78/agent-skills (author: eins78)"
 ---
 

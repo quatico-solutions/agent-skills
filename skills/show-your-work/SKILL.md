@@ -4,7 +4,7 @@ description: "Use when the user asks to show, demo, or document completed work a
 compatibility: claude-code, cursor
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Show Your Work

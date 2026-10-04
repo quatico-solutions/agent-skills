@@ -4,7 +4,7 @@ description: "Use when writing unit tests with Jest. Covers naming conventions (
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   source: "Based on an internal Jest testing guide"
 ---
 
