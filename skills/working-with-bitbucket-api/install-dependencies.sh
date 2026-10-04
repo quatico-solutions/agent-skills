@@ -114,6 +114,25 @@ elif [[ -e "$HOME/bin/bb" ]]; then
     echo "         If it shadows $BIN_DIR/bb on your PATH, remove it yourself."
 fi
 
+# Migration from the old formula name. Until 2026-10-04 the formula was called `bb`. The tap's
+# formula_renames.json maps it to quatico-bb, but `brew update` does not migrate the keg on most
+# machines: installing by the fully qualified old name trusted only the FORMULA
+# quatico-solutions/tap/bb, so the renamed formula is refused as untrusted, and Homebrew drops the
+# keg from its migration without a message. So: trust the tap, then migrate by the FULL new name —
+# a bare `bb` resolves to an unrelated cask. A real directory at Cellar/bb is the old keg (after a
+# migration Homebrew leaves Cellar/bb behind as a symlink); the receipt says whether it is ours.
+OLD_RACK="$(brew --cellar)/bb"
+if [[ -d "$OLD_RACK" && ! -L "$OLD_RACK" ]] \
+    && grep -qs '"tap": *"quatico-solutions/tap"' "$OLD_RACK"/*/INSTALL_RECEIPT.json; then
+    echo "bb: migrating the keg installed under the old formula name bb to quatico-bb..."
+    if ! brew trust --tap quatico-solutions/tap || ! brew migrate "$FORMULA"; then
+        echo "ERROR: migrating the old bb keg failed. Run these yourself, then re-run this script:"
+        echo "         brew trust --tap quatico-solutions/tap"
+        echo "         brew migrate $FORMULA"
+        exit 1
+    fi
+fi
+
 # Install or upgrade. The name is fully qualified on purpose: it taps, trusts and
 # installs in one step, and a bare `bb` would find an unrelated cask.
 if brew list --formula "$FORMULA" &> /dev/null; then
