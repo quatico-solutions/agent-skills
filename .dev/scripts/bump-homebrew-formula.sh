@@ -69,7 +69,7 @@ if ! git clone --depth 1 "$TAP_SSH" "$work"; then
   exit 0
 fi
 
-branch="formula-bump/bb-${version}"
+branch="formula-bump/quatico-bb-${version}"
 # Checked, because this script runs without `set -e` so that every give-up path
 # can report and exit 0. An unchecked failure here would leave HEAD on the
 # clone's main, commit there, and fail the push with a refspec error instead.
@@ -78,7 +78,7 @@ if ! git -C "$work" switch -c "$branch"; then
   exit 0
 fi
 
-formula="$work/Formula/bb.rb"
+formula="$work/Formula/quatico-bb.rb"
 if [ ! -f "$formula" ]; then
   echo "  WARN: $formula does not exist — skipping the formula bump"
   exit 0
