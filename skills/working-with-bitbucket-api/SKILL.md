@@ -44,9 +44,11 @@ brew outdated quatico-bb                        # prints the formula when newer 
 unlinked and PATH still serves an old copied `bb`. The link and the PATH resolution are what
 say which binary actually runs.
 
-**If `bb` is missing, if `command -v bb` printed anything but `$(brew --prefix)/bin/bb`, or if
-`readlink` failed** (the `bb` that runs is a copy, not a Homebrew link), install it — no user
-approval needed, this is safe and idempotent:
+**If `bb` is missing, if `command -v bb` printed anything but `$(brew --prefix)/bin/bb`, if
+`readlink` failed** (the `bb` that runs is a copy, not a Homebrew link), **or if `readlink`
+printed a path under `Cellar/bb/`** (the keg still carries the formula's old name `bb`, which
+`brew update` does not migrate by itself), install it — no user approval needed, this is safe and
+idempotent:
 
 ```bash
 bash "${CLAUDE_SKILL_DIR}/install-dependencies.sh"   # installs quatico-bb, migrates any old copy

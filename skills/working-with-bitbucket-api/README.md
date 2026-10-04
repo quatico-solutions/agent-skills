@@ -23,6 +23,11 @@ Skill for Bitbucket Cloud API access via `bb` CLI wrapper. Follows the same API-
 
 (One-time `brew tap quatico-solutions/tap && brew trust --tap quatico-solutions/tap`; the fully qualified `brew install quatico-solutions/tap/quatico-bb` also works.) The formula declares `jq`, so Homebrew installs that too. macOS supplies perl and `Unicode::Normalize`, which `bb` uses for NFC normalization; `install-dependencies.sh` checks for them and installs the formula.
 
+**Installed it as `bb` before the rename (2026-10-04)?** `install-dependencies.sh` migrates the keg. By hand it is two steps — trust the whole tap (the old install trusted only the formula `quatico-solutions/tap/bb`), then migrate by the full new name, never a bare `bb`, which resolves to the unrelated cask:
+
+    brew trust --tap quatico-solutions/tap
+    brew migrate quatico-solutions/tap/quatico-bb
+
 The CLI source lives at `cli/bb` in this repository, outside the skill directory. Only Homebrew puts a `bb` on your PATH — running the copy in this repository directly runs a version nobody installed.
 
 `bb` also depends on, at runtime:
