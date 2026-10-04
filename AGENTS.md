@@ -9,10 +9,8 @@ Instructions for coding agents working in the `agent-skills` repository.
 > versioning flow, Plot configuration — lives in CLAUDE.md and is not duplicated
 > here.
 >
-> A previous copy of this file was produced by a blind `Claude` → `Codex`
-> find-and-replace, which invented a `.Codex-plugin/` directory and a
-> `Codex-opus-5` model family, and dropped the bash 3.2 rule entirely. If you
-> are tempted to regenerate this file mechanically: don't. Where the two files
+> Edit this file by hand; never regenerate it mechanically from CLAUDE.md
+> (a find-and-replace corrupts paths and model names). Where the two files
 > disagree, CLAUDE.md wins.
 
 ## Rules that bite
@@ -25,8 +23,9 @@ them.
 
 **2. Every change touching a skill needs a changeset.** `pnpm changeset`, then
 edit the created file: a one-line summary, a root-package bump, and a `bumps:`
-block listing each changed skill. Record `tuned-against: claude-opus-5` (the
-model family, never a dated snapshot) when a change is model-specific. CI only
+block listing each changed skill. When a change is model-specific, record the
+model family it was tuned against as `tuned-against: <family>` (e.g.
+`claude-opus-5`, never a dated snapshot). CI only
 *warns* when a changeset is missing — it will not catch this for you.
 
 **3. Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and
@@ -39,9 +38,7 @@ which pins `/bin/bash`; every other script relies on this rule alone.
 `|` — Cursor does not parse them. `description` is a single-line quoted string;
 `metadata.version` is 3-part semver.
 
-**5. Update README.md whenever skill membership changes.** The skills table must
-match the contents of `skills/`. Adding or removing a skill without touching the
-table leaves the two out of sync, and nothing checks it.
+**5. Update README.md whenever skill membership changes.** The skills table must match the contents of `skills/`, one row per skill, in alphabetical order by skill name. Add a new skill's row at its place in that order, not at the end. Adding or removing a skill without touching the table leaves the two out of sync, and nothing checks it.
 
 **6. Prefer gates over rules.** A rule is prose an agent can rationalise around;
 a gate is a hard stop with objective verification (a hook, a CI check). The

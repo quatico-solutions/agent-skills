@@ -9,14 +9,14 @@ metadata:
 
 # Working with Bitbucket Web
 
-## CRITICAL: Use `bb` CLI First
+## Use `bb` CLI First
 
 **Before using the browser, try `bb` CLI (`working-with-bitbucket-api` skill).** It handles all PR operations — create, edit, comment, approve, merge, resolve — including markdown descriptions. Run `bb --help` for the full command list.
 
 **Only use this browser skill for:**
 - SSO-gated pages that require browser authentication
 
-> **Image uploads no longer need a browser.** Attach images to PR comments and
+> **Image uploads don't need a browser.** Attach images to PR comments and
 > descriptions via the API with `bb pr comment --image <file>` or
 > `bb download upload <file>` (see `working-with-bitbucket-api`). The manual
 > drag-drop workflow below remains only as a fallback if the CLI is unavailable.

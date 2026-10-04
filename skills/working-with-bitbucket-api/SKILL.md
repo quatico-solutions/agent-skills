@@ -1,6 +1,6 @@
 ---
 name: working-with-bitbucket-api
-description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branch, tag) including markdown descriptions. Browser only for SSO-gated pages. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, upload image to PR, attach screenshot, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
+description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branches, tags, search, commits, diff) including markdown descriptions. Browser only for SSO-gated pages. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, upload image to PR, attach screenshot, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -37,7 +37,7 @@ install, so Homebrew answers the question:
 bb --version                                    # missing counts as outdated
 command -v bb                                   # must print "$(brew --prefix)/bin/bb" — anything else is a foreign bb earlier on PATH
 readlink "$(brew --prefix)/bin/bb"              # non-zero: that path is not a Homebrew symlink, so Homebrew does not upgrade it
-brew outdated quatico-bb          # prints the formula when newer (auto-updates the tap, at most once every 24h)
+brew outdated quatico-bb                        # prints the formula when newer (auto-updates the tap, at most once every 24h)
 ```
 
 `brew list --formula` is not the check: it reports the keg as installed even while the keg is
@@ -49,7 +49,7 @@ say which binary actually runs.
 approval needed, this is safe and idempotent:
 
 ```bash
-bash "{{SKILL_DIR}}/install-dependencies.sh"   # installs quatico-bb, migrates any old copy
+bash "${CLAUDE_SKILL_DIR}/install-dependencies.sh"   # installs quatico-bb, migrates any old copy
 ```
 
 **If `brew outdated` printed the formula,** upgrade it:
@@ -89,8 +89,9 @@ Need to interact with Bitbucket?
 
 `bb` handles everything including markdown in `--body` (descriptions, comments)
 and image uploads (via the repo Downloads area — see below). For multi-line
-descriptions or comments, use `--body-file <path>` (or `-` for stdin) instead
-of interpolating a file through the shell.
+descriptions or comments, use `--body-file <path>` (or `-` for stdin) on
+`bb pr create`, `bb pr edit`, or `bb pr comment` instead of interpolating a
+file through the shell.
 Browser is a **last resort** — only for SSO-gated pages.
 
 > **Markdown**: Bitbucket uses CommonMark, not GFM — no task lists, no strikethrough, no bare autolinks. Use the `markdown` skill if installed.
@@ -122,13 +123,13 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 | **read:repository:bitbucket** | `bb pr list`, `bb pr view`, `bb source ls/cat` |
 | **read:pullrequest:bitbucket** | `bb pr list`, `bb pr view --comments` |
 | **write:pullrequest:bitbucket** | `bb pr create`, `bb pr edit`, `bb pr comment`, `bb pr review`, `bb pr merge`, `bb pr close`, `bb pr tasks --resolve/--reopen` |
-| **write:repository:bitbucket** | `bb source ls/cat/branch/tag` (private repos) |
+| **write:repository:bitbucket** | `bb source ls/cat/branches/tags` (private repos) |
 
 **Minimum for full use (recommended):** All five scopes above. Scope-to-command mappings are approximate — Bitbucket may require additional scopes depending on repository permissions.
 
 > **Common failure mode:** A token with only read scopes will list and view PRs successfully but fail with HTTP 400 or 401 on any write operation (commenting, approving, merging). Bitbucket error messages do not mention the missing scope — they just say "Bad Request" or "Token is not supported for this endpoint."
 
-> **App Passwords are deprecated.** New creation was disabled Sep 2025; all existing app passwords stop working Jun 2026. Use API Tokens instead.
+> **App passwords no longer work.** Use API tokens.
 
 ---
 
@@ -210,7 +211,7 @@ bb pr edit 42 --body "## Screenshots
 Use `working-with-bitbucket-web` skill only when:
 - SSO-gated pages that require browser authentication
 
-Image uploads no longer need a browser — use `bb pr comment --image` or
+Image uploads don't need a browser — use `bb pr comment --image` or
 `bb download upload` (see above).
 
 ---

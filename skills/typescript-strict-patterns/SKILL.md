@@ -77,7 +77,7 @@ Useful for config keys, route paths, and event names where runtime validation is
 
 ## No `!` or `as` in Production Code
 
-Non-null assertions (`!`) and type assertions (`as`) are banned in production code. They hide type errors. Allowed in test files where the tradeoff is acceptable (enforced by ESLint config).
+Avoid non-null assertions (`!`) and type assertions (`as`) in production code — they hide type errors. The one sanctioned `as` is the brand cast at a validated boundary (see Branded Types). `!` is lint-enforced (`no-non-null-assertion`, relaxed in `*.test.ts`/`*.spec.ts`); `as` is enforced by review.
 
 Replacements:
 - **Destructuring with defaults** instead of `obj.prop!`: `const { name = '' } = config;`

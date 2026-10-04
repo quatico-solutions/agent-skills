@@ -50,7 +50,7 @@ git diff HEAD --cached --stat
 
 For each changed file, it determines:
 - **File category**: TEST, DOCS, CONFIG, SOURCE
-- **Intention**: F (feature), B (bugfix), R (refactoring), D (docs), T (test), E (environment), A (automated), C (comment)
+- **Intention**: F (feature), B (bugfix), R (refactoring), D (docs), T (test), E (environment). Tool-assisted changes (IDE rename, formatter, import updates) are R; comment-only changes are D.
 - **Change nature**: Import-only, comment-only, mixed changes
 
 **Security Checks:**
@@ -132,50 +132,22 @@ After initial grouping, refine based on:
 
 ### Phase 5: Risk Level Determination
 
-**CRITICAL:** The skill **invokes `/commit-notation`** for each commit group to determine the proper annotation.
+The skill takes each commit group's annotation from commit-notation's criteria.
 
 It does NOT reimplement the risk logic. Instead:
 
 1. **Gather context** for each commit group:
-   - Intention type (F/B/R/D/T/E/A/C)
+   - Intention type (F/B/R/D/T/E)
    - Files changed (count, types)
    - Lines of code added/removed
    - Test coverage (do tests exist? do they pass?)
    - Change nature (imports-only? typo fix? IDE-assisted?)
 
-2. **Invoke commit-notation skill using the Skill tool:**
-
-   For each commit group, invoke the skill with structured context:
-
-   ```
-   Use Skill tool:
-   - skill: "commit-notation"
-   - args: (structured text with context)
-
-   Example invocation context:
-   "Intention: R
-   Files changed: 50
-   Lines of code: 150
-   Test coverage: All existing tests pass
-   Change nature: IDE-assisted rename 'getUserData' to 'fetchUserProfile'
-   Tool-assisted: Yes (TypeScript compiler verified)
-
-   What annotation should I use?"
-   ```
-
-3. **Parse the returned annotation:**
-
-   The `/commit-notation` skill will return the proper annotation based on the context:
-   ```
-   → Returns: "a" (lowercase, provably safe)
-   → Full commit message format: "a Rename getUserData to fetchUserProfile"
-   ```
-
-   Use this annotation in the commit message during Phase 8.
+2. **Apply commit-notation's risk criteria:** Load the commit-notation skill once and apply its risk-level criteria (its REFERENCE.md tables) to each group's context: intention, LoC, test status, tool-assisted. Don't invent thresholds of your own. Record each group's annotation (e.g. `r` for a type-checked IDE rename) for Phase 8.
 
 **Why this matters:**
-- **Lowercase (a, r, d, e, t, c)** = Provably safe, don't need review, can touch MANY files
-- **UPPERCASE (A, R, D, E, T, C, F, B)** = Test-verified, need review
+- **Lowercase (r, d, e, t)** = Provably safe, don't need review, can touch MANY files
+- **UPPERCASE (R, D, E, T, F, B)** = Test-verified, need review
 - **!! suffix** = Risky, large, or incompletely verified
 - **\*\* suffix** = Broken, WIP
 
@@ -184,13 +156,10 @@ It does NOT reimplement the risk logic. Instead:
 Commits are ordered for optimal review:
 
 1. **e/E** (Environment) - dependencies, config (foundation)
-2. **a** (Automated, provable) - IDE renames, import updates (safe, many files OK)
-3. **r/R** (Refactoring) - structural prep for features
-4. **t/T** (Test-only) - if standalone
-5. **F/B** (Features/Bugfixes) - in dependency order (main review focus)
-6. **A** (Automated, validated) - formatter runs, bulk changes
-7. **d/D** (Documentation) - standalone docs
-8. **c/C** (Comments) - comment-only
+2. **r/R** (Refactoring) - IDE renames, import updates, formatter runs, structural prep for features
+3. **t/T** (Test-only) - if standalone
+4. **F/B** (Features/Bugfixes) - in dependency order (main review focus)
+5. **d/D** (Documentation) - standalone docs and comment-only changes
 
 **Rationale:**
 - **Lowercase first** - Provably safe, don't need review, clear the noise
@@ -233,7 +202,7 @@ digraph branch_decision {
 
 **Step 2: Branch decision logic:**
 
-**Case A: User on main/master/develop/trunk**
+**Case A: User on a protected branch (see Protected Branches Configuration)**
 - Inform: "You're on `<branch>`. Creating a feature branch is required."
 - Propose branch name based on detected ticket or first commit
 - Allow custom input
@@ -348,10 +317,7 @@ When executing this skill, Claude should use the following tools and patterns:
    - Provide 2-4 options per question
    - Questions must be contextual, not obvious
 
-3. **Skill tool** to invoke `/commit-notation`:
-   - Pass context as structured text in args parameter
-   - Parse response for annotation
-   - Use annotation in commit message
+3. **Skill tool** to load `commit-notation` once; apply its criteria to each group
 
 4. **Read tool** for analyzing file contents (if needed):
    - Check file patterns
@@ -402,53 +368,18 @@ fi
 5. Group changes based on interview insights
 6. For each group:
    a. Gather context
-   b. Invoke /commit-notation (Skill tool)
+   b. Apply commit-notation's risk criteria
    c. Store annotation for later
 7. Detect current branch (Bash - git branch --show-current)
 8. Branch decision:
-   - If on main/master/develop/trunk: Propose new branch, set needs_new_branch=true
+   - If on a protected branch (see Protected Branches Configuration): Propose new branch, set needs_new_branch=true
    - If on feature branch: Ask "Use this branch?", set needs_new_branch accordingly
 9. Show proposed commits with branch strategy (text output)
 10. Get confirmation (AskUserQuestion or wait for approval)
 11. If needs_new_branch=true: Create branch (Bash - git checkout -b)
 12. Execute commits (Bash - git add, git commit)
-13. Push commits:
-    - If needs_new_branch=true: git push -u origin <branch-name>
-    - If needs_new_branch=false: git push
+13. Push: `git push` if the branch tracks an upstream, else `git push -u origin <branch>` (Phase 8 Step 3)
 14. Optional: PR workflow (two-step questions)
-```
-
-### Pattern: Invoking commit-notation
-
-For each commit group:
-
-```typescript
-// Gather context
-const context = {
-  intention: "F",  // or B, R, D, T, E, A, C
-  filesChanged: 2,
-  linesOfCode: 15,
-  testCoverage: "Unit tests added and passing",
-  changeNature: "Added email validation function",
-  toolAssisted: "Manual implementation"
-};
-
-// Invoke via Skill tool
-// skill: "commit-notation"
-// args: `
-// Intention: ${context.intention}
-// Files changed: ${context.filesChanged}
-// Lines of code: ${context.linesOfCode}
-// Test coverage: ${context.testCoverage}
-// Change nature: ${context.changeNature}
-// Tool-assisted: ${context.toolAssisted}
-//
-// What annotation should I use?
-// `
-
-// Parse response
-// Expected response format: annotation letters like "F" or "a" or with risk suffix like "R" with double-bang
-// Use in commit message: "<annotation> <summary>"
 ```
 
 ### Pattern: Interview Questions
@@ -630,7 +561,7 @@ Based on `/commit-notation` skill with **project override for ticket format**:
 
 **Separator Convention:**
 - **UPPERCASE intentions**: Use `:` separator (e.g., `F: Add feature`, `B: Fix bug`)
-- **Lowercase intentions**: Omit separator (e.g., `a Rename method`, `r Extract function`)
+- **Lowercase intentions**: Omit separator (e.g., `r Rename method`, `r Extract function`)
 - **Rationale**: Lowercase = provably safe, less formal notation
 
 Examples:
@@ -638,31 +569,15 @@ Examples:
 - `r Extract calculateTotal method` + `#FOO-123` (lowercase without `:`)
 - `B` with risk suffix: `Fix race condition in event handler` + `#BAR-456` (uppercase with `:`)
 - `E: Add axios-retry dependency` + (optional ticket)
-- `a Update imports after file move` + `#FOO-123` (lowercase without `:`)
+- `r Update imports after file move` + `#FOO-123` (lowercase without `:`)
 
 ## Change Categorization
 
-### Intention Detection (F/B/R/D/T/E/A/C)
+### Intention Detection (F/B/R/D/T/E)
 
-**Feature (F) vs Bugfix (B):**
-```bash
-# Check for bug-related keywords
-git diff <file> | grep -iE "fix|bug|error|crash|issue|repair"
-# Present → B, Absent → F
+**Feature (F) vs Bugfix (B):** B when the diff repairs existing behavior that was wrong, F when it adds or changes intended behavior. Use the ticket type and the interview; ask if unclear.
 
-# Check ticket number
-ticket =~ /BUG-\d+|BUGFIX-\d+/ → B
-```
-
-**Refactoring (R) vs Automated (A):**
-```bash
-# Refactoring: specific, named changes (extract, inline, rename)
-# Automated: bulk operations, formatter, tool-generated
-
-# Import-only changes → A (automated)
-git diff <file> | grep -v "^[+-]import\|^[+-]require" | grep "^[+-]" | wc -l
-# If 0 → imports only → A
-```
+**Refactoring (R):** structural changes with no behavior change, including tool-assisted ones (IDE rename, formatter, import updates).
 
 **Test-only (T):**
 ```bash
@@ -682,32 +597,25 @@ path =~ /\.md$|^docs\//
 path =~ /\.(json|yml|yaml)$|package\.json|tsconfig/
 ```
 
-**Comment (C):**
-```bash
-# Comment-only changes in source
-# Detect by checking if all diff lines are comments
-```
+**Comment-only changes** are D.
 
 ### Context for commit-notation
 
 For each commit group, collect:
-- **Intention**: F/B/R/D/T/E/A/C
+- **Intention**: F/B/R/D/T/E
 - **File count**: How many files in this commit
 - **LoC**: Lines added + removed
 - **Test status**: Tests exist? Tests pass?
 - **Change nature**: Describe what changed (imports-only, typo fix, new function, etc.)
 - **Tool-assisted**: IDE refactoring? Manual edit?
 
-Then invoke `/commit-notation` with this context to get the proper annotation.
+Then apply commit-notation's risk criteria to this context to choose the annotation.
 
 ## Integration with Existing Skills
 
-**With commit-notation (CRITICAL - Active Integration):**
-- **Invoke `/commit-notation` for EACH commit group** to determine risk level
-- Provide context: intention, LoC, file count, change nature, test status
-- Use the annotation it returns (like `x` or `X` or with suffixes like `X!!` or `X**`)
-- This ensures 100% consistency with manual commits
-- Also use for final message formatting
+**With commit-notation:**
+- Apply its risk-level criteria to each commit group (intention, LoC, file count, change nature, test status), so annotations match manual commits
+- Also use it for final message formatting
 
 **With commit:**
 - Follow "one concern per commit" principle
@@ -807,12 +715,12 @@ D: Document data fetching API
 **Result:**
 ```bash
 # Commit 1
-a Rename oldMethod to newMethod
+r Rename oldMethod to newMethod
 
 #FOO-123
 ```
 
-Note: **Lowercase `a`** because provably safe (IDE-assisted, type-checked)
+Note: **Lowercase `r`** because provably safe (IDE-assisted, type-checked)
 Note: **All 50 files in one commit** because it's safe to do so
 
 ### Example 5: Typo Fix Across Docs
@@ -832,15 +740,14 @@ Note: **All 10 files in one commit** because it's safe to do so
 
 ## Success Criteria
 
-✓ Skill correctly categorizes files by intention (F/B/R/D/T/E/A/C)
+✓ Skill correctly categorizes files by intention (F/B/R/D/T/E)
 ✓ Conducts in-depth interview (2-4 contextual questions)
-✓ For each commit group, invokes `/commit-notation` to determine risk level
-✓ Risk levels match what commit-notation returns
+✓ Risk level of each commit group follows commit-notation's criteria
 ✓ Commits grouped logically (test+impl together, intentions separate)
 ✓ Provably safe commits (lowercase) can touch many files without being split
 ✓ Commits ordered optimally (lowercase first, then UPPERCASE, features last)
 ✓ Detects current branch and offers to use it (if on feature branch)
-✓ Creates new branch only when user chooses to (or when on main/master/develop)
+✓ Creates new branch only when user chooses to (or when on a protected branch)
 ✓ Correctly handles both workflows: current branch vs new branch
 ✓ Two-step PR workflow works (markdown generation + optional PR creation)
 ✓ Uses `#` prefix for ticket numbers in commit messages
@@ -861,11 +768,11 @@ Note: **All 10 files in one commit** because it's safe to do so
 - Forget `#` prefix on ticket numbers
 
 **Do:**
-- Invoke `/commit-notation` for every commit group
+- Apply commit-notation's criteria to every commit group
 - Ask in-depth, contextual questions during interview
 - Allow many files in lowercase commits (they're provably safe)
 - Detect current branch and ask if user wants to use it
-- Create new branch only when explicitly chosen or on main/master/develop
+- Create new branch only when explicitly chosen or on a protected branch
 - Give user choice on PR description (markdown vs full PR)
 - Use `#FOO-123` format for ticket numbers
 

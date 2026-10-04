@@ -1,16 +1,12 @@
 ---
 name: bye
-description: >-
-  Use when the user says /bye, "wrap up", "end session", or similar.
-  Reconstructs full session history including compacted context,
-  creates a sessionlog (if the project has a sessionlog directory),
-  commits changes, and summarizes next steps.
+description: "Use when the user says /bye, \"wrap up\", \"end session\", or similar. Reconstructs full session history including compacted context, creates a sessionlog (if the project has a sessionlog directory), commits changes, and summarizes next steps."
 globs: []
 license: MIT
 metadata:
   author: eins78
   repo: https://github.com/quatico-solutions/agent-skills
-  version: 2.2.1
+  version: 2.3.0
 compatibility: Designed for Claude Code and Cursor
 ---
 
@@ -20,14 +16,14 @@ compatibility: Designed for Claude Code and Cursor
 
 If running in a project with a local `CLAUDE.md` or `AGENTS.md`, check for a **"Session Wrap Up"** heading. If found, follow those additional instructions alongside (and in addition to) the steps below. That section is also where the project declares its sessionlog directory — see [sessionlog-template.md](${CLAUDE_SKILL_DIR}/sessionlog-template.md).
 
-## CRITICAL: Restore Full Session History First
+## Restore Full Session History First
 
-**Nothing proceeds until full history is reconstructed.** Context compaction hides earlier work — you must recover it or the sessionlog will be incomplete.
+Reconstruct full history before anything else: context compaction hides earlier work, and without it the sessionlog will be incomplete.
 
-1. Use a subagent to analyze the session file (see [subagent-tasks.md](${CLAUDE_SKILL_DIR}/subagent-tasks.md))
+1. For long or compacted sessions, delegate session-file analysis to a subagent (see [subagent-tasks.md](${CLAUDE_SKILL_DIR}/subagent-tasks.md))
 2. Follow the tool-specific restoration guide:
    - **Claude Code:** [claude-code-session-restoration.md](${CLAUDE_SKILL_DIR}/claude-code-session-restoration.md)
-   - **Cursor:** [cursor-session-restoration.md](${CLAUDE_SKILL_DIR}/cursor-session-restoration.md)
+   - **Cursor:** no restoration procedure yet. Use the current conversation and `git log`, and note "restoration limited (Cursor)" in the summary.
 3. Combine restored history with current context before continuing
 
 If restoration finds **no prior work beyond current context**, proceed — but log that restoration was attempted.
@@ -50,6 +46,16 @@ After restoring history, classify the session:
 
 1. **Determine scope** — everything between last /bye (or session start) and now. Verify each item was discussed in THIS conversation.
 2. **Assess work** — files created, files modified, decisions made, research done, tasks completed, tasks remaining.
+   **Then refresh live state before calling anything open or done.** The
+   conversation's picture of PRs, builds, tickets and branches is a snapshot
+   from when they were last looked at, and they keep moving while a session
+   sits idle — a wrap-up once listed a PR as "awaiting review and merge" hours
+   after it had been merged. For every item the summary or sessionlog will call
+   pending, done or blocked, check its source now: the PR's state
+   (`gh pr view` / `bb pr view`), the CI status of the latest commit, the
+   ticket's status in the tracker, the branch after `git fetch`. Drop what is
+   already done; mark what cannot be checked as *unverified*. Never carry a
+   status forward from memory.
 3. **Sessionlog needed?** Would anything important be lost if we clear this
    session now? Commits already capture *what* changed and *when*. A sessionlog
    is only worth creating for context not in the committed artifacts.
@@ -82,7 +88,7 @@ After restoring history, classify the session:
 | Modified files I didn't touch | **ASK** — likely parallel session |
 | .env, credentials, secrets | **NEVER**, warn user |
 
-Commit message: `[Brief description]\n\nSession wrap-up: YYYY-MM-DD`
+Commit message: follow the project's commit convention (CLAUDE.md / AGENTS.md, or the `commit-notation` skill) when one is declared, and add `Session wrap-up: YYYY-MM-DD` as the last body line. Otherwise use `[Brief description]\n\nSession wrap-up: YYYY-MM-DD`.
 
 Push if remote tracking exists.
 

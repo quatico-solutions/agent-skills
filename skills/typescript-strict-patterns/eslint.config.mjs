@@ -8,7 +8,7 @@
 // - No `enum` (use const arrays or z.enum())
 // - Exhaustive switch statements
 // - No unnecessary conditions (leverages strict tsconfig)
-// - No `!` / `as` in production code (relaxed in tests)
+// - No `!` in production code (relaxed in tests); `as` is left to review
 
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";

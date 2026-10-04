@@ -1,5 +1,30 @@
 # @quatico-solutions/agent-skills
 
+## 3.15.0
+
+### Minor Changes
+
+- [#76](https://github.com/quatico-solutions/agent-skills/pull/76) [`0888f59`](https://github.com/quatico-solutions/agent-skills/commit/0888f59614b4e62ebd97d8fc71fc09337f554b14) Thanks [@eins78](https://github.com/eins78)! - New skill `dedicated-browser` 0.1.0, beta, feedback welcome as GitHub issues: a separate browser for the agent, with its own saved logins. The human signs in only to the systems the agent should reach; the agent never gets their everyday browser. Runs Chrome for Testing on a fixed local port, connects through Playwright MCP, tells the human when the browser is behind the current stable version, and refuses to treat someone else's browser on the same port as its own. Interactive use on a Mac only.
+
+  <!--
+  bumps:
+    skills:
+      dedicated-browser: minor
+    tuned-against: claude-sonnet-5
+  -->
+
+## 3.14.0
+
+### Minor Changes
+
+- [#78](https://github.com/quatico-solutions/agent-skills/pull/78) [`690fd57`](https://github.com/quatico-solutions/agent-skills/commit/690fd577fdb2a379e2d34b262eda1ffd736031fd) Thanks [@qubert-quatico](https://github.com/qubert-quatico)! - bye: refresh PR, CI, ticket and branch state from their live sources before listing anything as pending or done in the summary or sessionlog.
+
+  <!--
+  bumps:
+    skills:
+      bye: minor
+  -->
+
 ## 3.13.1
 
 ### Patch Changes

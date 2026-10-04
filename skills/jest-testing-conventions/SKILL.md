@@ -382,13 +382,10 @@ test("saves order", () => { ... });
 Suppress expected console output:
 
 ```typescript
-beforeAll(() => {
+// beforeEach: the recommended config's restoreMocks undoes spies before every test
+beforeEach(() => {
     jest.spyOn(console, "warn").mockImplementation(() => {});
     jest.spyOn(console, "error").mockImplementation(() => {});
-});
-
-afterAll(() => {
-    jest.restoreAllMocks();
 });
 ```
 

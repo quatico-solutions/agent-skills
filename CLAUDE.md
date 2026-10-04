@@ -7,7 +7,7 @@ Agent instructions for the `agent-skills` repository.
 A single plugin (`quatico-skills`) over a flat skill pool:
 
 ```
-skills/          ← 18 skills (flat pool, one dir per skill)
+skills/          ← 19 skills (flat pool, one dir per skill)
 cli/             ← bb, the Bitbucket CLI source; Homebrew installs it, this is not the installed copy
 .claude-plugin/  ← marketplace.json + plugin.json
 .cursor-plugin/  ← marketplace.json + plugin.json
@@ -89,10 +89,10 @@ At release, `pnpm run version` consumes the changesets: `bump-skill-versions.sh`
 
 The skills table in README.md lists the `quatico-skills` plugin's skills. When you:
 
-- **Add a skill**: add it to `skills/` and the README table (linked to its directory)
+- **Add a skill**: add it to `skills/` and the README table (linked to its directory), at its alphabetical place, not at the end
 - **Remove a skill**: remove from `skills/` and the table
 
-The README table must always match the actual contents of the `skills/` directory.
+The README table must always match the actual contents of the `skills/` directory, in alphabetical order by skill name.
 
 ## Gates Over Rules
 
@@ -108,7 +108,7 @@ When a skill includes a critical workflow (session teardown, credential handling
 
 **Candidates in this repo:**
 
-- "Documentation Sync (CRITICAL)" above is prose-only — a candidate for a CI check / pre-push hook that fails when the README skills table doesn't match `skills/`.
+- "Documentation Sync (CRITICAL)" above is prose-only — a candidate for a CI check / pre-push hook that fails when the README skills table doesn't match `skills/` or is not in alphabetical order.
 - Versioning is currently soft-gated: CI *warns* when a PR has no changeset, but doesn't fail. Hardening that into a failure would make it a gate.
 
 ## Plot Config

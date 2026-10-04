@@ -137,55 +137,19 @@ done
 
 ### Feature (F) vs Bugfix (B)
 
-**Bugfix indicators:**
-```bash
-# Keywords in diff
-git diff <file> | grep -iE "fix|bug|error|crash|issue|repair|broken|defect"
-
-# Ticket number pattern
-ticket =~ /BUG-\d+|BUGFIX-\d+|FIX-\d+/
-```
-
-**Feature indicators:**
-```bash
-# New files
-git status --porcelain | grep "^A "
-
-# New functions/classes
-git diff <file> | grep "^+.*function\|^+.*class\|^+.*export"
-
-# Ticket number pattern
-ticket =~ /FEAT-\d+|FEATURE-\d+|STORY-\d+/
-```
+B when the diff repairs existing behavior that was wrong; F when it adds or changes intended behavior. The ticket type (`BUG-`, `FEAT-`, `STORY-`) is a hint, not a verdict.
 
 **If unclear:** Ask user during interview phase
 
-### Refactoring (R) vs Automated (A)
+### Refactoring (R)
 
-**Refactoring (R):**
 - Specific, named structural changes
 - Extract method/function
 - Inline variable
 - Rename class/method
 - Move file/module
+- Tool-assisted changes: formatter output (Prettier, ESLint --fix), import updates after a file move, mass rename via IDE
 - No behavior change (tests don't change logic)
-
-**Automated (A):**
-- Bulk operations
-- Formatter output (Prettier, ESLint --fix)
-- Tool-generated code
-- Import updates after file move
-- Mass rename via IDE
-
-**Detection:**
-```bash
-# Import-only → A
-# Check if all changes are imports
-
-# Check commit message or ask user:
-# "Was this IDE-assisted?" → A if yes
-# "Is this a structural change?" → R if yes
-```
 
 ### Test-only (T)
 
@@ -227,12 +191,11 @@ path =~ /\.md$|^docs\/|^README/
 path =~ /\.(json|yml|yaml)$|package\.json|tsconfig|\.env|\.github/
 ```
 
-### Comment (C)
+### Comment-only changes (D)
 
 **Criteria:**
-- Only comments changed
+- Only comments changed (JSDoc/JavaDoc included)
 - No code logic changed
-- JSDoc/JavaDoc counts as D (documentation), not C
 
 **Detection:**
 ```bash
@@ -248,7 +211,7 @@ git diff <file> | grep "^[+-]" | grep -v "^[+-].*//\|^[+-].*\/\*\|^[+-].*\*\/"
 ### Context Template
 
 ```
-Intention: [F/B/R/D/T/E/A/C]
+Intention: [F/B/R/D/T/E]
 Files changed: [count]
 Lines of code: [added + removed]
 Test coverage: [tests exist? tests pass?]
@@ -327,9 +290,9 @@ Tool-assisted: Find-and-replace
    - FOO-123 ≠ FOO-124
    - Separate commits even if same intention
 
-3. **Automated vs Manual:**
-   - Formatter run (A) ≠ Feature (F)
-   - Import updates (a) ≠ Refactoring (R)
+3. **Tool-assisted vs manual:**
+   - Formatter run (R) ≠ Feature (F)
+   - Import updates (r) ≠ hand-written refactoring (R)
 
 ### Provably Safe Changes Can Span Many Files
 
@@ -337,11 +300,11 @@ Tool-assisted: Find-and-replace
 
 ```bash
 # OK: 50 files in one commit
-a Rename getUserData to fetchUserProfile
+r Rename getUserData to fetchUserProfile
 # Why: IDE-assisted, type-checked, provably safe
 
 # OK: 100 files in one commit
-a Update imports after moving UserService
+r Update imports after moving UserService
 # Why: Tool-generated, compiler-verified
 
 # OK: 10 files in one commit
@@ -371,38 +334,24 @@ F!! Add email and password validation
    - Build setup
    - **Why first:** Foundation for other changes
 
-2. **a** (Automated, provable)
-   - IDE renames
-   - Import updates
-   - Tool-generated
-   - **Why second:** Safe, clears noise, can touch many files
-
-3. **r/R** (Refactoring)
+2. **r/R** (Refactoring)
+   - IDE renames, import updates, formatter runs
    - Structural changes
    - Prep for features
-   - **Why third:** Prepares ground for behavior changes
+   - **Why second:** Clears noise and prepares ground for behavior changes
 
-4. **t/T** (Test-only)
+3. **t/T** (Test-only)
    - Standalone test changes
    - **Why here:** Test infrastructure before features
 
-5. **F/B** (Features/Bugfixes)
+4. **F/B** (Features/Bugfixes)
    - Main behavioral changes
    - In dependency order
    - **Why here:** Main review focus, reviewers see clean code
 
-6. **A** (Automated, validated)
-   - Formatter runs
-   - Bulk linting
-   - **Why late:** Doesn't obscure features, already validated
-
-7. **d/D** (Documentation)
-   - Standalone docs
-   - **Why late:** Can reference completed features
-
-8. **c/C** (Comments)
-   - Comment-only changes
-   - **Why last:** Least critical, can reference completed work
+5. **d/D** (Documentation)
+   - Standalone docs and comment-only changes
+   - **Why last:** Can reference completed features
 
 ### Dependency Order Within Categories
 
@@ -495,12 +444,12 @@ F: Add User model
 
 ### No Clear Intention
 
-**Scenario:** Change doesn't fit F/B/R/D/T/E/A/C
+**Scenario:** Change doesn't fit F/B/R/D/T/E
 
 **Solution:**
-- Use `*` (unknown) intention
+- Use the WIP intention
 - Ask user during interview for clarification
-- Example: `*: Mixed changes to auth module`
+- Example: `WIP Mixed changes to auth module`
 
 ### Dependency Cycle
 
@@ -518,8 +467,8 @@ F: Add User model
 
 **Solution:**
 - Still one commit (it's provably safe)
-- Use lowercase `a`
-- Example: `a Update imports after reorganizing src/ directory`
+- Use lowercase `r`
+- Example: `r Update imports after reorganizing src/ directory`
 - **Why:** Safe changes don't become risky just because they're large
 
 ### Multiple Tickets in Changes
@@ -676,7 +625,7 @@ done
 ```
 
 **Expected:**
-- 1 commit: `a Rename oldMethod to newMethod`
+- 1 commit: `r Rename oldMethod to newMethod`
 - All 50 files in one commit
 
 ### Test 4: Typo Fix
@@ -721,12 +670,6 @@ echo "auth test" >> src/auth.spec.ts
 - ❌ "Does it work?"
 - ❌ "Is this ready to commit?"
 - ❌ "Are you sure this is correct?"
-
-**Expected Interview Questions (YES):**
-- ✅ "How should the system handle token refresh when user has multiple tabs open?"
-- ✅ "What's the UX when a user's session expires mid-form-fill?"
-- ✅ "Should admin users bypass rate limiting, or be rate-limited differently?"
-- ✅ "How should we handle password reset if user's email was compromised?"
 
 **Verification:**
 - Questions are **contextual** (mention auth, tokens, sessions, not generic)
@@ -786,37 +729,22 @@ if (filesChanged > 10) {
 }
 ```
 
-**Right:**
-```typescript
-// Do this instead
-const context = {
-  intention: "R",
-  filesChanged: 50,
-  linesOfCode: 150,
-  testStatus: "all pass",
-  changeNature: "IDE rename",
-  toolAssisted: true
-};
-
-// Invoke /commit-notation
-const annotation = await invokeCommitNotation(context);
-// Returns: "a" (provably safe)
-```
+**Right:** apply commit-notation's risk criteria (its REFERENCE.md tables) to the group's context — intention, file count, LoC, test status, tool-assisted.
 
 ### Mistake 2: Splitting Safe Changes
 
 **Wrong:**
 ```bash
 # 50 files from IDE rename split into 5 commits
-a Rename oldMethod to newMethod (part 1)
-a Rename oldMethod to newMethod (part 2)
+r Rename oldMethod to newMethod (part 1)
+r Rename oldMethod to newMethod (part 2)
 ...
 ```
 
 **Right:**
 ```bash
 # All 50 files in one commit
-a Rename oldMethod to newMethod
+r Rename oldMethod to newMethod
 ```
 
 ### Mistake 3: Skipping Interview
