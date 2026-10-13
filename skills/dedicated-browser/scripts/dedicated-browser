@@ -15,10 +15,13 @@ set -euo pipefail
 #   1  not running (or not installed)
 #   2  something answers on the port, but it is not this browser: another profile, or another host
 #
-# Two settings, both optional, both environment variables:
+# Three settings, all optional, all environment variables:
 #   DEDICATED_BROWSER_PORT   debugging port (default 9393)
 #   DEDICATED_BROWSER_HOME   install directory, holds the browser app and its profile
 #                            (default ~/Library/Application Support/dedicated-browser)
+#   DEDICATED_BROWSER_COLOR  theme color of the browser window, by the name of a Chrome theme
+#                            color, or "none" (default orange). Read once, when the profile is
+#                            created: a profile that exists keeps its look.
 #
 # Everything browser-specific lives in backend-<name>.sh next to this file.
 
@@ -28,6 +31,7 @@ SELF="${SELF_DIR}/$(basename "${BASH_SOURCE[0]}")"
 DB_PORT="${DEDICATED_BROWSER_PORT:-9393}"
 DB_HOME="${DEDICATED_BROWSER_HOME:-${HOME}/Library/Application Support/dedicated-browser}"
 DB_PROFILE="${DB_HOME}/profile"
+DB_COLOR="${DEDICATED_BROWSER_COLOR:-orange}"
 DB_BACKEND="${DEDICATED_BROWSER_BACKEND:-chrome}"
 CDP="http://127.0.0.1:${DB_PORT}"
 LATEST_CACHE="${DB_HOME}/.latest-stable"

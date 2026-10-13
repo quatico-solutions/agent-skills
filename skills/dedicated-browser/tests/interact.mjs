@@ -4,7 +4,7 @@
 //   node interact.mjs <port> <app-port> login <screenshot>   load a German page (no translate
 //                                                            offer), sign in through the form,
 //                                                            click, set localStorage, load a real
-//                                                            website
+//                                                            website, read the window's theme
 //   node interact.mjs <port> <app-port> check <screenshot>   after a restart: the server still sees
 //                                                            the cookie, localStorage is still there
 //
@@ -134,6 +134,13 @@ try {
     check((await page.title()) === 'Example Domain', 'a real website loads (example.com)');
     // FedCM's page API exists on https pages unless the launch flags turn the feature off.
     check((await page.evaluate(() => typeof window.IdentityCredential)) === 'undefined', 'FedCM is off (no IdentityCredential on an https page)');
+    // The window has the theme color that the new profile got: Chrome's Orange. Chrome derives the
+    // frame color from that color and from light or dark mode, so the check is "a warm color" (red
+    // over green over blue) and not one value. Without a theme the frame is blue or grey.
+    await page.goto('chrome://theme/colors.css?sets=ui,chrome');
+    const frame = /--color-sys-header:\s*#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(await page.evaluate(() => document.body.innerText));
+    const [red, green, blue] = frame ? frame.slice(1).map((hex) => parseInt(hex, 16)) : [0, 0, 0];
+    check(red > green && green > blue && red - blue >= 24, `the window frame has the orange theme (frame color ${frame ? `#${frame.slice(1).join('')}` : 'not found'})`);
   } else {
     await page.goto(app);
     check((await who()) === `Signed in as ${USER}`, 'after the restart the server still sees the cookie');

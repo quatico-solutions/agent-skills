@@ -14,7 +14,8 @@ the agent should reach. The agent never gets the human's everyday browser, which
 everything.
 
 It is Chrome for Testing: its own app in the Dock and in Cmd-Tab, with a different icon, so the
-human can tell at a glance which window is the agent's. Since version 136, Chrome also refuses
+human can tell at a glance which window is the agent's. A new profile gets an orange window theme
+for the same reason. Since version 136, Chrome also refuses
 remote control of its default profile, so the agent needs a profile of its own anyway.
 
 For a human at their own Mac. Servers, headless runs and start-at-login are out of scope.
@@ -55,6 +56,12 @@ step 2 with the human.
 
 1. `dedicated-browser setup`. It downloads Chrome for Testing (about 150 MB) into
    `~/Library/Application Support/dedicated-browser/`, starts it, and prints the MCP config.
+   Before you run it, tell the human that the browser's window will be orange, and that they can
+   name another color. For another color, set `DEDICATED_BROWSER_COLOR` for this one command to
+   `blue`, `cool-grey`, `grey`, `aqua`, `green`, `viridian`, `citron`, `apricot`, `rose`, `pink`,
+   `fuchsia` or `violet` (Chrome's own theme colors), or to `none`. The setting counts only when
+   the profile is created. Later, the human changes the color in Chrome, at
+   `chrome://settings/manageProfile`.
 2. Register the MCP server under the name `dedicated-browser` (setup prints the exact line for
    Claude Code and for Cursor), then restart the agent so it loads. A different name, or the
    official `playwright` plugin, gives tools named differently, and that plugin's server starts its
