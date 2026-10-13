@@ -7,7 +7,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.16.1",
+      "version": "3.16.2",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -45,16 +45,6 @@
       }
     },
     {
-      "name": "commit",
-      "description": "When and what to commit. Covers timing, atomic commits, and git hooks. Use when: making commits, deciding when to commit, preparing changes. Triggers: commit, commit this, commit changes, git commi...",
-      "version": "1.0.0",
-      "source": "./skills/commit",
-      "author": {
-        "name": "Quatico Solutions AG",
-        "email": ""
-      }
-    },
-    {
       "name": "commit-notation",
       "description": "Format git commit messages using Quaticos notation (Arlos v1 with extensions). Use when: committing changes, making commits, creating commits, writing commit messages, reviewing commits, or analyzi...",
       "version": "1.0.2",
@@ -65,9 +55,19 @@
       }
     },
     {
+      "name": "commit",
+      "description": "When and what to commit. Covers timing, atomic commits, and git hooks. Use when: making commits, deciding when to commit, preparing changes. Triggers: commit, commit this, commit changes, git commi...",
+      "version": "1.0.0",
+      "source": "./skills/commit",
+      "author": {
+        "name": "Quatico Solutions AG",
+        "email": ""
+      }
+    },
+    {
       "name": "dedicated-browser",
       "description": "Use when the agent needs a web browser that is signed in to systems the human chose: a separate Chrome for Testing with its own saved logins, so the agent never touches the humans everyday browser....",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "./skills/dedicated-browser",
       "author": {
         "name": "Quatico Solutions AG",
