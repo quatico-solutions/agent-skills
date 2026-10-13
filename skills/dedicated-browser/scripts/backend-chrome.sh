@@ -89,17 +89,20 @@ backend_install() {
   echo "Installed Chrome for Testing $(backend_installed_version) in ${DB_HOME}" >&2
 }
 
-# Each name was checked against the Chrome for Testing 154 source and binary: Chrome ignores a name
-# it does not know, so a stale one would only look like it works. Re-check after a major update.
-#   MediaRouter,                  no Cast device discovery on the local network, which can raise
-#   DialMediaRouteProvider        macOS network prompts
+# Chrome ignores a name it does not know, so a stale one only looks like it works. Each name is
+# defined with BASE_FEATURE(k<Name>, ...) in the Chromium source at tag 155.0.8059.39.
+# tests/feature-names.sh holds the source file of each name and repeats the check for any version:
+# run it after a major update. A search for the name in the binary is no check. It finds strings
+# that are no feature, and it misses a feature whose name comes from its C++ identifier.
+#   MediaRouter                   no Cast device discovery on the local network, which can raise
+#                                 macOS network prompts
 #   OptimizationHints             no Optimization Guide downloads from Google
 #   AutofillServerCommunication   no form-field lookups sent to Google's autofill server
 #   AimEnabled                    no AI Mode button in the address bar
 #   LensOverlay                   no Google Lens overlay or "Search with Lens" entry points
 #   FedCm                         no browser "Sign in to <site> with <provider>" dialog; sites fall
 #                                 back to their own sign-in pop-up or redirect, or offer none
-CFT_DISABLED_FEATURES="MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
+CFT_DISABLED_FEATURES="MediaRouter,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
 
 # Settings written into the profile before each start, because no flag sets them. Chrome reads them
 # at startup; a change the human makes in Settings is undone at the next start.
