@@ -34,6 +34,9 @@ for arg in "$@"; do
   esac
 done
 
+# The test checks the default theme color, so a setting from the caller's shell must not reach it.
+unset DEDICATED_BROWSER_COLOR
+
 PORT="${SMOKE_PORT:-9444}"
 DECOY_PORT=$((PORT + 1))
 APP_PORT=$((PORT + 2)) # step 3's local web app
@@ -94,10 +97,11 @@ COOKIE_TIMEOUT=25
 [[ "${REAL_KEYCHAIN}" == true ]] && COOKIE_TIMEOUT=120
 cookie() { perl -e "alarm ${COOKIE_TIMEOUT}; exec @ARGV" node "${HERE}/cookie.mjs" "${PORT}" "$1" 2>&1 || echo "hung-or-failed"; }
 
-# Read one setting from home-a's profile, e.g. `pref signin.allowed`. Prints the value as JSON
-# ("false", "true", "undefined" when absent). Chrome writes the file on quit.
+# Read one setting from a profile, e.g. `pref signin.allowed`: home-a's, or that of the home given
+# as second argument. Prints the value as JSON ("false", "true", "undefined" when absent). Chrome
+# writes the file on quit.
 pref() {
-  osascript -l JavaScript - "${HOME_A}/profile/Default/Preferences" "$1" 2>/dev/null <<'JXA' || echo "unreadable"
+  osascript -l JavaScript - "${2:-${HOME_A}}/profile/Default/Preferences" "$1" 2>/dev/null <<'JXA' || echo "unreadable"
 function run(argv) {
   ObjC.import('Foundation');
   let value = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null).js);
@@ -144,6 +148,9 @@ v="$(pref profile.password_manager_leak_detection)"
 if [[ "${v}" == false ]]; then ok "profile: password breach check is off"; else bad "profile: password breach check is off (= ${v})"; fi
 v="$(pref translate.enabled)"
 if [[ "${v}" == false ]]; then ok "profile: translation is off"; else bad "profile: translation is off (translate.enabled = ${v})"; fi
+# -32768 is #FF8000 as the signed 32-bit ARGB number Chrome stores: its own "Orange" theme color.
+v="$(pref browser.theme.user_color2)"
+if [[ "${v}" == -32768 ]]; then ok "profile: the theme color is Chrome's Orange"; else bad "profile: the theme color is Chrome's Orange (browser.theme.user_color2 = ${v})"; fi
 expect_status 0 "start again" db start
 if [[ "$(cookie get)" == "survived" ]]; then ok "cookie survived stop/start"; else bad "cookie survived stop/start"; fi
 
@@ -178,7 +185,11 @@ fi
 echo "4. another browser on the port is not mistaken for ours"
 # A second profile (home-b) answers on the decoy port; home-a must refuse to treat it as its own.
 ln -s "${HOME_A}/Google Chrome for Testing.app" "${HOME_B}/Google Chrome for Testing.app"
-expect_status 0 "decoy browser starts" db_b start
+# The decoy's new profile also tests the color setting: a wrong name stops the start and leaves no
+# profile behind, and "none" gives a profile without a theme.
+DEDICATED_BROWSER_COLOR=purple expect_status 1 "start refuses an unknown color name" db_b start
+if [[ ! -e "${HOME_B}/profile/Default/Preferences" ]]; then ok "the refused start left no profile"; else bad "the refused start left no profile"; fi
+DEDICATED_BROWSER_COLOR=none expect_status 0 "decoy browser starts" db_b start
 expect_status 2 "status refuses the decoy" db_a_on_decoy_port status
 expect_status 1 "start refuses the decoy port" db_a_on_decoy_port start
 # stop quits through the port only when the port is ours. Here it is not: home-a's own browser gets
@@ -190,7 +201,13 @@ else
   bad "stop leaves a different browser on the port running"
 fi
 expect_status 0 "decoy stops" db_b stop
-expect_status 0 "real browser starts again" db start
+v="$(pref browser.theme.user_color2 "${HOME_B}")"
+if [[ "${v}" == undefined ]]; then ok "color none: the profile has no theme color"; else bad "color none: the profile has no theme color (browser.theme.user_color2 = ${v})"; fi
+# The setting counts only for a new profile. backend_prepare_profile runs before the browser
+# starts, so the file shows at once whether this start changed the color.
+DEDICATED_BROWSER_COLOR=violet expect_status 0 "real browser starts again" db start
+v="$(pref browser.theme.user_color2)"
+if [[ "${v}" == -32768 ]]; then ok "an existing profile keeps its theme color"; else bad "an existing profile keeps its theme color (browser.theme.user_color2 = ${v})"; fi
 expect_status 0 "real browser reports running" db status
 
 echo "5. behind-stable note"

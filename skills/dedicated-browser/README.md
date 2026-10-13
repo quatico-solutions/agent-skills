@@ -28,10 +28,17 @@ tests/cookie.mjs            helper for smoke.sh: plant / read a cookie over the 
 tests/interact.mjs          helper for smoke.sh: drive a local web app with Playwright over the port
 ```
 
-Two settings, both environment variables: `DEDICATED_BROWSER_PORT` (default **9393**) and
+Three settings, all environment variables: `DEDICATED_BROWSER_PORT` (default **9393**),
 `DEDICATED_BROWSER_HOME` (default `~/Library/Application Support/dedicated-browser`, holding the
-browser app and `profile/`). Removing that directory uninstalls everything. 9393 is not 9222,
-because 9222 is the port every tool reaches for first and is often already taken.
+browser app and `profile/`) and `DEDICATED_BROWSER_COLOR` (default `orange`). Removing the home
+directory uninstalls everything. 9393 is not 9222, because 9222 is the port every tool reaches for
+first and is often already taken.
+
+`DEDICATED_BROWSER_COLOR` is the theme color of the browser window, by the name of one of Chrome's
+own theme colors: `blue`, `cool-grey`, `grey`, `aqua`, `green`, `viridian`, `citron`, `orange`,
+`apricot`, `rose`, `pink`, `fuchsia`, `violet`, or `none` for Chrome's default look. It is read
+once, when the profile is created. A profile that exists keeps its look, also one from a version
+before this setting: there the human picks the color at `chrome://settings/manageProfile`.
 
 ## How it works
 
@@ -115,6 +122,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--disable-features=FedCm` | no browser "Sign in to <site> with <provider>" dialog; a "Sign in with Google" button may then do nothing. A control run on CfT 154 showed `IdentityCredential` present by default and gone with this flag. |
 | `--allow-browser-signin=false` | no "Sign in to Chrome as …" bubble after a Google login and no sync promos; signing in to Google websites still works. Chrome for Testing ships Google's sign-in credentials, so this sign-in is on by default. |
 | profile setting `profile.password_manager_leak_detection = false`, written before each start | no "password found in a data breach" warnings; replaces `PasswordCheck`. Saving passwords still works. No flag controls this in Chrome 154. |
+| a theme color for a new profile: `browser.theme.user_color2`, `browser.theme.color_variant2` and `extensions.theme.id = "user_color_theme_id"`, written once, when the profile is created | the agent's window looks unlike the human's own Chrome. The default is Chrome's own "Orange" (`#FF8000`, tonal spot): a click on that chip at `chrome://settings/manageProfile` writes the same three settings, and a profile prepared with them shows the chip as selected. Chrome derives the frame color from the seed color, so the frame is light orange (`#ffdcc7` in light mode, `#2f1b0c` in dark mode on Chrome 155), not `#FF8000`. Written once and not at every start, so a color the human picks later stays. |
 | profile setting `translate.enabled = false`, written before each start | no "Translate this page?" bubble; replaces `Translate`. Chromium has no feature of that name since 138, so Chrome ignores the flag. |
 
 | Cut | Why |
@@ -182,7 +190,7 @@ No user-facing recommendation is made either way yet.
 
 `tests/smoke.sh` runs the real scripts against a fresh temp directory on port 9444. It refuses port 9222 and checks that whoever holds 9222 is unchanged at the end. Unattended it runs a *copy* of the scripts with two extra flags, `--use-mock-keychain --password-store=basic`, so a keychain prompt cannot block it. `--real-keychain` runs the scripts as shipped; a human must click Always Allow whenever macOS asks.
 
-Step 3 drives the browser the way the agent's MCP server does: `tests/interact.mjs` attaches Playwright (`playwright-core`, installed into the temp directory) over the debugging port and uses the profile's default context. It serves a small web app on 127.0.0.1. It first loads a German page from that app and reads Chrome's decision about the translate offer from the `Translate.PageLoad.TriggerDecision` histogram: 7 means the offer is turned off, 13 means Chrome showed it. Then it types a user name into the app's form and clicks Sign in; the server answers with a real `Set-Cookie`. It clicks a page-script button three times, writes localStorage and loads example.com. After `stop` and `start` it checks that the server still sees the session cookie and that localStorage is still there. Both phases save a screenshot, to `SMOKE_ARTIFACTS` when that is set.
+Step 3 drives the browser the way the agent's MCP server does: `tests/interact.mjs` attaches Playwright (`playwright-core`, installed into the temp directory) over the debugging port and uses the profile's default context. It serves a small web app on 127.0.0.1. It first loads a German page from that app and reads Chrome's decision about the translate offer from the `Translate.PageLoad.TriggerDecision` histogram: 7 means the offer is turned off, 13 means Chrome showed it. Then it types a user name into the app's form and clicks Sign in; the server answers with a real `Set-Cookie`. It clicks a page-script button three times, writes localStorage and loads example.com. Last, it reads the window's frame color from `chrome://theme/colors.css` and checks that it is a warm color: Chrome derives the frame color from the theme color and from light or dark mode, so the check compares red, green and blue and not one value. After `stop` and `start` it checks that the server still sees the session cookie and that localStorage is still there. Both phases save a screenshot, to `SMOKE_ARTIFACTS` when that is set.
 
 Step 7 runs `tests/feature-names.sh` for the installed version. It checks every name in `CFT_DISABLED_FEATURES` against the Chromium source at that version's tag: the file that defines the feature must hold `BASE_FEATURE(k<Name>`. Chrome ignores a `--disable-features` name it does not know and prints nothing, so no check of the running browser finds a name that Chromium removed. Run the script alone after a major update; it needs the network and no browser. Without an argument it checks the current stable version.
 
@@ -195,6 +203,7 @@ Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152,
 | `setup`: real download, install, start; `status`; a second `start` is a no-op | pass | pass |
 | a cookie set just before `stop` survives `stop` and `start` | pass | pass |
 | the profile records Chrome's own sign-in as off (`signin.allowed`) and the breach check as off | pass | pass |
+| a new profile gets Chrome's Orange theme and the window frame is a warm color; `none` gives a profile without a theme; an unknown name stops `start` and leaves no profile; an existing profile keeps its color | pass | not run |
 | a German page gets no translate offer: Chrome records trigger decision 7, and the profile holds `translate.enabled = false` | pass | not run |
 | Playwright over the debugging port: typing, clicks and a page script work; a server-set cookie and localStorage survive `stop` and `start`; example.com loads with FedCM's `IdentityCredential` absent; the browser keeps running after Playwright disconnects | pass | pass |
 | a browser with another profile on the port: `status` exits 2, `start` refuses, `stop` leaves it running | pass | pass |
@@ -203,7 +212,7 @@ Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152,
 | every `--disable-features` name is defined in the Chromium source of the installed version | pass | not run |
 | port 9222 has the same owner before and after | pass | pass |
 
-Run on 2026-10-13 on a Mac (macOS 26.5.2, Apple silicon) with `smoke.sh` and the mock keychain, CfT 155 and 153, playwright-core 1.64.0: 54 of 54 checks pass. That run is the source of the two rows marked "not run" for the real keychain.
+Run on 2026-10-13 on a Mac (macOS 26.5.2, Apple silicon) with `smoke.sh` and the mock keychain, CfT 155 and 153, playwright-core 1.64.0: 60 of 60 checks pass. That run is the source of the three rows marked "not run" for the real keychain.
 
 Run on 2026-10-02 on a Mac (macOS 26.5, Apple silicon) with `smoke.sh --real-keychain` and a human clicking Always Allow, while another Chrome for Testing held port 9222. Full run: 33 of 34; every keychain and update check passed, including the cookie surviving the update. The one failure was `npm install`, because the npm registry was unreachable. Run again with `--quick`: 33 of 33, including step 3. The keychain prompted twice, once for 154 at the first cookie write and once for 152 at step 6.
 

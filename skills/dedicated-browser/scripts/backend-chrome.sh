@@ -13,7 +13,8 @@
 #   backend_quit                 ask the browser on the debugging port to quit the way its Quit menu does
 #   backend_main_pids            pid of the running browser process for THIS profile, empty if none
 #
-# The caller sets DB_HOME (install dir), DB_PROFILE and DB_PORT before sourcing.
+# The caller sets DB_HOME (install dir), DB_PROFILE and DB_PORT before sourcing, and DB_COLOR (the
+# theme color for a new profile, or "none") before backend_launch.
 
 CFT_APP_NAME="Google Chrome for Testing.app"
 CFT_INDEX_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
@@ -104,6 +105,29 @@ backend_install() {
 #                                 back to their own sign-in pop-up or redirect, or offer none
 CFT_DISABLED_FEATURES="MediaRouter,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
 
+# Chrome's own theme colors: the chips under "Pick a theme color" in chrome://settings/manageProfile.
+# Prints the seed color (RRGGBB) and the color variant (1 tonal spot, 2 neutral) that
+# kDynamicCustomizeChromeColors holds for a name at Chromium tag 155.0.8059.39.
+CFT_THEME_COLORS="blue cool-grey grey aqua green viridian citron orange apricot rose pink fuchsia violet"
+backend_theme_color() {
+  case "$1" in
+    blue) printf '8CABE4 1' ;;
+    cool-grey) printf '8CABE4 2' ;;
+    grey) printf '888888 2' ;;
+    aqua) printf '26A69A 1' ;;
+    green) printf '00FF00 1' ;;
+    viridian) printf '87BA81 2' ;;
+    citron) printf 'FADF73 1' ;;
+    orange) printf 'FF8000 1' ;;
+    apricot) printf 'FCDBC9 2' ;;
+    rose) printf 'F3B2BE 1' ;;
+    pink) printf 'F3B2BE 2' ;;
+    fuchsia) printf 'FF00FF 1' ;;
+    violet) printf 'E5D5FC 1' ;;
+    *) return 1 ;;
+  esac
+}
+
 # Settings written into the profile before each start, because no flag sets them. Chrome reads them
 # at startup; a change the human makes in Settings is undone at the next start.
 #   profile.password_manager_leak_detection = false   no "password found in a data breach" warnings;
@@ -111,19 +135,44 @@ CFT_DISABLED_FEATURES="MediaRouter,OptimizationHints,AutofillServerCommunication
 #   translate.enabled = false                         no "Translate this page?" bubble; Chromium has
 #                                                      no feature named "Translate" since 138, so no
 #                                                      --disable-features entry does this
+#
+# The theme color is different: it is written once, into a profile that does not exist yet, so the
+# window of the agent's browser looks unlike the human's own. A color the human picks later in
+# Chrome stays. The three settings are the ones Chrome writes when a person clicks that chip.
+#   browser.theme.user_color2, .color_variant2        the seed color as a signed 32-bit ARGB number,
+#                                                      and the variant
+#   extensions.theme.id = "user_color_theme_id"       marks the theme as a color theme
 backend_prepare_profile() {
-  local prefs="${DB_PROFILE}/Default/Preferences"
-  mkdir -p "${DB_PROFILE}/Default"
-  [[ -f "${prefs}" ]] || printf '{}\n' > "${prefs}"
+  local prefs="${DB_PROFILE}/Default/Preferences" color="${DB_COLOR:-none}" seed="" variant=""
+  if [[ ! -f "${prefs}" ]]; then
+    # The name is checked before anything is written: a wrong name must not leave a profile behind
+    # that the next start takes for an existing one.
+    if [[ "${color}" != none ]]; then
+      read -r seed variant <<< "$(backend_theme_color "${color}" || true)"
+      if [[ -z "${seed}" ]]; then
+        echo "Unknown color '${color}'. DEDICATED_BROWSER_COLOR takes one of: ${CFT_THEME_COLORS}, or none." >&2
+        return 1
+      fi
+    fi
+    mkdir -p "${DB_PROFILE}/Default"
+    printf '{}\n' > "${prefs}"
+  fi
   # JavaScript for Automation ships with macOS and parses Chrome's JSON exactly, nulls included.
-  osascript -l JavaScript - "${prefs}" >/dev/null <<'JXA'
+  osascript -l JavaScript - "${prefs}" "${seed}" "${variant}" >/dev/null <<'JXA'
 function run(argv) {
   ObjC.import('Foundation');
-  const path = argv[0];
+  const [path, seed, variant] = argv;
   const prefs = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null).js);
   prefs.profile = prefs.profile || {};
   prefs.translate = prefs.translate || {};
   let changed = false;
+  if (seed) {
+    prefs.browser = prefs.browser || {};
+    prefs.browser.theme = Object.assign(prefs.browser.theme || {}, { user_color2: (0xff000000 | parseInt(seed, 16)) | 0, color_variant2: Number(variant) });
+    prefs.extensions = prefs.extensions || {};
+    prefs.extensions.theme = Object.assign(prefs.extensions.theme || {}, { id: 'user_color_theme_id' });
+    changed = true;
+  }
   if (prefs.profile.password_manager_leak_detection !== false) { prefs.profile.password_manager_leak_detection = false; changed = true; }
   if (prefs.translate.enabled !== false) { prefs.translate.enabled = false; changed = true; }
   if (!changed) return;
