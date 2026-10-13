@@ -1,5 +1,28 @@
 # @quatico-solutions/agent-skills
 
+## 3.17.0
+
+### Minor Changes
+
+- [#92](https://github.com/quatico-solutions/agent-skills/pull/92) [`ab48e97`](https://github.com/quatico-solutions/agent-skills/commit/ab48e975b6a76564a2f0a6e4d83fa95736ee4461) Thanks [@eins78](https://github.com/eins78)! - dedicated-browser: a new profile gets a window theme color, so the agent's browser looks unlike the human's own. The default is Chrome's own "Orange"; `DEDICATED_BROWSER_COLOR` takes the name of another Chrome theme color, or `none`. The color is written once, when the profile is created: an existing profile keeps its look.
+
+  <!--
+  bumps:
+    skills:
+      dedicated-browser: minor
+    tuned-against: claude-opus-5-5
+  -->
+
+### Patch Changes
+
+- [#90](https://github.com/quatico-solutions/agent-skills/pull/90) [`573a706`](https://github.com/quatico-solutions/agent-skills/commit/573a706c6755f5c4e1a94c5d13b96ef4f4fa49e1) Thanks [@eins78](https://github.com/eins78)! - dedicated-browser: remove `DialMediaRouteProvider` from `--disable-features`. Chromium has no feature of that name since 153, so Chrome ignored it. The smoke test now checks that a German page gets no translate offer, and the new `tests/feature-names.sh` checks every remaining name against the Chromium source of the installed version.
+
+  <!--
+  bumps:
+    skills:
+      dedicated-browser: patch
+  -->
+
 ## 3.16.2
 
 ### Patch Changes
