@@ -4,7 +4,8 @@ set -euo pipefail
 # End-to-end test for dedicated-browser on a real Mac. Not part of `pnpm test`: it needs a GUI
 # session, Node 22+ with npm, the network, and downloads Chrome for Testing (about 150 MB, three
 # times unless --quick). Step 3 installs playwright-core into the temp directory and drives the
-# browser with it, as the agent's MCP server does.
+# browser with it, as the agent's MCP server does. Step 7 reads the Chromium source on GitHub for
+# the installed version (tests/feature-names.sh).
 #
 #   tests/smoke.sh                 unattended: runs a patched COPY of the scripts that adds
 #                                  --use-mock-keychain --password-store=basic, so no macOS
@@ -226,7 +227,22 @@ if [[ "${QUICK}" == false ]]; then
   fi
 fi
 
-echo "7. port 9222 untouched"
+echo "7. every --disable-features name is a feature in the installed Chrome version"
+# feature-names.sh prints "ok <what>" / "FAIL <what>" per name, as interact.mjs does.
+INSTALLED="$(DB_HOME="${HOME_A}" /bin/bash -c ". '${SCRIPTS}/backend-chrome.sh'; backend_installed_version")"
+names_status=0
+names_out="$(/bin/bash "${HERE}/feature-names.sh" "${INSTALLED}" 2>&1)" || names_status=$?
+while IFS= read -r line; do
+  case "${line}" in
+    "ok "*) ok "${line#ok }" ;;
+    "FAIL "*) bad "${line#FAIL }" ;;
+  esac
+done <<< "${names_out}"
+if [[ "${names_status}" != 0 ]] && ! grep -q '^FAIL ' <<< "${names_out}"; then
+  bad "feature-names.sh (exit ${names_status}: $(head -1 <<< "${names_out}"))"
+fi
+
+echo "8. port 9222 untouched"
 if [[ "$(port_9222_owner)" == "${OWNER_9222_BEFORE}" ]]; then ok "port 9222 has the same owner as before"; else bad "port 9222 owner changed"; fi
 
 echo

@@ -104,7 +104,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--no-first-run`, `--no-default-browser-check`, `--disable-search-engine-choice-screen`, `--disable-infobars` | no dialogs in the agent's way |
 | `--disable-popup-blocking`, `--disable-hang-monitor` | sign-in pop-ups that a page opens from script still work; no "Page unresponsive" dialog in the agent's way |
 | `--disable-breakpad`, `--disable-component-update`, `--disable-sync`, `--metrics-recording-only` | background work a person never sees; component updates are already off in Chrome for Testing |
-| `--disable-features=` `MediaRouter`, `DialMediaRouteProvider`, `OptimizationHints`, `AutofillServerCommunication` | no Cast discovery on the local network, fewer requests to Google |
+| `--disable-features=` `MediaRouter`, `OptimizationHints`, `AutofillServerCommunication` | no Cast discovery on the local network, fewer requests to Google |
 | exit codes 0/1/2 for health; no python anywhere in the scripts | a version-manager `python3` shim exists on `PATH` yet fails; `sed` and `defaults` cannot |
 | page gotchas, "never drive the debugging port by hand", "do not switch to a lookalike MCP" | mistakes agents kept making |
 
@@ -125,6 +125,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--disable-prompt-on-repost` | a reload of a page that came from a form would re-send the form without asking (Chromium's `NavigationControllerImpl::Reload`) |
 | `--disable-background-networking`, `--disable-client-side-phishing-detection` | Safe Browsing stays current while the profile holds live logins and the agent visits any site |
 | `--disable-features=` `TranslateUI`, `PasswordCheck`, `PasswordManagerOnboarding`, `TabOrganization`, `AiModeOmniboxEntryPoint`, `OmniboxAiModeEntryPointVariations`, `GlobalMediaControls` | none of these names exists in Chrome for Testing 154 (checked in the source at the 154 tag and in the binary), so Chrome ignores them. Replacements are in "Added"; tab organization is gone from Chrome. |
+| `--disable-features=DialMediaRouteProvider` | Chromium has no feature of that name since 153, so Chrome ignores it. `MediaRouter` stays in the list. |
 | symlinks into `~/.local/bin` | plugin cache paths are versioned and change on update, so the links go stale. SKILL.md calls the script by `${CLAUDE_SKILL_DIR}`. |
 | `@puppeteer/browsers` through `npx` | a plain download from the public CfT storage needs no Node for the browser itself |
 | separate health, tabs and restart scripts | folded into `status`, `stop` and `start` |
@@ -181,7 +182,9 @@ No user-facing recommendation is made either way yet.
 
 `tests/smoke.sh` runs the real scripts against a fresh temp directory on port 9444. It refuses port 9222 and checks that whoever holds 9222 is unchanged at the end. Unattended it runs a *copy* of the scripts with two extra flags, `--use-mock-keychain --password-store=basic`, so a keychain prompt cannot block it. `--real-keychain` runs the scripts as shipped; a human must click Always Allow whenever macOS asks.
 
-Step 3 drives the browser the way the agent's MCP server does: `tests/interact.mjs` attaches Playwright (`playwright-core`, installed into the temp directory) over the debugging port and uses the profile's default context. It serves a small web app on 127.0.0.1, types a user name into its form and clicks Sign in; the server answers with a real `Set-Cookie`. It clicks a page-script button three times, writes localStorage and loads example.com. After `stop` and `start` it checks that the server still sees the session cookie and that localStorage is still there. Both phases save a screenshot, to `SMOKE_ARTIFACTS` when that is set.
+Step 3 drives the browser the way the agent's MCP server does: `tests/interact.mjs` attaches Playwright (`playwright-core`, installed into the temp directory) over the debugging port and uses the profile's default context. It serves a small web app on 127.0.0.1. It first loads a German page from that app and reads Chrome's decision about the translate offer from the `Translate.PageLoad.TriggerDecision` histogram: 7 means the offer is turned off, 13 means Chrome showed it. Then it types a user name into the app's form and clicks Sign in; the server answers with a real `Set-Cookie`. It clicks a page-script button three times, writes localStorage and loads example.com. After `stop` and `start` it checks that the server still sees the session cookie and that localStorage is still there. Both phases save a screenshot, to `SMOKE_ARTIFACTS` when that is set.
+
+Step 7 runs `tests/feature-names.sh` for the installed version. It checks every name in `CFT_DISABLED_FEATURES` against the Chromium source at that version's tag: the file that defines the feature must hold `BASE_FEATURE(k<Name>`. Chrome ignores a `--disable-features` name it does not know and prints nothing, so no check of the running browser finds a name that Chromium removed. Run the script alone after a major update; it needs the network and no browser. Without an argument it checks the current stable version.
 
 `tests/vm-smoke.sh` runs `smoke.sh` in a throwaway macOS VM with [tart](https://tart.run) on an Apple silicon Mac, so the host's browsers and keychain cannot change the result. It passes its options on to `smoke.sh` and copies the screenshots out of the VM. `--real-keychain --quick` runs unattended there, because a fresh keychain shows no prompt on the first start. Without `--quick`, step 6 waits for the prompt that every update brings, and nobody is there to click it.
 
@@ -192,11 +195,15 @@ Run on 2026-10-02 with `vm-smoke.sh`, in a clean macOS 26.5 VM, CfT 154 and 152,
 | `setup`: real download, install, start; `status`; a second `start` is a no-op | pass | pass |
 | a cookie set just before `stop` survives `stop` and `start` | pass | pass |
 | the profile records Chrome's own sign-in as off (`signin.allowed`) and the breach check as off | pass | pass |
+| a German page gets no translate offer: Chrome records trigger decision 7, and the profile holds `translate.enabled = false` | pass | not run |
 | Playwright over the debugging port: typing, clicks and a page script work; a server-set cookie and localStorage survive `stop` and `start`; example.com loads with FedCM's `IdentityCredential` absent; the browser keeps running after Playwright disconnects | pass | pass |
 | a browser with another profile on the port: `status` exits 2, `start` refuses, `stop` leaves it running | pass | pass |
 | the behind-stable note, and `update` refusing while the browser runs | pass | pass |
 | a real update from 152 to 154: the cookie survives, and a second `update` says "already current" | pass | not unattended: the new build prompts, see below |
+| every `--disable-features` name is defined in the Chromium source of the installed version | pass | not run |
 | port 9222 has the same owner before and after | pass | pass |
+
+Run on 2026-10-13 on a Mac (macOS 26.5.2, Apple silicon) with `smoke.sh` and the mock keychain, CfT 155 and 153, playwright-core 1.64.0: 54 of 54 checks pass. That run is the source of the two rows marked "not run" for the real keychain.
 
 Run on 2026-10-02 on a Mac (macOS 26.5, Apple silicon) with `smoke.sh --real-keychain` and a human clicking Always Allow, while another Chrome for Testing held port 9222. Full run: 33 of 34; every keychain and update check passed, including the cookie surviving the update. The one failure was `npm install`, because the npm registry was unreachable. Run again with `--quick`: 33 of 33, including step 3. The keychain prompted twice, once for 154 at the first cookie write and once for 152 at step 6.
 
