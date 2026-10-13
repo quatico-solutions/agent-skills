@@ -89,9 +89,8 @@ backend_install() {
   echo "Installed Chrome for Testing $(backend_installed_version) in ${DB_HOME}" >&2
 }
 
-# Each name was checked against the Chrome for Testing 154 source and binary: Chrome ignores a name
+# Each name was checked against the Chrome for Testing source and binary: Chrome ignores a name
 # it does not know, so a stale one would only look like it works. Re-check after a major update.
-#   Translate                     no "Translate this page?" bubble over the page
 #   MediaRouter,                  no Cast device discovery on the local network, which can raise
 #   DialMediaRouteProvider        macOS network prompts
 #   OptimizationHints             no Optimization Guide downloads from Google
@@ -100,12 +99,17 @@ backend_install() {
 #   LensOverlay                   no Google Lens overlay or "Search with Lens" entry points
 #   FedCm                         no browser "Sign in to <site> with <provider>" dialog; sites fall
 #                                 back to their own sign-in pop-up or redirect, or offer none
-CFT_DISABLED_FEATURES="Translate,MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
+# Translate was dropped from this list: Chromium 153+ defines no feature named "Translate", so
+# --disable-features=Translate was ignored and the "Translate this page?" bubble kept appearing.
+# Translation is now turned off via the translate.enabled=false pref in backend_prepare_profile.
+CFT_DISABLED_FEATURES="MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
 
 # Settings written into the profile before each start, because no flag sets them. Chrome reads them
 # at startup; a change the human makes in Settings is undone at the next start.
 #   profile.password_manager_leak_detection = false   no "password found in a data breach" warnings;
 #                                                      saving passwords still works
+#   translate.enabled = false                         no "Translate this page?" bubble (the Translate
+#                                                      feature flag was removed in Chromium 153)
 backend_prepare_profile() {
   local prefs="${DB_PROFILE}/Default/Preferences"
   mkdir -p "${DB_PROFILE}/Default"
@@ -117,8 +121,11 @@ function run(argv) {
   const path = argv[0];
   const prefs = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null).js);
   prefs.profile = prefs.profile || {};
-  if (prefs.profile.password_manager_leak_detection === false) return;
-  prefs.profile.password_manager_leak_detection = false;
+  prefs.translate = prefs.translate || {};
+  let changed = false;
+  if (prefs.profile.password_manager_leak_detection !== false) { prefs.profile.password_manager_leak_detection = false; changed = true; }
+  if (prefs.translate.enabled !== false) { prefs.translate.enabled = false; changed = true; }
+  if (!changed) return;
   $(JSON.stringify(prefs)).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null);
 }
 JXA

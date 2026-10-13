@@ -104,7 +104,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--no-first-run`, `--no-default-browser-check`, `--disable-search-engine-choice-screen`, `--disable-infobars` | no dialogs in the agent's way |
 | `--disable-popup-blocking`, `--disable-hang-monitor` | sign-in pop-ups that a page opens from script still work; no "Page unresponsive" dialog in the agent's way |
 | `--disable-breakpad`, `--disable-component-update`, `--disable-sync`, `--metrics-recording-only` | background work a person never sees; component updates are already off in Chrome for Testing |
-| `--disable-features=` `Translate`, `MediaRouter`, `DialMediaRouteProvider`, `OptimizationHints`, `AutofillServerCommunication` | no translate bubble, no Cast discovery on the local network, fewer requests to Google |
+| `--disable-features=` `MediaRouter`, `DialMediaRouteProvider`, `OptimizationHints`, `AutofillServerCommunication` | no Cast discovery on the local network, fewer requests to Google |
 | exit codes 0/1/2 for health; no python anywhere in the scripts | a version-manager `python3` shim exists on `PATH` yet fails; `sed` and `defaults` cannot |
 | page gotchas, "never drive the debugging port by hand", "do not switch to a lookalike MCP" | mistakes agents kept making |
 
@@ -115,6 +115,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--disable-features=FedCm` | no browser "Sign in to <site> with <provider>" dialog; a "Sign in with Google" button may then do nothing. A control run on CfT 154 showed `IdentityCredential` present by default and gone with this flag. |
 | `--allow-browser-signin=false` | no "Sign in to Chrome as …" bubble after a Google login and no sync promos; signing in to Google websites still works. Chrome for Testing ships Google's sign-in credentials, so this sign-in is on by default. |
 | profile setting `profile.password_manager_leak_detection = false`, written before each start | no "password found in a data breach" warnings; replaces `PasswordCheck`. Saving passwords still works. No flag controls this in Chrome 154. |
+| profile setting `translate.enabled = false`, written before each start | no "Translate this page?" bubble. `--disable-features=Translate` no longer works: Chromium 153+ defines no feature named `Translate`, so the flag was silently ignored and the bubble kept appearing. |
 
 | Cut | Why |
 |---|---|
