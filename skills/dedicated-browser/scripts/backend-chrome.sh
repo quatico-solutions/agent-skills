@@ -91,7 +91,6 @@ backend_install() {
 
 # Each name was checked against the Chrome for Testing 154 source and binary: Chrome ignores a name
 # it does not know, so a stale one would only look like it works. Re-check after a major update.
-#   Translate                     no "Translate this page?" bubble over the page
 #   MediaRouter,                  no Cast device discovery on the local network, which can raise
 #   DialMediaRouteProvider        macOS network prompts
 #   OptimizationHints             no Optimization Guide downloads from Google
@@ -100,12 +99,15 @@ backend_install() {
 #   LensOverlay                   no Google Lens overlay or "Search with Lens" entry points
 #   FedCm                         no browser "Sign in to <site> with <provider>" dialog; sites fall
 #                                 back to their own sign-in pop-up or redirect, or offer none
-CFT_DISABLED_FEATURES="Translate,MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
+CFT_DISABLED_FEATURES="MediaRouter,DialMediaRouteProvider,OptimizationHints,AutofillServerCommunication,AimEnabled,LensOverlay,FedCm"
 
 # Settings written into the profile before each start, because no flag sets them. Chrome reads them
 # at startup; a change the human makes in Settings is undone at the next start.
 #   profile.password_manager_leak_detection = false   no "password found in a data breach" warnings;
 #                                                      saving passwords still works
+#   translate.enabled = false                         no "Translate this page?" bubble; Chromium has
+#                                                      no feature named "Translate" since 138, so no
+#                                                      --disable-features entry does this
 backend_prepare_profile() {
   local prefs="${DB_PROFILE}/Default/Preferences"
   mkdir -p "${DB_PROFILE}/Default"
@@ -117,8 +119,11 @@ function run(argv) {
   const path = argv[0];
   const prefs = JSON.parse($.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null).js);
   prefs.profile = prefs.profile || {};
-  if (prefs.profile.password_manager_leak_detection === false) return;
-  prefs.profile.password_manager_leak_detection = false;
+  prefs.translate = prefs.translate || {};
+  let changed = false;
+  if (prefs.profile.password_manager_leak_detection !== false) { prefs.profile.password_manager_leak_detection = false; changed = true; }
+  if (prefs.translate.enabled !== false) { prefs.translate.enabled = false; changed = true; }
+  if (!changed) return;
   $(JSON.stringify(prefs)).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null);
 }
 JXA

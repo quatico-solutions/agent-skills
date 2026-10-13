@@ -141,6 +141,8 @@ v="$(pref signin.allowed)"
 if [[ "${v}" == false ]]; then ok "profile: Chrome's own sign-in is off"; else bad "profile: Chrome's own sign-in is off (signin.allowed = ${v})"; fi
 v="$(pref profile.password_manager_leak_detection)"
 if [[ "${v}" == false ]]; then ok "profile: password breach check is off"; else bad "profile: password breach check is off (= ${v})"; fi
+v="$(pref translate.enabled)"
+if [[ "${v}" == false ]]; then ok "profile: translation is off"; else bad "profile: translation is off (translate.enabled = ${v})"; fi
 expect_status 0 "start again" db start
 if [[ "$(cookie get)" == "survived" ]]; then ok "cookie survived stop/start"; else bad "cookie survived stop/start"; fi
 
