@@ -115,7 +115,7 @@ author's `chrome-browser` skill, which keeps serving remote and headless hosts.
 | `--disable-features=FedCm` | no browser "Sign in to <site> with <provider>" dialog; a "Sign in with Google" button may then do nothing. A control run on CfT 154 showed `IdentityCredential` present by default and gone with this flag. |
 | `--allow-browser-signin=false` | no "Sign in to Chrome as …" bubble after a Google login and no sync promos; signing in to Google websites still works. Chrome for Testing ships Google's sign-in credentials, so this sign-in is on by default. |
 | profile setting `profile.password_manager_leak_detection = false`, written before each start | no "password found in a data breach" warnings; replaces `PasswordCheck`. Saving passwords still works. No flag controls this in Chrome 154. |
-| profile setting `translate.enabled = false`, written before each start | no "Translate this page?" bubble. `--disable-features=Translate` no longer works: Chromium 153+ defines no feature named `Translate`, so the flag was silently ignored and the bubble kept appearing. |
+| profile setting `translate.enabled = false`, written before each start | no "Translate this page?" bubble; replaces `Translate`. Chromium has no feature of that name since 138, so Chrome ignores the flag. |
 
 | Cut | Why |
 |---|---|
