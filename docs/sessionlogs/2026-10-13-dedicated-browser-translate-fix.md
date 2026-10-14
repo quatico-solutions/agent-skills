@@ -38,7 +38,10 @@ as v3.16.2.
       ×3, real keychain prompt) to behaviourally confirm `translate.enabled=false` and the other seven
       disabled-feature names (MediaRouter, DialMediaRouteProvider, OptimizationHints,
       AutofillServerCommunication, AimEnabled, LensOverlay, FedCm). The PR was merged without this run;
-      it is the open verification item.
+      it is the open verification item. **Unverified** — no `smoke.sh` run was found in CI for this
+      repo in the 24h after the merge. (A later change, `skills/dedicated-browser/tests/feature-names.sh`,
+      appears in `main` and may cover the seven-names re-test; its status is outside this session and
+      unverified here.)
 
 ## Repository State
 
@@ -63,3 +66,11 @@ tag already exists and skips re-tagging at the correct commit). The sanctioned f
 
 `pnpm run release` exists for local/maintainer use but is meant to run where the push is allowed; on a
 protected `main` it must go through the bot PR instead.
+
+## Automated wrap-up
+
+Updated during an **automated idle-bye wrap-up** (triggered after 24h of thread inactivity; not
+requested by a person). This log records the session as a checkpoint — the work was not continued.
+Since the session, `main` has advanced past v3.16.2: a later release, **v3.17.0** (PR #93), exists,
+and `skills/dedicated-browser/tests/feature-names.sh` was added. The Repository State above is the
+snapshot at session end.
