@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.17.1
+
+### Patch Changes
+
+- [#95](https://github.com/quatico-solutions/agent-skills/pull/95) [`b083fbd`](https://github.com/quatico-solutions/agent-skills/commit/b083fbdc9de683a9c4b435ed39fcd2f0603462b0) Thanks [@eins78](https://github.com/eins78)! - bb: detect the repository from `ssh.bitbucket.org` remotes (Bitbucket's new SSH hostname from 2026-11-12)
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.17.0
 
 ### Minor Changes
