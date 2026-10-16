@@ -13,7 +13,7 @@ Tests do **not** cover:
 
 - **Real macOS Keychain writes** — `auth login` is tested with a `security` shim (`fixtures/bin/security`) so the success path never touches the developer's real Keychain
 - **Interactive prompts** — `auth login` without a tty (the email/token/browser prompts) is out of reach of the subprocess harness; only the non-interactive (`--email` + piped token) path is exercised
-- **Git remote auto-detection** — bypassed with the `-R` flag
+- **Git remote auto-detection** — bypassed with the `-R` flag, except in `remote-detection.test.ts`, which runs bb without `-R` in temp git repos
 - Intermediate resolution steps are asserted only where they affect the final request (e.g. default-base resolution, reviewer lookup failure)
 
 ## Architecture

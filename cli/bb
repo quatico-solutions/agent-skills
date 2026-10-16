@@ -76,7 +76,7 @@ bb_parse_remote() {
     echo >&2 "error: not a git repository or no 'origin' remote"
     exit 1
   }
-  # SSH:  git@bitbucket.org:workspace/repo.git
+  # SSH:  git@ssh.bitbucket.org:workspace/repo.git (git@bitbucket.org: before 2026-11-12)
   # HTTPS: https://bitbucket.org/workspace/repo.git
   if [[ "$url" != *bitbucket.org* ]]; then
     echo >&2 "error: origin remote is not a bitbucket.org URL: $url"
@@ -84,7 +84,7 @@ bb_parse_remote() {
     exit 1
   fi
   local path
-  path="$(echo "$url" | sed -E 's#^(git@bitbucket\.org:|https://[^@]*@bitbucket\.org/|https://bitbucket\.org/)##; s/\.git$//')"
+  path="$(echo "$url" | sed -E 's#^(git@(ssh\.)?bitbucket\.org:|ssh://git@((ssh|altssh)\.)?bitbucket\.org(:[0-9]+)?/|https://([^@/]*@)?bitbucket\.org/)##; s/\.git$//')"
   echo "$path"
 }
 
