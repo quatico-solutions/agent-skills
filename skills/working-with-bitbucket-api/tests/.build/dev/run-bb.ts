@@ -13,16 +13,19 @@ export interface BbResult {
 
 export async function bb(args: string | string[], opts: {
   port: number
-  repo?: string
+  /** `-R` value; null omits -R so bb detects the repository from the git remote. */
+  repo?: string | null
+  /** Working directory of the subprocess. */
+  cwd?: string
   env?: Record<string, string>
   /** Written to the subprocess's stdin (e.g. a token for `auth login`). */
   input?: string
 }): Promise<BbResult> {
-  const repo = opts.repo ?? 'testws/testrepo'
+  const repo = opts.repo === undefined ? 'testws/testrepo' : opts.repo
   const argList = Array.isArray(args) ? args : args.split(/\s+/).filter(Boolean)
 
   // Prepend -R unless already specified
-  if (!argList.includes('-R')) {
+  if (repo !== null && !argList.includes('-R')) {
     argList.unshift('-R', repo)
   }
 
@@ -38,6 +41,7 @@ export async function bb(args: string | string[], opts: {
   return new Promise<BbResult>((resolve) => {
     const child = execFile('bash', [BB_PATH, ...argList], {
       env,
+      cwd: opts.cwd,
       timeout: 5_000,
       maxBuffer: 1024 * 1024,
     }, (error, stdout, stderr) => {
