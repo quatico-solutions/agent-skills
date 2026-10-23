@@ -141,6 +141,22 @@ Run `bb --help` for the full command list, or `bb <command> <subcommand> --help`
 
 > **This skill is the single source of truth for the `bb` command surface.** Do **not** maintain a local `gh`→`bb` translation/mapping table in a repo's `CLAUDE.md`/`AGENTS.md`. A copied local table duplicates this skill and drifts out of date — that is how stale, incorrect mappings spread (e.g. inventing a non-existent `bb pr ready` instead of `bb pr edit <id> --ready`). When a repo's agent-docs reference a `gh` command, translate it on the fly using this skill and `bb --help`, not from a hand-maintained table.
 
+### Listing pull requests (`pr list`)
+
+`bb pr list` follows Bitbucket's `next` links, so the row count is the caller's choice:
+
+```bash
+bb pr list --state merged --limit 120                  # exactly 120 rows, across 3 pages
+bb pr list --state merged --all --json number          # every page, no row limit
+bb pr list --state merged --updated-since 2026-10-01   # only PRs updated at or after the bound
+```
+
+- Without `--limit` or `--all`, `pr list` prints at most 50 rows. When more exist, it writes `warning: listing truncated at 50 rows; use --limit or --all` to stderr. Stdout stays pure JSON with `--json`.
+- `--all` has no ceiling: about 75 requests per state on a repository with 3700 PRs. Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
+- `--updated-since <ISO>` filters on the server and is inclusive (`>=`), so a caller that reads again from its last watermark gets the boundary PR twice, never zero times. It forces the `q=` filter form, like `--author`.
+- Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
+- Every paged listing retries a page that answers HTTP 429 up to 3 times (`Retry-After` seconds, otherwise 1 s, 2 s, 4 s). After that it exits non-zero with `error: rate limited after <n> rows` and prints no rows, so a short list never looks complete.
+
 ### Targeting another repository (`-R`)
 
 By default `bb` auto-detects the workspace/repo from the current directory's `origin` remote. To operate on a **different** repo — or from a directory that is not a Bitbucket checkout at all — pass the global `-R workspace/repo` flag **before** the subcommand:
