@@ -35,27 +35,20 @@
 
 - [ ] ...
 
-## Branches
+## Slices
 
-<!-- Optional: define a tracer bullet (thin vertical slice) first. -->
-<!-- See the tracer-bullets skill for guidance. -->
-<!-- ### Tracer -->
-<!-- - `feature/<slug>-tracer` — <thin slice description> -->
-<!--   Layers: <layer> → <layer> → <layer> -->
-<!--   Proves: <what this validates> -->
-<!--   Status: Not started -->
+<!-- One `### <name> (Branch: <branch>)` heading per slice. The name is the
+     slice's title on the board and its PR title. /plot-approve refuses a branch
+     that sits under no such heading.
+     Order slices with a `waits: <branch>` HTML comment on the heading line: the slice
+     becomes eligible once that branch is merged. Slices with no `waits:` are
+     eligible at once.
+     Optional: a tracer bullet (thin vertical slice) first — see the
+     tracer-bullets skill — with the other slices waiting on its branch.
+     Annotations (builds:/waits:/deferred:/claimed:/moved:) must sit on the SAME
+     line they annotate — a wrapped continuation line is not read. -->
 
-<!-- When using ### Tracer, wrap remaining branches in ### Implementation: -->
-<!-- ### Implementation -->
-
-<!-- Waves: branches under one ### subheading may run concurrently. A wave is
-     eligible once every non-deferred branch in every PRIOR wave is merged, so
-     `### Tracer` proves the seam before `### Implementation` fans out. Add
-     `### Wave 3`, `### Wave 4`, … for anything that must follow.
-     No subheadings at all = one wave = every branch eligible at once (the
-     pre-wave behaviour). Check state with /plot-fleet.
-     Annotations (deferred:/claimed:/moved:) must sit on the SAME line as
-     the backticked branch name — a wrapped continuation line is not read. -->
+### <slice name> (Branch: feature/<slug>)
 
 - `feature/<slug>` — <description>
 
