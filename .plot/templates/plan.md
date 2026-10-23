@@ -39,7 +39,9 @@
 
 <!-- One `### <name> (Branch: <branch>)` heading per slice. The name is the
      slice's title on the board and its PR title. /plot-approve refuses a branch
-     that sits under no such heading.
+     that sits under no such heading. Record the slice's PR inside the same
+     parentheses, `(Branch: <branch>, PR: #N)`; an arrow after the heading is
+     not read as a PR.
      Order slices with a `waits: <branch>` HTML comment on the heading line: the slice
      becomes eligible once that branch is merged. Slices with no `waits:` are
      eligible at once.

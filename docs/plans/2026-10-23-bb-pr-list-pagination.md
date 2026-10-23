@@ -58,7 +58,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ## Slices
 
-### pr list pagination (Branch: feature/bb-pr-list-pagination) → #103
+### pr list pagination (Branch: feature/bb-pr-list-pagination, PR: #103)
 
 - `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all, --updated-since and the truncation warning on cmd_pr_list; 429 retry and leftover-page report in bb_paginate; sequenced stubs in mock-server -->
 
