@@ -420,4 +420,225 @@ describe('bb pr list --limit', () => {
     assert.equal(result.exitCode, 0)
     assert.match(result.stdout, /--limit <n>/)
   })
+
+  describe('paging', () => {
+    const PR_PATH = '/repositories/testws/testrepo/pullrequests'
+
+    // Serves `pages` pages of `size` PRs each. Page 1 answers the request
+    // without a page= parameter; later pages answer on page=N, as Bitbucket's
+    // next links do. The last page carries no next link.
+    function servePages(pages: number, size: number) {
+      const pageBody = (n: number) => ({
+        values: Array.from({ length: size }, (_, i) => ({
+          id: (n - 1) * size + i + 1,
+          title: `PR ${(n - 1) * size + i + 1}`,
+          state: 'MERGED',
+          author: { display_name: 'A', nickname: 'a' },
+          source: { branch: { name: 'src' } },
+          destination: { branch: { name: 'main' } },
+        })),
+        ...(n < pages ? { next: `${server.baseUrl}${PR_PATH}?state=MERGED&pagelen=${size}&page=${n + 1}` } : {}),
+      })
+      server.stub('GET', PR_PATH, pageBody(1))
+      for (let n = 2; n <= pages; n++) {
+        server.stubWithQuery('GET', PR_PATH, { page: String(n) }, pageBody(n))
+      }
+    }
+
+    const noSleep = { BB_RETRY_BASE_MS: '0' }
+
+    it('Follows next links until --limit rows are held', async () => {
+      // Given 4 pages of 50 PRs
+      servePages(4, 50)
+
+      // When I ask for 120 merged PRs
+      const result = await bb('pr list --state merged --limit 120 --json number --jq length', { port: server.port })
+
+      // Then 120 rows print, from exactly 3 requests, without a warning
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '120')
+      assert.equal(server.getCalls().length, 3)
+      assert.doesNotMatch(result.stderr, /truncated/)
+    })
+
+    it('Reads every page with --all', async () => {
+      // Given 4 pages of 50 PRs
+      servePages(4, 50)
+
+      // When I ask for all merged PRs
+      const result = await bb('pr list --state merged --all --json number --jq length', { port: server.port })
+
+      // Then all 200 rows print, from 4 requests, without a warning
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '200')
+      assert.equal(server.getCalls().length, 4)
+      assert.equal(result.stderr, '')
+    })
+
+    it('Reads more than 10 pages with --all', async () => {
+      // Given 12 pages
+      servePages(12, 5)
+
+      // When I ask for all merged PRs
+      const result = await bb('pr list --state merged --all --json number --jq length', { port: server.port })
+
+      // Then no page cap applies
+      assert.equal(result.stdout.trim(), '60')
+      assert.equal(server.getCalls().length, 12)
+    })
+
+    it('Rejects --all together with --limit', async () => {
+      const result = await bb('pr list --all --limit 5', { port: server.port })
+      assert.equal(result.exitCode, 1)
+      assert.match(result.stderr, /--all and --limit cannot be combined/)
+    })
+
+    it('Warns on stderr when the default limit leaves a next link', async () => {
+      // Given 3 pages of 50 PRs
+      servePages(3, 50)
+
+      // When I list without --limit
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port })
+
+      // Then 50 rows print from one request, and stderr carries the warning
+      assert.equal(result.stdout.trim(), '50')
+      assert.equal(server.getCalls().length, 1)
+      assert.match(result.stderr, /warning: listing truncated at 50 rows; use --limit or --all/)
+    })
+
+    it('Stays silent when the default limit ends exactly on the last page', async () => {
+      // Given one page of 50 PRs and no next link
+      servePages(1, 50)
+
+      // When I list without --limit
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port })
+
+      // Then there is nothing left to warn about
+      assert.equal(result.stdout.trim(), '50')
+      assert.equal(result.stderr, '')
+    })
+
+    it('Stays silent when --limit stops the listing early', async () => {
+      // Given 3 pages of 50 PRs
+      servePages(3, 50)
+
+      // When the caller chooses a limit that leaves pages unread
+      const result = await bb('pr list --state merged --limit 10 --json number --jq length', { port: server.port })
+
+      // Then the choice is the caller's: no warning
+      assert.equal(result.stdout.trim(), '10')
+      assert.equal(result.stderr, '')
+    })
+
+    it('Sends pagelen=50 on pr list but not on other paged listings', async () => {
+      // Given a PR list and a comments listing
+      servePages(1, 5)
+      server.stub('GET', `${PR_PATH}/7/comments`, { values: [] })
+      server.stub('GET', `${PR_PATH}/7`, { id: 7, title: 't', state: 'OPEN', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } })
+
+      // When I run both
+      await bb('pr list --state merged', { port: server.port })
+      await bb('pr view 7 --comments', { port: server.port })
+
+      // Then only the pr list request carries pagelen
+      const list = server.getCalls().find(c => c.path === PR_PATH)
+      assert.equal(list?.query.pagelen, '50')
+      const comments = server.getCallsTo('GET', '/comments')
+      assert.ok(comments.length > 0)
+      assert.equal(comments[0].query.pagelen, undefined)
+    })
+
+    it('Puts --updated-since into the q= expression', async () => {
+      // Given a PR list
+      servePages(1, 2)
+
+      // When I filter by update time
+      const result = await bb('pr list --state merged --updated-since 2026-10-01', { port: server.port })
+
+      // Then the query is the q= form, inclusive, with no state= parameter
+      assert.equal(result.exitCode, 0)
+      const q = server.getLastCall().query
+      assert.equal(q.q, '(state = "MERGED") AND updated_on >= "2026-10-01"')
+      assert.equal(q.state, undefined)
+    })
+
+    it('Combines --updated-since with --author in one q= expression', async () => {
+      servePages(1, 2)
+
+      const result = await bb('pr list --state merged --author alice --updated-since 2026-10-01', { port: server.port })
+
+      assert.equal(result.exitCode, 0)
+      assert.equal(
+        server.getCalls()[0].query.q,
+        '(state = "MERGED") AND (author.nickname = "alice") AND updated_on >= "2026-10-01"',
+      )
+    })
+
+    it('Rejects a malformed --updated-since', async () => {
+      const result = await bb('pr list --updated-since yesterday', { port: server.port })
+      assert.equal(result.exitCode, 1)
+      assert.match(result.stderr, /--updated-since must be an ISO date or time/)
+    })
+
+    it('Retries a page that answers 429 once, then succeeds', async () => {
+      // Given page 1 answers 429 with Retry-After, then 200
+      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
+      server.stubSequence('GET', PR_PATH, {}, [
+        { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '0' } },
+        { status: 200, body: ok },
+      ])
+
+      // When I list
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
+
+      // Then the list succeeds after 2 requests
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '1')
+      assert.equal(server.getCalls().length, 2)
+    })
+
+    it('Retries a 429 without Retry-After', async () => {
+      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
+      server.stubSequence('GET', PR_PATH, {}, [
+        { status: 429, body: { error: { message: 'slow down' } } },
+        { status: 200, body: ok },
+      ])
+
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 0)
+      assert.equal(server.getCalls().length, 2)
+    })
+
+    it('Fails after 3 retries and prints no rows', async () => {
+      // Given page 1 reads fine and page 2 answers 429 every time
+      const first = {
+        values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }],
+        next: `${server.baseUrl}${PR_PATH}?state=MERGED&pagelen=1&page=2`,
+      }
+      server.stub('GET', PR_PATH, first)
+      server.stubSequence('GET', PR_PATH, { page: '2' }, [
+        { status: 429, body: { error: { message: 'slow down' } } },
+      ])
+
+      // When I read all pages
+      const result = await bb('pr list --state merged --all --json', { port: server.port, env: noSleep })
+
+      // Then it exits non-zero after 1 + 4 requests, names the rows read, and prints nothing
+      assert.equal(result.exitCode, 1)
+      assert.equal(result.stdout, '')
+      assert.match(result.stderr, /error: rate limited after 1 rows/)
+      assert.equal(server.getCalls().length, 5)
+    })
+
+    it('Fails other non-2xx answers on the first attempt', async () => {
+      server.stub('GET', PR_PATH, { error: { message: 'boom' } }, 500)
+
+      const result = await bb('pr list --state merged', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 1)
+      assert.match(result.stderr, /HTTP 500/)
+      assert.equal(server.getCalls().length, 1)
+    })
+  })
 })

@@ -17,6 +17,15 @@ interface Stub {
   body: unknown
   contentType: string
   queryMatch?: Record<string, string>
+  /** Answers served in order; the last one repeats once the list is spent. */
+  sequence?: SequenceStep[]
+  served?: number
+}
+
+export interface SequenceStep {
+  status: number
+  body: unknown
+  headers?: Record<string, string>
 }
 
 export interface MockServer {
@@ -25,6 +34,8 @@ export interface MockServer {
   stub: (method: string, pathPrefix: string, body: unknown, status?: number) => void
   stubRaw: (method: string, pathPrefix: string, body: string, status?: number) => void
   stubWithQuery: (method: string, pathPrefix: string, query: Record<string, string>, body: unknown, status?: number) => void
+  /** Like stubWithQuery, but answers with `steps` in order (e.g. 429, then 200). */
+  stubSequence: (method: string, pathPrefix: string, query: Record<string, string>, steps: SequenceStep[]) => void
   getCalls: () => RecordedCall[]
   getLastCall: () => RecordedCall
   getCallsTo: (method: string, pathSubstring: string) => RecordedCall[]
@@ -67,7 +78,13 @@ export async function createMockServer(): Promise<MockServer> {
       return Object.entries(s.queryMatch).every(([k, v]) => query[k] === v)
     }) ?? candidates.find(s => !s.queryMatch)
 
-    if (stub) {
+    if (stub?.sequence) {
+      const step = stub.sequence[Math.min(stub.served ?? 0, stub.sequence.length - 1)]
+      stub.served = (stub.served ?? 0) + 1
+      res.status(step.status)
+      for (const [k, v] of Object.entries(step.headers ?? {})) res.set(k, v)
+      res.json(step.body)
+    } else if (stub) {
       res.status(stub.status)
       res.set('Content-Type', stub.contentType)
       if (stub.contentType === 'application/json') {
@@ -102,6 +119,10 @@ export async function createMockServer(): Promise<MockServer> {
 
     stubWithQuery(method: string, pathPrefix: string, query: Record<string, string>, body: unknown, status = 200) {
       stubs.push({ method: method.toUpperCase(), pathPrefix, status, body, contentType: 'application/json', queryMatch: query })
+    },
+
+    stubSequence(method: string, pathPrefix: string, query: Record<string, string>, steps: SequenceStep[]) {
+      stubs.push({ method: method.toUpperCase(), pathPrefix, status: 200, body: null, contentType: 'application/json', queryMatch: query, sequence: steps })
     },
 
     getCalls() {
