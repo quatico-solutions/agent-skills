@@ -23,7 +23,7 @@
 
 `bb pr list --state merged --limit 1000 --json number --jq length` prints `50` (bb 1.11.2). Any caller that matches PRs against the merged list reads PRs older than the newest 50 as "no PR". On 2026-10-23 the same command against `quatico/ewz-kus-portal` answered `HTTP 429` instead. `bb_paginate` exits on the first non-2xx page, so a rate limit on page 7 discards pages 1–6.
 
-This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr list`. Its listing calls `bb api …/pullrequests?state=X&pagelen=50` once per state (`bb_state_listing`, plot-host.sh:1286), and it already filters with `updated_on>=` through `q=`. Its comment says `bb pr list` refuses `--limit`, which is no longer true. A plot-repo issue covers switching that listing to `bb pr list --all` once this ships.
+This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr list`. Its listing calls `bb api …/pullrequests?state=X&pagelen=50` once per state (`bb_state_listing`, plot-host.sh:1286), and it already filters with `updated_on>=` through `q=`. Its comment says `bb pr list` refuses `--limit`, which is no longer true. plot-pm/plot#2400 covers switching that listing to `bb pr list --all` once this ships.
 
 ## Design
 
@@ -41,7 +41,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 - [ ] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires.
 - [x] Does `plot-host.sh` pass `--limit` to `bb`? No. It never calls `bb pr list` for its listing; see Motivation. That change belongs to the plot repo.
-- [ ] File the plot-repo issue: switch `bb_state_listing` to `bb pr list --all`, and remove the stale "refuses --limit" comment.
+- [x] File the plot-repo issue: plot-pm/plot#2400 switches `bb_state_listing` to `bb pr list --all` and removes the stale "refuses --limit" comment.
 
 ### Verification
 
