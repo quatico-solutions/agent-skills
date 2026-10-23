@@ -34,9 +34,9 @@ On 2026-10-23, `/plot-approve` refused both bb plans: `plan 'bb-pr-view-json-fie
 
 ## Slices
 
-### Template writes Slices (Branch: infra/plan-template-slices)
+### Template writes Slices (Branch: infra/plan-template-slices) → commit 5799dfb
 
-- `infra/plan-template-slices` — rewrite the `## Branches` section of `.plot/templates/plan.md` → commit 5799dfb
+- `infra/plan-template-slices` — rewrite the `## Branches` section of `.plot/templates/plan.md`
 
 ## Definition of Done
 
