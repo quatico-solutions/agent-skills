@@ -32,7 +32,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 
 <!-- add items here -->
 
-- [ ] [bb-pr-merge-match-head] `bb pr merge --match-head-commit <sha>` refuses a merge when the PR moved (#100) <!-- pr: #0, branch: feature/bb-pr-merge-match-head -->
+- [x] [bb-pr-merge-match-head] `bb pr merge --match-head-commit <sha>` refuses a merge when the PR moved (#100) <!-- pr: #0, branch: feature/bb-pr-merge-match-head -->
 
 ### Deferred
 
