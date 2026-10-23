@@ -54,8 +54,8 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 - **Tracker:** plot
 - **Commit style:** arlo
 - **Plan template:** .plot/templates/plan.md
-- **Worker command:** none
+- **Worker command:** PLOT_UNATTENDED=1 PLOT_MODEL=sonnet ~/.claude/plugins/marketplaces/plot-marketplace/skills/plot/scripts/plot-worker-loop.sh
 
-`Worker command: none` records a decision, not a missing setting: `/plot-dispatch` prepares and claims worktrees, and a human starts the session in each. The recorded answer stops dispatch from asking again every time.
+`Worker command` starts plot's worker loop in each desk `/plot-dispatch` prepares. The loop runs one unattended `claude` session (Sonnet) per claimed slice, with that slice's brief. The path points at the marketplace checkout, which plugin updates change in place, so the command survives a plot upgrade. The fleet supervisor for this repo runs under the launchd label `com.plot-pm.fleetd.agent-skills`; pass `PLOT_FLEET_LABEL` with that value to `/plot-fleet --status` and `--stop`.
 
 Plot was in use here before it was configured, so every key above records a path this repo already uses. Commit style is `arlo` (`F -`, `R -`, `D -`, `b -` per [commit-notation](skills/commit-notation/SKILL.md)), not the `conventional` that auto-detection guesses.
