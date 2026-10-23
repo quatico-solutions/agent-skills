@@ -41,7 +41,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ### Open Points
 
-- [ ] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires.
+- [x] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires. (Not reproduced live; see Notes.)
 - [x] Does `plot-host.sh` pass `--limit` to `bb`? No. It never calls `bb pr list` for its listing; see Motivation. That change belongs to the plot repo.
 - [x] File the plot-repo issue: plot-pm/plot#2400 switches `bb_state_listing` to `bb pr list --all` and removes the stale "refuses --limit" comment.
 
@@ -57,7 +57,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ## Slices
 
-### pr list pagination (Branch: feature/bb-pr-list-pagination)
+### pr list pagination (Branch: feature/bb-pr-list-pagination) → #103
 
 - `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all, --updated-since and the truncation warning on cmd_pr_list; 429 retry and leftover-page report in bb_paginate; sequenced stubs in mock-server -->
 
@@ -70,6 +70,8 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 - [ ] `README.md` skills table matches `skills/` — required when adding or removing a skill
 
 ## Notes
+
+- 2026-10-23, 50-row cap: two runs of the repro on `quatico/ewz-kus-portal` both answered `HTTP 429` on page 1, so no row count was observed. One single-page read showed `pagelen: 10` and `size: 3519` for `state=MERGED`. With 10 pages of 10 rows, the old loop reaches 100 rows at `--limit 1000`, not 50. None of the three named limits (page size, page cap, `--limit` handling) alone gives 50 from the code; the reporter's 50 most likely came from a run without `--limit` (default 50). The change removes all three limits, so the fix does not depend on the cause.
 
 - Deliverable search: `bb_paginate` (`cli/bb:193`) and `bb_pr_list_query` (`cli/bb:445`) exist and are extended, not duplicated.
 

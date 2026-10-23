@@ -190,47 +190,79 @@ bb_api_call() {
   echo "$body"
 }
 
+# Follow Bitbucket's `next` links until `limit` rows are held or `next` is
+# empty. A limit of 0 means no row limit. The page size is the caller's
+# business: it belongs in $path, because the maximum differs per endpoint.
+#
+# HTTP 429 on a page is retried: Retry-After seconds when Bitbucket sends the
+# header, otherwise 1 s, 2 s, 4 s (times BB_RETRY_BASE_MS/1000, so tests can
+# set 0). After 3 retries the call fails and prints NO rows — a short list must
+# never look complete. Every other non-2xx fails on the first attempt.
+#
+# This runs inside $(…), so it cannot hand its caller a second value on stdout.
+# When BB_PAGINATE_NEXT_FILE names a file, it holds "1" afterwards if a `next`
+# link was left when the loop stopped, and is empty otherwise.
 bb_paginate() {
   local path="$1"; shift
   local limit="${1:-50}"
-  local all="[]"
+  # Pages accumulate in a file, one JSON array per line: a growing array passed
+  # through `jq --argjson` overflows the argument-size limit at a few thousand rows.
+  local rows=0 acc_file
   local url="${BB_API}${path}"
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local page=0
+  local base_ms="${BB_RETRY_BASE_MS:-1000}"
+  local hdr_file
+  hdr_file="$(mktemp)"
+  acc_file="$(mktemp)"
+  [[ -n "${BB_PAGINATE_NEXT_FILE:-}" ]] && : > "$BB_PAGINATE_NEXT_FILE"
 
-  while [[ -n "$url" && "$page" -lt 10 ]]; do
-    local response http_code
-    response="$(curl -sSL -w "\n%{http_code}" -X GET \
-      -u "${email}:${token}" \
-      -H "Accept: application/json" \
-      "$url")"
-    http_code="$(echo "$response" | tail -1)"
-    local body
-    body="$(echo "$response" | sed '$d')"
+  while [[ -n "$url" ]]; do
+    local response http_code body attempt=0
+    while :; do
+      response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
+        -u "${email}:${token}" \
+        -H "Accept: application/json" \
+        "$url")"
+      http_code="$(echo "$response" | tail -1)"
+      body="$(echo "$response" | sed '$d')"
+      [[ "$http_code" == "429" && "$attempt" -lt 3 ]] || break
+
+      local wait_s
+      wait_s="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
+      if [[ ! "$wait_s" =~ ^[0-9]+$ ]]; then
+        # 1, 2, 4 seconds; BB_RETRY_BASE_MS=0 skips the sleep.
+        wait_s=$(( (base_ms * (1 << attempt) + 999) / 1000 ))
+      fi
+      [[ "$base_ms" -eq 0 ]] && wait_s=0
+      [[ "$wait_s" -gt 0 ]] && sleep "$wait_s"
+      attempt=$((attempt + 1))
+    done
 
     if [[ "$http_code" -ge 400 ]]; then
+      rm -f "$hdr_file" "$acc_file"
+      if [[ "$http_code" == "429" ]]; then
+        echo >&2 "error: rate limited after ${rows} rows"
+        return 1
+      fi
       local msg
       msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
       echo >&2 "error: HTTP $http_code — $msg"
       return 1
     fi
 
-    local values
-    values="$(echo "$body" | jq '.values // []')"
-    all="$(jq -n --argjson a "$all" --argjson b "$values" '$a + $b')"
-
-    local count
-    count="$(echo "$all" | jq 'length')"
-    if [[ "$count" -ge "$limit" ]]; then
-      all="$(echo "$all" | jq --argjson l "$limit" '.[:$l]')"
-      break
-    fi
-
+    local page_rows
+    page_rows="$(echo "$body" | jq -c '.values // []' | tee -a "$acc_file" | jq 'length')"
+    rows=$((rows + page_rows))
     url="$(echo "$body" | jq -r '.next // empty')"
-    page=$((page + 1))
+
+    [[ "$limit" -gt 0 && "$rows" -ge "$limit" ]] && break
   done
+  local all
+  all="$(jq -s --argjson l "$limit" 'add // [] | if $l > 0 then .[:$l] else . end' "$acc_file")"
+  rm -f "$hdr_file" "$acc_file"
+  [[ -n "${BB_PAGINATE_NEXT_FILE:-}" && -n "$url" ]] && echo 1 > "$BB_PAGINATE_NEXT_FILE"
   echo "$all"
 }
 
@@ -443,11 +475,11 @@ bb_str_contains_line() {
 # point of this function — three inline constructions were free to drift, and
 # the drift is invisible until someone combines --author with two states.
 bb_pr_list_query() {
-  local states="$1" authors="$2"
+  local states="$1" authors="$2" since="${3:-}"
   local s a expr ors path
   local IFS=$'\n'
 
-  if [[ -z "$authors" ]]; then
+  if [[ -z "$authors" && -z "$since" ]]; then
     # No author: repeated state= parameters. Bitbucket returns the union,
     # already sorted descending by updated_on — one call, nothing to re-sort.
     path=""
@@ -458,18 +490,27 @@ bb_pr_list_query() {
     return 0
   fi
 
-  # An author forces the q= form, so the states must travel inside it too.
+  # An author or an --updated-since bound forces the q= form, so the states
+  # must travel inside it too.
   ors=""
   for s in $states; do
     ors="${ors:+$ors OR }state = \"${s}\""
   done
   expr="(${ors})"
 
-  ors=""
-  for a in $authors; do
-    ors="${ors:+$ors OR }author.nickname = \"${a}\""
-  done
-  expr="${expr} AND (${ors})"
+  if [[ -n "$authors" ]]; then
+    ors=""
+    for a in $authors; do
+      ors="${ors:+$ors OR }author.nickname = \"${a}\""
+    done
+    expr="${expr} AND (${ors})"
+  fi
+
+  # Inclusive: a caller that reads again from its last watermark gets the PR
+  # at the boundary twice, never zero times.
+  if [[ -n "$since" ]]; then
+    expr="${expr} AND updated_on >= \"${since}\""
+  fi
 
   printf '?q=%s' "$(printf '%s' "$expr" | jq -sRr @uri)"
 }
@@ -733,7 +774,7 @@ cmd_pr_list() {
   # whole thing stays bash 3.2 (see the compatibility note at the top).
   # Empty means "not given" — the OPEN default is applied after parsing, so a
   # caller passing no --state is unaffected.
-  local states="" authors="" limit=50
+  local states="" authors="" since="" limit=50 limit_given=0 all=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -741,7 +782,7 @@ cmd_pr_list() {
 List pull requests in the current repository.
 
 USAGE
-  bb pr list [--state <state>] [--author <name>] [--limit <n>] [--json [<fields>]] [--jq <expr>]
+  bb pr list [--state <state>] [--author <name>] [--limit <n> | --all] [--updated-since <ISO>] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
   --state <state>    Filter by state: open, merged, declined, superseded (default: open)
@@ -751,7 +792,17 @@ FLAGS
                      repeated identical state is harmless.
   --author <name>    Filter by author (nickname or display name).
                      May be repeated to cover several authors.
-  --limit <n>        Maximum number of items to fetch (default: 50).
+  --limit <n>        Maximum number of items to fetch (default: 50). Follows
+                     Bitbucket's next links across as many pages as needed.
+  --all              Fetch every page, with no row limit. Cannot be combined
+                     with --limit. A large repository takes many requests;
+                     use --limit or --updated-since to read less.
+  --updated-since <ISO>
+                     List only PRs updated at or after this time, e.g.
+                     2026-10-01 or 2026-10-01T12:00:00Z. The bound is inclusive.
+
+                     Without --limit or --all, at most 50 rows print. When
+                     more exist, a warning goes to stderr; stdout stays pure.
   --json [<fields>]  Output JSON. Bare --json emits the full Bitbucket API objects.
                      An optional comma-separated field list projects each PR into
                      an object with just those keys (gh-style), e.g. --json number,headRefName.
@@ -781,6 +832,9 @@ EXAMPLES
   bb pr list --json number,headRefName,isDraft
   bb pr list --state open --json headRefName --jq '.[].headRefName'
   bb pr list --limit 5
+  bb pr list --state merged --limit 120
+  bb pr list --state merged --all --json number
+  bb pr list --state merged --updated-since 2026-10-01
 HELP
         exit 0
         ;;
@@ -788,6 +842,15 @@ HELP
         limit="$2"; shift 2
         if [[ ! "$limit" =~ ^[0-9]+$ || "$limit" -eq 0 ]]; then
           echo >&2 "error: --limit must be a positive number, got '$limit'"
+          exit 1
+        fi
+        limit_given=1
+        ;;
+      --all)     all=1; shift ;;
+      --updated-since)
+        since="${2:-}"; shift 2 || true
+        if [[ ! "$since" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([T\ ][0-9:.+Z-]*)?$ ]]; then
+          echo >&2 "error: --updated-since must be an ISO date or time, got '$since'"
           exit 1
         fi
         ;;
@@ -826,6 +889,11 @@ HELP
     echo >&2 "error: --jq requires --json"; exit 1
   fi
 
+  if [[ "$all" -eq 1 && "$limit_given" -eq 1 ]]; then
+    echo >&2 "error: --all and --limit cannot be combined"; exit 1
+  fi
+  [[ "$all" -eq 1 ]] && limit=0
+
   # Apply the default only now, so "no --state given" stays distinguishable
   # from an explicit one during parsing.
   [[ -z "$states" ]] && states="OPEN"
@@ -835,18 +903,22 @@ HELP
   repo="$(bb_repo)"
   # One helper builds the filter for both shapes — see bb_pr_list_query for why
   # the q= and state= forms must not be mixed.
-  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors")"
+  # pagelen is set here, not in bb_paginate: the maximum page size differs per
+  # endpoint, and the pull-request endpoint takes 50. Both query forms start
+  # with `?`, so `&pagelen=` always appends.
+  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since")&pagelen=50"
 
-  local result
-  result="$(bb_paginate "$path" "$limit")"
+  local result next_file
+  next_file="$(mktemp)"
+  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
 
   # If author filter returned nothing, fall back to client-side display_name match
   if [[ -n "$authors" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
     # Refetch without the author filter, but across EVERY requested state — a
     # recovery path that silently narrows the result fails the same way the bug
     # it recovers from does.
-    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "")"
-    result="$(bb_paginate "$path" "$limit")"
+    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since")&pagelen=50"
+    result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
     local nfc_author a_nfc names_filter
     names_filter=""
     local IFS=$'\n'
@@ -856,6 +928,12 @@ HELP
     done
     result="$(echo "$result" | jq --argjson names "[$names_filter]" '[.[] | select(.author.display_name as $d | $names | index($d))]')"
   fi
+
+  # Truncated by the default row limit: the caller gave neither --limit nor --all.
+  if [[ "$limit_given" -eq 0 && "$all" -eq 0 && -s "$next_file" ]]; then
+    echo >&2 "warning: listing truncated at 50 rows; use --limit or --all"
+  fi
+  rm -f "$next_file"
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     local out="$result"
