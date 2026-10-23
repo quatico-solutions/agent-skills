@@ -1,6 +1,6 @@
-# `bb pr list` pages past 50 rows, sorts, and filters by update time
+# `bb pr list` pages past 50 rows and filters by update time
 
-> `bb pr list --limit 1000` returns 50 rows without a warning; callers cannot page, sort, or read only what changed.
+> `bb pr list --limit 1000` returns 50 rows without a warning; callers cannot page or read only what changed.
 
 ## Status
 
@@ -10,36 +10,52 @@
 - **Sprint:** bb-pr-reads
 - **Review:** in-session
 - **Impl:** own branches
+- **Rounds:** 2
 
 ## Changelog
 
 - `bb pr list --limit <n>` follows Bitbucket's `next` links until it has `n` rows; `--all` reads every page.
-- `bb pr list --sort <field>` (e.g. `-updated`) and `--updated-since <ISO date>` support incremental reads.
-- `bb pr list` prints a warning on stderr when a page cap stops a listing early.
+- `bb pr list --updated-since <ISO date>` lists only PRs updated on or after that time.
+- `bb pr list` without `--limit` prints a warning on stderr when more than the default 50 rows exist.
+- `bb pr list` retries a page that answers HTTP 429 up to 3 times before it fails.
 
 ## Motivation
 
-`bb pr list --state merged --limit 1000 --json number --jq length` prints `50` (bb 1.11.2). Any join against the merged list reads PRs older than the newest 50 as "no PR". Plot's `plot-host.sh` reports the cap on every call, and `bb api` is no escape (HTTP 403 with an app password). plot-pm/plot#2385 proposes an append-only PR index that needs `--sort -updated` and `--updated-since`.
+`bb pr list --state merged --limit 1000 --json number --jq length` prints `50` (bb 1.11.2). Any caller that matches PRs against the merged list reads PRs older than the newest 50 as "no PR". On 2026-10-23 the same command against `quatico/ewz-kus-portal` answered `HTTP 429` instead. `bb_paginate` exits on the first non-2xx page, so a rate limit on page 7 discards pages 1–6.
+
+This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr list`. Its listing calls `bb api …/pullrequests?state=X&pagelen=50` once per state (`bb_state_listing`, plot-host.sh:1286), and it already filters with `updated_on>=` through `q=`. Its comment says `bb pr list` refuses `--limit`, which is no longer true. A plot-repo issue covers switching that listing to `bb pr list --all` once this ships.
 
 ## Design
 
 ### Approach
 
 - `bb_paginate` (`cli/bb:193`) already follows `next`, but stops after 10 pages and sends no `pagelen`. Send `pagelen=50` (the Bitbucket maximum) and derive the page cap from `--limit` instead of the fixed 10.
-- `--all`: no row limit; follow `next` until it is empty.
-- Truncation: when the loop stops with a `next` link still present, print `warning: listing truncated at <n> rows; use --limit or --all` on stderr. Stdout stays pure JSON.
-- `--sort <field>`: pass through as Bitbucket `sort=` (`-updated_on`, `created_on`, …). Accept the gh-style names `updated`/`created` and map them.
-- `--updated-since <ISO>`: add `updated_on > <ISO>` to the `q=` expression. `bb_pr_list_query` builds both the `state=` and `q=` forms; this filter forces the `q=` form, like `--author` does today.
+- `--all`: no row limit; follow `next` until it is empty. There is no ceiling: about 75 requests per state on a repository with 3700 PRs. Callers who want fewer rows use `--limit` or `--updated-since`.
+- HTTP 429 on any page: wait for `Retry-After` when Bitbucket sends it, otherwise 1 s, 2 s, then 4 s. After 3 retries on one page, exit non-zero with `error: rate limited after <n> rows`. The pages already read are not printed, so a short list never looks complete. Other non-2xx answers fail on the first attempt, as today. Tests set `BB_RETRY_BASE_MS=0` so they do not sleep. `sleep` with a whole number of seconds stays bash 3.2-safe.
+- Truncation: when no `--limit` was given and the default 50 rows stop the loop with a `next` link still present, print `warning: listing truncated at 50 rows; use --limit or --all` on stderr. An explicit `--limit` is the caller's choice and stays silent, as in `gh`. Stdout stays pure JSON.
+- `--updated-since <ISO>`: add `updated_on >= "<ISO>"` to the `q=` expression. The bound is inclusive, as in plot-host's existing query: a caller that reads again from its last watermark gets the PR at the boundary twice, never zero times. `bb_pr_list_query` builds both the `state=` and `q=` forms; this filter forces the `q=` form, like `--author` does today.
+- No `--sort`, although #98 asks for one. Bitbucket already returns PRs newest-updated first, and `--updated-since` filters on the server, so no caller has to stop at a watermark. A caller that needs another order gets a flag then.
 - Update `pr list` help text and `skills/working-with-bitbucket-api/SKILL.md`.
 
 ### Open Points
 
 - [ ] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires.
-- [ ] Does `plot-host.sh` pass `--limit` to `bb` at all? Its message says Bitbucket "ignores" it; if plot-host drops the flag itself, that needs a separate change in the plot repo.
+- [x] Does `plot-host.sh` pass `--limit` to `bb`? No. It never calls `bb pr list` for its listing; see Motivation. That change belongs to the plot repo.
+- [ ] File the plot-repo issue: switch `bb_state_listing` to `bb pr list --all`, and remove the stale "refuses --limit" comment.
+
+### Verification
+
+- **Mock suite:** `tests/pr-list.test.ts` serves pages through `stubWithQuery` on `page=`, with `next` links. The mock server gains a sequenced stub (first answer 429 with `Retry-After`, then 200), so the retry path runs in CI on Linux and on macOS with bash 3.2.
+- **Live check, read-only, on `quatico/ewz-kus-portal`:** once per branch, before its PR is marked ready, run from the branch's `cli/bb`. Every command is a GET request.
+  - `bb pr list --state merged --limit 120 --json number --jq length` prints `120`
+  - `bb pr list --state merged --all --json number --jq length` prints more than 3000, with no warning on stderr
+  - `bb pr list --state merged --json number --jq length` prints `50` and the truncation warning on stderr
+  - `bb pr list --state merged --updated-since 2026-10-01 --json updatedAt --jq 'map(select(.updatedAt < "2026-10-01")) | length'` prints `0`
+  - the output of each command goes into the PR description
 
 ## Branches
 
-- `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, stderr truncation warning, `--sort`, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all, --sort and --updated-since on cmd_pr_list; truncation warning in bb_paginate -->
+- `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all and --updated-since on cmd_pr_list; 429 retry and truncation warning in bb_paginate; sequenced stubs in mock-server -->
 
 ## Definition of Done
 
@@ -52,3 +68,26 @@
 ## Notes
 
 - Deliverable search: `bb_paginate` (`cli/bb:193`) and `bb_pr_list_query` (`cli/bb:445`) exist and are extended, not duplicated.
+
+<!-- CHALLENGE-THE-PLAN-METADATA
+{
+  "round": 2,
+  "questionHistory": [
+    {"q": "Live verification target?", "a": "quatico/ewz-kus-portal, read-only GETs, once per branch, output in the PR", "category": "technical"},
+    {"q": "Truncation warning when --limit stops a listing?", "a": "Only when no --limit was given", "category": "ux"},
+    {"q": "Does --sort earn its place?", "a": "Dropped; Bitbucket sorts by -updated_on and --updated-since filters server-side", "category": "tradeOffs"},
+    {"q": "--updated-since inclusive or exclusive?", "a": "Inclusive >=, as plot-host", "category": "domain"},
+    {"q": "plot-host never calls bb pr list; what does #98 serve?", "a": "Direct bb callers; a plot-repo issue covers switching plot-host to bb pr list --all", "category": "domain"},
+    {"q": "What should pagination do on HTTP 429?", "a": "Retry with Retry-After or 1/2/4 s backoff, max 3 per page, then fail naming rows read", "category": "nonFunctional"},
+    {"q": "Should --all have a ceiling?", "a": "No ceiling; rely on retry, --limit and --updated-since", "category": "nonFunctional"}
+  ],
+  "deferredItems": [],
+  "categoriesCovered": {
+    "technical": {"stack": true, "architecture": true, "implementation": true},
+    "domain": true,
+    "ux": {"happyPath": true, "edgeCases": true, "errors": true, "accessibility": false},
+    "nonFunctional": {"security": false, "performance": true, "scalability": true},
+    "tradeOffs": true
+  }
+}
+END-CHALLENGE-THE-PLAN-METADATA -->
