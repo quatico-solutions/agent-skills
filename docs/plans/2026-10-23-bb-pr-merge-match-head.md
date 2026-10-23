@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** feature
 - **Issue:** #100
 - **Sprint:** bb-pr-reads
@@ -13,6 +13,7 @@
 - **Approved:** 2026-10-23, jwloka, in-session
 - **Started:** 2026-10-23, jwloka, `feature/bb-pr-merge-match-head`
 - **Delivered:** 2026-10-23
+- **Released:** 2026-10-23, v3.18.0
 
 ## Changelog
 
