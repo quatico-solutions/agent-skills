@@ -4,8 +4,9 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** infra
+- **Approved:** 2026-10-23, jwloka, in-session
 - **Sprint:** <!-- optional, filled when plan is added to a sprint — a time-boxed selection of planned work -->
 - **Review:** in-session
 - **Impl:** own branches
