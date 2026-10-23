@@ -79,3 +79,60 @@ Merged PR #42 (strategy: squash)
 `)
   })
 })
+
+describe('--match-head-commit', () => {
+  let server: MockServer
+  const prPath = '/repositories/testws/testrepo/pullrequests/42'
+  const head = '35ed68c05967'
+  const prWithHead = { ...prSingle, source: { commit: { hash: head } } }
+
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => {
+    server.reset()
+    server.stub('GET', prPath, prWithHead)
+    server.stub('POST', `${prPath}/merge`, {})
+  })
+
+  const methods = () => server.getCalls().map((c) => c.method)
+
+  it('merges when a 12-character pin equals the head', async () => {
+    const result = await bb(`pr merge 42 --match-head-commit ${head}`, { port: server.port })
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(methods(), ['GET', 'POST'])
+  })
+
+  it('merges when a 40-character pin starts with the head', async () => {
+    const result = await bb(`pr merge 42 --match-head-commit ${head}${'a'.repeat(28)}`, { port: server.port })
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(methods(), ['GET', 'POST'])
+  })
+
+  it('merges when an uppercase pin matches', async () => {
+    const result = await bb(`pr merge 42 --match-head-commit ${head.toUpperCase()}`, { port: server.port })
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(methods(), ['GET', 'POST'])
+  })
+
+  it('refuses a mismatch and sends no POST', async () => {
+    const result = await bb('pr merge 42 --match-head-commit 0000000', { port: server.port })
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /head moved/)
+    assert.deepEqual(methods(), ['GET'])
+  })
+
+  for (const pin of ['abcdef', 'zzzzzzzz']) {
+    it(`rejects pin "${pin}" with no request`, async () => {
+      const result = await bb(`pr merge 42 --match-head-commit ${pin}`, { port: server.port })
+      assert.equal(result.exitCode, 1)
+      assert.match(result.stderr, /usage/)
+      assert.deepEqual(server.getCalls(), [])
+    })
+  }
+
+  it('sends only the POST without the flag', async () => {
+    const result = await bb('pr merge 42', { port: server.port })
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(methods(), ['POST'])
+  })
+})

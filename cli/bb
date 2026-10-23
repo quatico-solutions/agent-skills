@@ -1599,7 +1599,7 @@ HELP
 }
 
 cmd_pr_merge() {
-  local pr_id="" strategy="merge" delete_branch=0
+  local pr_id="" strategy="merge" delete_branch=0 match_head=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -1607,23 +1607,34 @@ cmd_pr_merge() {
 Merge a pull request.
 
 USAGE
-  bb pr merge <id> [--squash|--merge] [--delete-branch] [--json]
+  bb pr merge <id> [--squash|--merge] [--delete-branch] [--match-head-commit <sha>] [--json]
 
 FLAGS
-  --squash          Squash and merge
-  --merge           Merge commit (default)
-  --delete-branch   Delete source branch after merge
-  --json            Output raw JSON
+  --squash                     Squash and merge
+  --merge                      Merge commit (default)
+  --delete-branch              Delete source branch after merge
+  --match-head-commit <sha>    Merge only if the PR head still starts with <sha>
+                               (7+ lowercase hex digits; a full 40-character SHA works)
+  --json                       Output raw JSON
+
+--match-head-commit reads the PR head, compares it with <sha>, and sends the
+merge only on a match. On a mismatch it exits 1 and merges nothing. The merge
+endpoint takes no expected head, so a push that lands between the read and the
+merge is still merged. The check narrows that window; it does not close it.
 
 EXAMPLES
   bb pr merge 42
   bb pr merge 42 --squash --delete-branch
+  bb pr merge 42 --match-head-commit "$(git rev-parse HEAD)"
 HELP
         exit 0
         ;;
       --squash)        strategy="squash"; shift ;;
       --merge)         strategy="merge"; shift ;;
       --delete-branch) delete_branch=1; shift ;;
+      --match-head-commit)
+        [[ $# -ge 2 ]] || { echo >&2 "error: --match-head-commit requires a SHA"; exit 1; }
+        match_head="$2"; shift 2 ;;
       --json)          JSON_OUTPUT=1; shift ;;
       -*)              echo >&2 "unknown flag: $1"; exit 1 ;;
       *)               pr_id="$1"; shift ;;
@@ -1631,13 +1642,38 @@ HELP
   done
 
   if [[ -z "$pr_id" ]]; then
-    echo >&2 "usage: bb pr merge <id> [--squash|--merge] [--delete-branch]"
+    echo >&2 "usage: bb pr merge <id> [--squash|--merge] [--delete-branch] [--match-head-commit <sha>]"
     exit 1
+  fi
+
+  local pin_l=""
+  if [[ -n "$match_head" ]]; then
+    pin_l="$(printf '%s' "$match_head" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! "$pin_l" =~ ^[0-9a-f]{7,}$ ]]; then
+      echo >&2 "usage: --match-head-commit needs 7 or more hex digits, got '${match_head}'"
+      exit 1
+    fi
   fi
 
   local ws repo
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
+
+  if [[ -n "$pin_l" ]]; then
+    local pr_json head head_l
+    pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit 1
+    head="$(printf '%s' "$pr_json" | jq -r '.source.commit.hash // empty')"
+    head_l="$(printf '%s' "$head" | tr '[:upper:]' '[:lower:]')"
+    if [[ ! "$head_l" =~ ^[0-9a-f]{7,}$ ]]; then
+      echo >&2 "error: could not read the head commit of PR #${pr_id}; nothing was merged"
+      exit 1
+    fi
+    # Bitbucket returns a 12-character hash; a pin may be a full SHA. Match when either is a prefix of the other.
+    if [[ "$head_l" != "$pin_l"* && "$pin_l" != "$head_l"* ]]; then
+      echo >&2 "error: head moved — PR #${pr_id} is at ${head}, expected ${match_head}; nothing was merged"
+      exit 1
+    fi
+  fi
 
   local merge_strategy
   case "$strategy" in

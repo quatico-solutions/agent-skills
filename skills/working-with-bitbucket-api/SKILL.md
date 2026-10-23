@@ -154,6 +154,18 @@ bb -R quatico/other-repo pr list
 
 `-R` is global, so it works for every command (`source`, `pr`, `api`, …). It must come **before** the subcommand — `bb source cat -R …` will not work. Without `-R`, source browsing and all other operations act on the current repo only.
 
+### Merging with a head check (`bb pr merge --match-head-commit`)
+
+`bb pr merge <id>` merges whatever the PR head is when the request arrives. To refuse a PR that moved after review, pin the head, like `gh pr merge --match-head-commit`:
+
+```bash
+bb pr merge 42 --squash --match-head-commit "$(git rev-parse HEAD)"
+```
+
+`bb` reads the PR, then merges only if its head and the pin match. The pin is 7 or more hex digits; uppercase is lowercased. Bitbucket reports a 12-character head hash, so the comparison is a prefix match in both directions and a full 40-character SHA works. A malformed pin is a usage error with no request sent. A mismatch exits 1 with `error: head moved — …; nothing was merged` and sends no merge request.
+
+**Race:** the merge endpoint takes no expected head, so a push between the read and the merge is merged anyway. `bb` runs no check after the merge. The flag narrows the window; it does not close it.
+
 ---
 
 ## Raw API Access

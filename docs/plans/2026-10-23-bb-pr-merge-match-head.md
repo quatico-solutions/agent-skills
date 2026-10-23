@@ -51,7 +51,7 @@ Plot already performs this check for its own Bitbucket merges: `plot-host.sh pr-
 
 <!-- One `### <name> (Branch: <branch>)` heading per slice. -->
 
-### pr merge head pin (Branch: feature/bb-pr-merge-match-head)
+### pr merge head pin (Branch: feature/bb-pr-merge-match-head) → #102
 
 - `feature/bb-pr-merge-match-head` — `--match-head-commit` on `cmd_pr_merge`, with cases in `tests/pr-merge.test.ts` <!-- builds: --match-head-commit on cmd_pr_merge -->
 
