@@ -24,4 +24,5 @@ coverage/
 
 # Plot: machine-written session state. Templates under .plot/ stay tracked.
 .plot/state/
+.plot/logs/
 /.worktrees/
