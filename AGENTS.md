@@ -1,68 +1,57 @@
 # AGENTS.md
 
-Instructions for coding agents working in the `agent-skills` repository.
+Agent instructions for the `agent-skills` repository: a single plugin, `quatico-skills`, over a flat pool of 19 skills in `skills/`. This file is the hub; the rules that need detail live in the `docs/rules/` spokes listed under [Where to Find More](#where-to-find-more). `CLAUDE.md` imports this file with `@AGENTS.md`, so every agent reads the same rules.
 
-> **[CLAUDE.md](CLAUDE.md) is the source of truth.** This file exists so agents
-> that look for `AGENTS.md` by convention (Codex, Cursor, and others) find the
-> repository's rules instead of nothing. It restates the rules that are easy to
-> violate without noticing; everything else — repository structure, the full
-> versioning flow, Plot configuration — lives in CLAUDE.md and is not duplicated
-> here.
->
-> Edit this file by hand; never regenerate it mechanically from CLAUDE.md
-> (a find-and-replace corrupts paths and model names). Where the two files
-> disagree, CLAUDE.md wins.
+## Critical Rules
 
-## Rules that bite
+1. **NEVER edit version numbers by hand.** The release pipeline owns `metadata.version` in every `SKILL.md`, `version` in `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json`, both `marketplace.json` files, and `package.json`. Hand-edits cause conflicts and drift.
+2. **Every change that touches a skill MUST add a changeset.** Run `pnpm changeset` and fill in the summary, the root bump, and the `bumps:` block. Indent `tuned-against:` by exactly two spaces, or CI fails — see `docs/rules/versioning.md`.
+3. **Shell scripts MUST stay bash 3.2-compatible.** macOS ships bash 3.2 and always will (bash 4 went GPLv3): no `declare -A`, no `${var^^}`/`${var,,}`, no `mapfile`. Under `set -u`, expand possibly-empty arrays as `${arr[@]+"${arr[@]}"}`. The `bb-tests-macos` CI job pins `/bin/bash` for `cli/bb`; every other script relies on this rule alone.
+4. **NEVER use YAML block scalars in SKILL.md frontmatter.** No `>-`, `>`, `|-`, `|` — Cursor does not parse them. `description` is a single-line `"quoted string"`; `metadata.version` is 3-part semver.
+5. **Update README.md whenever skill membership changes.** The skills table matches the contents of `skills/`, one row per skill, in alphabetical order by skill name. Add a new skill's row at its place in that order, not at the end. Nothing checks this.
+6. **Prefer gates over rules.** A rule is prose an agent can rationalise around; a gate is a hard stop with objective verification (a hook, a CI check). Every rule on this page is currently prose — see `docs/rules/skill-development.md` § Gates Over Rules.
 
-**1. Never edit version numbers by hand.** Versioning is changeset-driven. Do
-not touch `metadata.version` in any `SKILL.md`, `version` in
-`.claude-plugin/plugin.json` or `.cursor-plugin/plugin.json`, the
-`marketplace.json` files, or `package.json`. The release pipeline owns all of
-them.
+## Essential Commands
 
-**2. Every change touching a skill needs a changeset.** `pnpm changeset`, then
-edit the created file: a one-line summary, a root-package bump, and a `bumps:`
-block listing each changed skill. When a change is model-specific, record the
-model family it was tuned against as `tuned-against: <family>` (e.g.
-`claude-opus-5`, never a dated snapshot). CI only
-*warns* when a changeset is missing — it will not catch this for you.
+```bash
+pnpm changeset                                     # scaffold a changeset for a skill change
+pnpm test                                          # skills parse
+pnpm run validate                                  # skill frontmatter valid
+(cd skills/working-with-bitbucket-api/tests && pnpm test)   # bb integration suite
+```
 
-**3. Shell scripts must stay bash 3.2-compatible.** macOS ships bash 3.2 and
-always will (bash 4 went GPLv3): no `declare -A`, no `${var^^}`/`${var,,}`, no
-`mapfile`. Under `set -u`, expand possibly-empty arrays as
-`${arr[@]+"${arr[@]}"}`. Gated for `cli/bb` by the `bb-tests-macos` CI job,
-which pins `/bin/bash`; every other script relies on this rule alone.
-
-**4. Never use YAML block scalars in SKILL.md frontmatter.** No `>-`, `>`, `|-`,
-`|` — Cursor does not parse them. `description` is a single-line quoted string;
-`metadata.version` is 3-part semver.
-
-**5. Update README.md whenever skill membership changes.** The skills table must match the contents of `skills/`, one row per skill, in alphabetical order by skill name. Add a new skill's row at its place in that order, not at the end. Adding or removing a skill without touching the table leaves the two out of sync, and nothing checks it.
-
-**6. Prefer gates over rules.** A rule is prose an agent can rationalise around;
-a gate is a hard stop with objective verification (a hook, a CI check). The
-test: can you answer "did I complete this?" without doing the work? If yes, it
-is a rule. Every item on this page is currently a rule — which is exactly why
-they are worth reading twice.
+`pnpm run version` belongs to the release pipeline; do not run it in a change.
 
 ## Definition of Done
 
 A change is done when all three pass:
 
-1. `pnpm test` — skills parse
-2. `pnpm run validate` — skill frontmatter valid
-3. `pnpm test` in `skills/working-with-bitbucket-api/tests/` — the `bb`
-   integration suite on Linux **and** macOS/bash 3.2, when the diff touches
-   `cli/bb`
+1. `pnpm test` — skills parse (CI: `ci.yml`, every PR)
+2. `pnpm run validate` — skill frontmatter valid (CI: `ci.yml`, every PR)
+3. `pnpm test` in `skills/working-with-bitbucket-api/tests/` — the `bb` integration suite on Linux **and** macOS/bash 3.2 (CI: `bb-tests.yml`, only when the diff touches `cli/bb`)
 
-Plus a changeset, per rule 2.
+Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` only warns when the changeset is missing.
 
-## Where to look next
+## Where to Find More
 
-| For | Read |
+| When working on | Read |
 |---|---|
-| Repository structure, plugin layout | [CLAUDE.md](CLAUDE.md) § Repository Structure |
-| The full versioning and release flow | [CLAUDE.md](CLAUDE.md) § Versioning, [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Skill authoring conventions | [CLAUDE.md](CLAUDE.md) § Skill Development |
-| Plot planning workflow, branch prefixes | [CLAUDE.md](CLAUDE.md) § Plot Config |
+| Changesets, bump levels, model class, the release flow | `docs/rules/versioning.md`, [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Repository layout, adding or removing a skill, frontmatter, gates | `docs/rules/skill-development.md` |
+| Plans, branch prefixes, commit style | [Plot Config](#plot-config) below |
+
+## Plot Config
+
+- **Branch prefixes:** idea/, feature/, bug/, docs/, infra/
+- **Plan directory:** docs/plans/
+- **Active index:** docs/plans/active/
+- **Delivered index:** docs/plans/delivered/
+- **Git host:** github
+- **Tracker:** plot
+- **Commit style:** arlo
+- **Plan template:** .plot/templates/plan.md
+- **Worker command:** none
+
+`Worker command: none` records a decision, not a missing setting: `/plot-dispatch` prepares and claims worktrees, and a human starts the session in each. The recorded answer stops dispatch from asking again every time.
+
+Plot was in use here before it was configured, so every key above records a path this repo already uses. Commit style is `arlo` (`F -`, `R -`, `D -`, `b -` per [commit-notation](skills/commit-notation/SKILL.md)), not the `conventional` that auto-detection guesses.

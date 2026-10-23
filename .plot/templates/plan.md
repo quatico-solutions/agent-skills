@@ -61,7 +61,7 @@
 
 ## Definition of Done
 
-<!-- Per ## Plot Config in CLAUDE.md. Check before marking any impl PR ready. -->
+<!-- Per ## Plot Config in AGENTS.md. Check before marking any impl PR ready. -->
 
 - [ ] `pnpm test` passes — skills parse
 - [ ] `pnpm run validate` passes — skill frontmatter valid
