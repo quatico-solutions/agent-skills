@@ -32,7 +32,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 
 <!-- add items here -->
 
-- [ ] [bb-pr-merge-match-head] `bb pr merge --match-head-commit <sha>` refuses a merge when the PR moved (#100)
+- [ ] [bb-pr-merge-match-head] `bb pr merge --match-head-commit <sha>` refuses a merge when the PR moved (#100) <!-- pr: #0, branch: feature/bb-pr-merge-match-head -->
 
 ### Deferred
 
@@ -49,7 +49,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 <!-- Log scope changes here: added/removed items, tier changes, with date and reason -->
 <!-- Format: - YYYY-MM-DD: Added/Moved/Removed [slug] reason -->
 
-- 2026-10-23: Added [bb-pr-merge-match-head] to Could — issue #100 filed during the sprint; added by the operator's decision although the plan is not yet dispatched. A Could Have does not gate release 3.18.0.
+- 2026-10-23: Added [bb-pr-merge-match-head] to Could — issue #100 filed during the sprint; added by the operator's decision although the plan is not yet dispatched. A Could Have does not gate release 3.18.0. <!-- pr: #0, branch: feature/bb-pr-merge-match-head -->
 
 ### Planning
 - plot-host's own handling of `--limit` for Bitbucket lives in the plot repo and is out of scope; see the open point in `bb-pr-list-pagination`.
