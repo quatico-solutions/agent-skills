@@ -21,7 +21,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [ ] [bb-pr-view-json-fields] `bb pr view --json <fields>` and `--jq` instead of HTTP 404 (#97) <!-- pr: #0, branch: bug/bb-pr-view-json-fields -->
+- [ ] [bb-pr-view-json-fields] `bb pr view --json <fields>` and `--jq` instead of HTTP 404 (#97) <!-- pr: #101, branch: bug/bb-pr-view-json-fields -->
 - [ ] [bb-pr-list-pagination] `bb pr list` pagination, `--all`, 429 retry, truncation warning, `--updated-since` (#98) <!-- pr: #0, branch: feature/bb-pr-list-pagination -->
 
 ### Should Have
@@ -31,6 +31,8 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 ### Could Have
 
 <!-- add items here -->
+
+- [ ] [bb-pr-merge-match-head] `bb pr merge --match-head-commit <sha>` refuses a merge when the PR moved (#100)
 
 ### Deferred
 
@@ -47,7 +49,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 <!-- Log scope changes here: added/removed items, tier changes, with date and reason -->
 <!-- Format: - YYYY-MM-DD: Added/Moved/Removed [slug] reason -->
 
-### Planning
+- 2026-10-23: Added [bb-pr-merge-match-head] to Could — issue #100 filed during the sprint; added by the operator's decision although the plan is not yet dispatched. A Could Have does not gate release 3.18.0.
 
-- Both plans are Draft. They need in-session approval (`/plot-approve <slug>`) before `/plot-implement`.
+### Planning
 - plot-host's own handling of `--limit` for Bitbucket lives in the plot repo and is out of scope; see the open point in `bb-pr-list-pagination`.
