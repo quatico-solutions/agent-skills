@@ -4,13 +4,14 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** feature
 - **Issue:** #98
 - **Sprint:** bb-pr-reads
 - **Review:** in-session
 - **Impl:** own branches
 - **Rounds:** 2
+- **Approved:** 2026-10-23, jwloka, in-session
 
 ## Changelog
 
