@@ -75,6 +75,7 @@ silently fall back to `curl` or browser automation.
 Need to interact with Bitbucket?
 ├── List/view PRs? → bb pr list / bb pr view
 ├── Read PR comments? → bb pr view <id> --comments
+├── Read only some PR fields? → bb pr view <id> --json number,state [--jq .state]
 ├── Post comment? → bb pr comment
 ├── Create PR? → bb pr create
 ├── Edit PR (reviewers, title, description, target branch)? → bb pr edit

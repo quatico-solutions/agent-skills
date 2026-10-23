@@ -889,7 +889,7 @@ HELP
 }
 
 cmd_pr_view() {
-  local pr_id="" show_comments=0
+  local pr_id="" show_comments=0 JSON_FIELDS=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -897,29 +897,63 @@ cmd_pr_view() {
 View pull request details.
 
 USAGE
-  bb pr view <id> [--comments] [--json]
+  bb pr view <id> [--comments] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
-  --comments   Include all comments
-  --json       Output raw JSON (with --comments: {pr, comments})
+  --comments       Include all comments
+  --json [fields]  Output JSON. With a comma-separated field list, output only those
+                   fields (number, title, state, headRefName, baseRefName, isDraft,
+                   author, url, createdAt, updatedAt, checks). Without one, output the
+                   raw PR (with --comments: {pr, comments}).
+                   A field list cannot be combined with --comments.
+  --jq <expr>      Filter the JSON output with a jq expression (requires --json)
 
 EXAMPLES
   bb pr view 42
   bb pr view 42 --comments
   bb pr view 42 --json | jq .state
+  bb pr view 42 --json number,state
+  bb pr view 42 --json state --jq .state
 HELP
         exit 0
         ;;
       --comments) show_comments=1; shift ;;
-      --json)     JSON_OUTPUT=1; shift ;;
+      --json)
+        JSON_OUTPUT=1; shift
+        # The PR id is numeric and a field name starts with a letter, so a bare
+        # word after --json that starts with a letter is the field list, while
+        # `--json 42` keeps 42 as the id.
+        if [[ $# -gt 0 && "$1" =~ ^[a-zA-Z][a-zA-Z0-9,]*$ ]]; then
+          JSON_FIELDS="$1"; shift
+        fi
+        ;;
+      --jq)       JQ_EXPR="$2"; shift 2 ;;
       -*)         echo >&2 "unknown flag: $1"; exit 1 ;;
       *)          pr_id="$1"; shift ;;
     esac
   done
 
   if [[ -z "$pr_id" ]]; then
-    echo >&2 "usage: bb pr view <id> [--comments] [--json]"
+    echo >&2 "usage: bb pr view <id> [--comments] [--json [<fields>]] [--jq <expr>]"
     exit 1
+  fi
+  # Reject a non-numeric id before the request: a 404 from this command must
+  # mean the PR does not exist, never that the id was malformed.
+  if [[ ! "$pr_id" =~ ^[0-9]+$ ]]; then
+    echo >&2 "usage: bb pr view <id> [--comments] [--json [<fields>]] [--jq <expr>] (id must be a number, got '$pr_id')"
+    exit 1
+  fi
+  if [[ -n "${JQ_EXPR:-}" && "${JSON_OUTPUT:-}" != "1" ]]; then
+    echo >&2 "error: --jq requires --json"; exit 1
+  fi
+  if [[ -n "$JSON_FIELDS" && "$show_comments" -eq 1 ]]; then
+    echo >&2 "error: --comments cannot be combined with a --json field list (use --json alone for {pr, comments})"
+    exit 1
+  fi
+  # Validate the field list before spending any API call on it.
+  local proj=""
+  if [[ -n "$JSON_FIELDS" ]]; then
+    proj="$(bb_pr_json_projection "$JSON_FIELDS")" || exit 1
   fi
 
   local ws repo
@@ -930,12 +964,25 @@ HELP
   result="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")"
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    local out
     if [[ "$show_comments" -eq 1 ]]; then
       local comments
       comments="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests/${pr_id}/comments")"
-      jq -n --argjson pr "$result" --argjson comments "$comments" '{pr: $pr, comments: $comments}'
+      out="$(jq -n --argjson pr "$result" --argjson comments "$comments" '{pr: $pr, comments: $comments}')"
+    elif [[ -n "$JSON_FIELDS" ]]; then
+      # bb_pr_json_projection maps over an array: wrap the one PR, project, unwrap.
+      out="$(echo "[$result]" | jq -c .)"
+      if bb_pr_needs_checks "$JSON_FIELDS"; then
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+      fi
+      out="$(echo "$out" | jq "$proj | .[0]")"
     else
-      echo "$result" | jq .
+      out="$result"
+    fi
+    if [[ -n "${JQ_EXPR:-}" ]]; then
+      echo "$out" | jq -r "$JQ_EXPR"
+    else
+      echo "$out" | jq .
     fi
   else
     echo "$result" | bb_format_pr_view
