@@ -48,6 +48,8 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 - **Delivered index:** docs/plans/delivered/
 - **Sprint directory:** docs/sprints/
 - **People:** jwloka = Jan Wloka
+- **CI:** github-actions
+- **Worktree root:** .worktrees
 - **Git host:** github
 - **Tracker:** plot
 - **Commit style:** arlo
