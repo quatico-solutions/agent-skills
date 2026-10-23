@@ -487,6 +487,24 @@ describe('bb pr list --limit', () => {
       assert.equal(server.getCalls().length, 12)
     })
 
+    it('Accumulates listings larger than one argv string', async () => {
+      // Given 4 pages of 50 PRs with 1000-character titles (about 200 KB in total)
+      const pad = 'x'.repeat(1000)
+      const page = (n: number) => ({
+        values: Array.from({ length: 50 }, (_, i) => ({ id: n * 50 + i, title: pad, state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } })),
+        ...(n < 3 ? { next: `${server.baseUrl}${PR_PATH}?state=MERGED&pagelen=50&page=${n + 2}` } : {}),
+      })
+      server.stub('GET', PR_PATH, page(0))
+      for (let n = 1; n <= 3; n++) server.stubWithQuery('GET', PR_PATH, { page: String(n + 1) }, page(n))
+
+      // When I read them all
+      const result = await bb('pr list --state merged --all --json number --jq length', { port: server.port })
+
+      // Then no row is lost to an argument-size limit
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '200')
+    })
+
     it('Rejects --all together with --limit', async () => {
       const result = await bb('pr list --all --limit 5', { port: server.port })
       assert.equal(result.exitCode, 1)

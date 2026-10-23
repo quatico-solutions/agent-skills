@@ -205,7 +205,9 @@ bb_api_call() {
 bb_paginate() {
   local path="$1"; shift
   local limit="${1:-50}"
-  local all="[]"
+  # Pages accumulate in a file, one JSON array per line: a growing array passed
+  # through `jq --argjson` overflows the argument-size limit at a few thousand rows.
+  local rows=0 acc_file
   local url="${BB_API}${path}"
   local token email
   token="$(bb_token)" || exit 1
@@ -213,6 +215,7 @@ bb_paginate() {
   local base_ms="${BB_RETRY_BASE_MS:-1000}"
   local hdr_file
   hdr_file="$(mktemp)"
+  acc_file="$(mktemp)"
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" ]] && : > "$BB_PAGINATE_NEXT_FILE"
 
   while [[ -n "$url" ]]; do
@@ -238,9 +241,9 @@ bb_paginate() {
     done
 
     if [[ "$http_code" -ge 400 ]]; then
-      rm -f "$hdr_file"
+      rm -f "$hdr_file" "$acc_file"
       if [[ "$http_code" == "429" ]]; then
-        echo >&2 "error: rate limited after $(echo "$all" | jq 'length') rows"
+        echo >&2 "error: rate limited after ${rows} rows"
         return 1
       fi
       local msg
@@ -249,19 +252,16 @@ bb_paginate() {
       return 1
     fi
 
-    local values
-    values="$(echo "$body" | jq '.values // []')"
-    all="$(jq -n --argjson a "$all" --argjson b "$values" '$a + $b')"
+    local page_rows
+    page_rows="$(echo "$body" | jq -c '.values // []' | tee -a "$acc_file" | jq 'length')"
+    rows=$((rows + page_rows))
     url="$(echo "$body" | jq -r '.next // empty')"
 
-    local count
-    count="$(echo "$all" | jq 'length')"
-    if [[ "$limit" -gt 0 && "$count" -ge "$limit" ]]; then
-      all="$(echo "$all" | jq --argjson l "$limit" '.[:$l]')"
-      break
-    fi
+    [[ "$limit" -gt 0 && "$rows" -ge "$limit" ]] && break
   done
-  rm -f "$hdr_file"
+  local all
+  all="$(jq -s --argjson l "$limit" 'add // [] | if $l > 0 then .[:$l] else . end' "$acc_file")"
+  rm -f "$hdr_file" "$acc_file"
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" && -n "$url" ]] && echo 1 > "$BB_PAGINATE_NEXT_FILE"
   echo "$all"
 }
