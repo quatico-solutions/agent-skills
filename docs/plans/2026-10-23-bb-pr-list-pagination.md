@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** feature
 - **Issue:** #98
 - **Sprint:** bb-pr-reads
@@ -13,6 +13,7 @@
 - **Rounds:** 2
 - **Approved:** 2026-10-23, jwloka, in-session
 - **Started:** 2026-10-23, jwloka, `feature/bb-pr-list-pagination`
+- **Delivered:** 2026-10-23
 
 ## Changelog
 

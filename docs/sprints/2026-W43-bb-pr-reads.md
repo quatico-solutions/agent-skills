@@ -22,7 +22,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
 - [x] [bb-pr-view-json-fields] `bb pr view --json <fields>` and `--jq` instead of HTTP 404 (#97) <!-- pr: #101, branch: bug/bb-pr-view-json-fields -->
-- [ ] [bb-pr-list-pagination] `bb pr list` pagination, `--all`, 429 retry, truncation warning, `--updated-since` (#98) <!-- pr: #0, branch: feature/bb-pr-list-pagination -->
+- [x] [bb-pr-list-pagination] `bb pr list` pagination, `--all`, 429 retry, truncation warning, `--updated-since` (#98) <!-- pr: #0, branch: feature/bb-pr-list-pagination -->
 
 ### Should Have
 
