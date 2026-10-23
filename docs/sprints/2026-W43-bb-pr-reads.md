@@ -4,8 +4,9 @@
 
 ## Status
 
-- **State:** Active
-- **Start:** 2026-10-26
+- **State:** Closed
+- **Actual End:** 2026-10-23
+- **Start:** 2026-10-23
 - **End:** 2026-10-30
 - **Release:** 3.18.0
 
@@ -40,7 +41,36 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
 
 ## Retrospective
 
-<!-- Filled during /plot-sprint close: What went well / What could improve / Action items -->
+### What went well
+
+- All three issues (#97, #98, #100) went from issue to released code on 2026-10-23, in 3.18.0 (bb 1.12.0), through plans, briefs and fleet agents.
+- The live checks on `quatico/ewz-kus-portal` found a defect the mock suite missed: `bb_paginate` failed with `jq: Argument list too long` at `--limit 120`. #103 fixed it with a temp-file accumulator.
+- `/challenge-the-plan` found before implementation that `plot-host.sh` does not call `bb pr list`, which moved the plot-side change to plot-pm/plot#2400 instead of into this sprint.
+
+### What could improve
+
+- The fleet's first two runs never started an agent: this repo had no `.plot/worker-prompt.sh`, so each `claude` start exited 1. Recovery needed a force-push, two claim restarts and moving a desk to the new `main`.
+- Plot's controller gate blocked approvals, deliveries and releases until a board ran for this repo, and it also blocked read-only `grep` commands that named a gated script.
+- `--all` on ewz-kus-portal (3519 merged PRs) still fails with HTTP 429 after three retries (1 s, 2 s, 4 s). PR #103 merged without that live check passing.
+- The 50-row cap in #98 is not explained: the old loop should have stopped at 100 rows. The plan's open point is ticked although the cap was never reproduced.
+- Each workflow run on the release branch waited for a manual approval (`action_required`) before #104 could merge.
+
+### Action items
+
+- [ ] Decide the `--all` retry window (more attempts, longer backoff, or a documented limit) and reopen the 50-row cap question in `bb-pr-list-pagination`.
+- [ ] Create the `plan:*` labels in this repository, so plot's issue-state writes stop failing (`'plan:draft' not found`).
+- [ ] Add the `cli/bb` path to machine-setup's copy of the `~/.local/bin/bb` launcher; the local fix is overwritten on the next run.
+- [ ] File plot issues: the `→ commit` arrow is read only on the slice heading line; `/plot-approve` annotates scope-change log lines that name a slug; the controller gate blocks read-only commands.
+- [ ] Find out why release-branch workflow runs need approval, and remove that step if it is not intended.
+
+### Metrics
+
+- **Must-haves completed:** 2/2
+- **Should-haves completed:** 0/0
+- **Could-haves completed:** 1/1
+- **Deferred items:** 0
+- **Scope changes during sprint:** 1
+- **Duration:** planned 5 days (2026-10-26 to 2026-10-30), actual 1 day (2026-10-23)
 
 ## Notes
 
