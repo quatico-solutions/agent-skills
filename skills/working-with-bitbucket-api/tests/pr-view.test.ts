@@ -57,6 +57,100 @@ describe('bb pr view', () => {
   })
 })
 
+describe('--json field list', () => {
+  let server: MockServer
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => server.reset())
+
+  it('Projects the PR to the requested fields', async () => {
+    // Given the API returns a single PR
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr view 42 --json number,state
+    const result = await bb('pr view 42 --json number,state', { port: server.port })
+
+    // Then stdout is one object with exactly those keys, and the request went to the PR
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), { number: 42, state: 'OPEN' })
+    assert.equal(server.getLastCall().path, '/repositories/testws/testrepo/pullrequests/42')
+  })
+
+  it('Takes a single field without a comma', async () => {
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    const result = await bb('pr view 42 --json number', { port: server.port })
+
+    assert.deepEqual(JSON.parse(result.stdout), { number: 42 })
+  })
+
+  it('Applies --jq after the projection', async () => {
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    const result = await bb('pr view 42 --json number,state --jq .state', { port: server.port })
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stdout.trim(), 'OPEN')
+  })
+
+  it('Rejects --jq without --json', async () => {
+    const result = await bb('pr view 42 --jq .state', { port: server.port })
+
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--jq requires --json/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
+  it('Keeps a numeric word after --json as the PR id', async () => {
+    // Given the API returns a single PR
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+
+    // When I run bb pr view --json 42
+    const result = await bb('pr view --json 42', { port: server.port })
+
+    // Then 42 is the id and the full PR object comes back
+    assert.equal(result.exitCode, 0)
+    assert.equal(server.getLastCall().path, '/repositories/testws/testrepo/pullrequests/42')
+    assert.equal(JSON.parse(result.stdout).id, 42)
+  })
+
+  it('Rejects an unknown field before sending a request', async () => {
+    const result = await bb('pr view 42 --json number,bogus', { port: server.port })
+
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /unknown field 'bogus'/)
+    assert.match(result.stderr, /headRefName/)
+    assert.equal(server.getCalls().length, 0, 'no request may be sent')
+  })
+
+  it('Rejects a non-numeric id before sending a request', async () => {
+    const result = await bb('pr view abc --json number', { port: server.port })
+
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /id must be a number/)
+    assert.equal(server.getCalls().length, 0, 'no request may be sent')
+  })
+
+  it('Rejects --comments together with a field list before sending a request', async () => {
+    const result = await bb('pr view 42 --comments --json number,state', { port: server.port })
+
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--comments cannot be combined/)
+    assert.equal(server.getCalls().length, 0, 'no request may be sent')
+  })
+
+  it('Keeps {pr, comments} for a bare --json with --comments', async () => {
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42', prSingle)
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/42/comments', prComments)
+
+    const result = await bb('pr view 42 --comments --json', { port: server.port })
+
+    const parsed = JSON.parse(result.stdout)
+    assert.equal(parsed.pr.id, 42)
+    assert.ok(Array.isArray(parsed.comments))
+  })
+})
+
 describe('output', () => {
   let server: MockServer
   before(async () => { server = await createMockServer() })
