@@ -21,7 +21,7 @@ Two open issues, both filed 2026-10-23, make `bb` report a wrong answer as if it
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [ ] [bb-pr-view-json-fields] `bb pr view --json <fields>` and `--jq` instead of HTTP 404 (#97)
+- [ ] [bb-pr-view-json-fields] `bb pr view --json <fields>` and `--jq` instead of HTTP 404 (#97) <!-- pr: #0, branch: bug/bb-pr-view-json-fields -->
 - [ ] [bb-pr-list-pagination] `bb pr list` pagination, `--all`, 429 retry, truncation warning, `--updated-since` (#98)
 
 ### Should Have
