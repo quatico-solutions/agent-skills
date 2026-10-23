@@ -12,6 +12,7 @@
 - **Impl:** own branches
 - **Rounds:** 2
 - **Approved:** 2026-10-23, jwloka, in-session
+- **Started:** 2026-10-23, jwloka, `bug/bb-pr-view-json-fields`
 
 ## Changelog
 

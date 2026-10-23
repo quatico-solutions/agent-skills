@@ -12,13 +12,14 @@
 - **Impl:** own branches
 - **Rounds:** 2
 - **Approved:** 2026-10-23, jwloka, in-session
+- **Started:** 2026-10-23, jwloka, `feature/bb-pr-list-pagination`
 
 ## Changelog
 
 - `bb pr list --limit <n>` follows Bitbucket's `next` links until it has `n` rows; `--all` reads every page.
 - `bb pr list --updated-since <ISO date>` lists only PRs updated on or after that time.
 - `bb pr list` without `--limit` prints a warning on stderr when more than the default 50 rows exist.
-- `bb pr list` retries a page that answers HTTP 429 up to 3 times before it fails.
+- Every `bb` command that reads a paged listing retries a page that answers HTTP 429 up to 3 times before it fails.
 
 ## Motivation
 
@@ -30,10 +31,10 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ### Approach
 
-- `bb_paginate` (`cli/bb:193`) already follows `next`, but stops after 10 pages and sends no `pagelen`. Send `pagelen=50` (the Bitbucket maximum) and derive the page cap from `--limit` instead of the fixed 10.
+- `bb_paginate` (`cli/bb:193`) already follows `next`, but stops after 10 pages and sends no `pagelen`. Replace the fixed 10-page cap with the row limit: the loop stops when it has `limit` rows or `next` is empty. `cmd_pr_list` adds `pagelen=50` (the pull-request endpoint's maximum) to its own query. `bb_paginate` has 14 callers on endpoints whose maximum page size differs, so it sends no `pagelen` itself.
 - `--all`: no row limit; follow `next` until it is empty. There is no ceiling: about 75 requests per state on a repository with 3700 PRs. Callers who want fewer rows use `--limit` or `--updated-since`.
 - HTTP 429 on any page: wait for `Retry-After` when Bitbucket sends it, otherwise 1 s, 2 s, then 4 s. After 3 retries on one page, exit non-zero with `error: rate limited after <n> rows`. The pages already read are not printed, so a short list never looks complete. Other non-2xx answers fail on the first attempt, as today. Tests set `BB_RETRY_BASE_MS=0` so they do not sleep. `sleep` with a whole number of seconds stays bash 3.2-safe.
-- Truncation: when no `--limit` was given and the default 50 rows stop the loop with a `next` link still present, print `warning: listing truncated at 50 rows; use --limit or --all` on stderr. An explicit `--limit` is the caller's choice and stays silent, as in `gh`. Stdout stays pure JSON.
+- Truncation: `bb_paginate` reports to its caller whether a `next` link was left when it stopped, and prints nothing itself. `cmd_pr_list`, when no `--limit` was given and a `next` link was left, prints `warning: listing truncated at 50 rows; use --limit or --all` on stderr. An explicit `--limit` is the caller's choice and stays silent, as in `gh`. Stdout stays pure JSON.
 - `--updated-since <ISO>`: add `updated_on >= "<ISO>"` to the `q=` expression. The bound is inclusive, as in plot-host's existing query: a caller that reads again from its last watermark gets the PR at the boundary twice, never zero times. `bb_pr_list_query` builds both the `state=` and `q=` forms; this filter forces the `q=` form, like `--author` does today.
 - No `--sort`, although #98 asks for one. Bitbucket already returns PRs newest-updated first, and `--updated-since` filters on the server, so no caller has to stop at a watermark. A caller that needs another order gets a flag then.
 - Update `pr list` help text and `skills/working-with-bitbucket-api/SKILL.md`.
@@ -58,7 +59,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ### pr list pagination (Branch: feature/bb-pr-list-pagination)
 
-- `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all and --updated-since on cmd_pr_list; 429 retry and truncation warning in bb_paginate; sequenced stubs in mock-server -->
+- `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all, --updated-since and the truncation warning on cmd_pr_list; 429 retry and leftover-page report in bb_paginate; sequenced stubs in mock-server -->
 
 ## Definition of Done
 
