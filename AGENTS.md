@@ -46,6 +46,8 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 - **Plan directory:** docs/plans/
 - **Active index:** docs/plans/active/
 - **Delivered index:** docs/plans/delivered/
+- **Sprint directory:** docs/sprints/
+- **People:** jwloka = Jan Wloka
 - **Git host:** github
 - **Tracker:** plot
 - **Commit style:** arlo

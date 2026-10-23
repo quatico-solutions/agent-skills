@@ -53,7 +53,9 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
   - `bb pr list --state merged --updated-since 2026-10-01 --json updatedAt --jq 'map(select(.updatedAt < "2026-10-01")) | length'` prints `0`
   - the output of each command goes into the PR description
 
-## Branches
+## Slices
+
+### pr list pagination (Branch: feature/bb-pr-list-pagination)
 
 - `feature/bb-pr-list-pagination` — `pagelen`, limit-derived page cap, `--all`, 429 retry, stderr truncation warning, `--updated-since`, with cases in `tests/pr-list.test.ts` <!-- builds: --all and --updated-since on cmd_pr_list; 429 retry and truncation warning in bb_paginate; sequenced stubs in mock-server -->
 
