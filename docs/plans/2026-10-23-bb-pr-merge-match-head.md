@@ -11,6 +11,7 @@
 - **Review:** in-session
 - **Impl:** own branches
 - **Approved:** 2026-10-23, jwloka, in-session
+- **Started:** 2026-10-23, jwloka, `feature/bb-pr-merge-match-head`
 
 ## Changelog
 
