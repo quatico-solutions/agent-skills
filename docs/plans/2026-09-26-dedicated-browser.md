@@ -5,7 +5,7 @@
 
 ## Status
 
-- **Phase:** In Progress
+- **Phase:** Released
 - **Type:** feature
 - **Story:** <!-- optional, story slug (docs/stories/<slug>/) — the durable intent this plan serves -->
 - **Sprint:** <!-- optional, filled when plan is added to a sprint -->
@@ -13,6 +13,8 @@
 - **Impl:** same branch
 - **Approved:** 2026-09-26, Max Albrecht, in-session
 - **Started:** 2026-09-26, Max Albrecht, `worktree-q-agent-browser`
+- **Delivered:** 2026-10-02
+- **Released:** 2026-10-02, v3.15.0
 
 ## Changelog
 
@@ -63,7 +65,7 @@ daemon-owned port, competing skill). It can attach over `--cdp`, which was check
 
 - `worktree-q-agent-browser` — the whole skill. Delegated session: the maintainer's instruction was
   to work only on this branch, push only here, and open no pull request until told. The name does
-  not follow the Plot prefixes for that reason.
+  not follow the Plot prefixes for that reason. → #76
 
 ## Definition of Done
 
@@ -79,3 +81,6 @@ daemon-owned port, competing skill). It can attach over `--cdp`, which was check
   session was told not to do.
 - Unattended test runs used a mock-keychain copy of the scripts; see the Testing section of the
   skill's README for what that does and does not cover.
+- The skill shipped in PR #76 (merged 2026-10-02) and first released in v3.15.0. The phase was
+  recorded on 2026-10-23: the branch has no Plot prefix, so no Plot script can read the slice.
+  The five Open Points above are follow-ups after release, not missing work.
