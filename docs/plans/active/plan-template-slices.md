@@ -1,0 +1,1 @@
+../2026-10-23-plan-template-slices.md
