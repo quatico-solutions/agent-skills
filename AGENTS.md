@@ -50,6 +50,7 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 - **People:** jwloka = Jan Wloka
 - **CI:** github-actions
 - **Worktree root:** .worktrees
+- **Board port:** 7778
 - **Git host:** github
 - **Tracker:** plot
 - **Commit style:** arlo
