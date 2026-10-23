@@ -1,5 +1,35 @@
 # @quatico-solutions/agent-skills
 
+## 3.18.0
+
+### Minor Changes
+
+- [#103](https://github.com/quatico-solutions/agent-skills/pull/103) [`722d226`](https://github.com/quatico-solutions/agent-skills/commit/722d2267ca92f759f188d1a4c39d38edee760691) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb pr list --limit <n>` follows Bitbucket's `next` links until it holds `n` rows, and the fixed 10-page cap is gone. New flags: `--all` (every page) and `--updated-since <ISO>` (inclusive, server-side). `pr list` sends `pagelen=50` and warns on stderr when the default limit truncates the listing. Every paged `bb` listing retries HTTP 429 up to 3 times per page, then exits with `error: rate limited after <n> rows` and prints no rows.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+- [#102](https://github.com/quatico-solutions/agent-skills/pull/102) [`eaf11d8`](https://github.com/quatico-solutions/agent-skills/commit/eaf11d8c850ee9501a16eb2a5f8b8e116b2bcc8f) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb pr merge --match-head-commit <sha>` refuses a PR whose head moved after review (issue [#100](https://github.com/quatico-solutions/agent-skills/issues/100))
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+### Patch Changes
+
+- [#101](https://github.com/quatico-solutions/agent-skills/pull/101) [`7bda285`](https://github.com/quatico-solutions/agent-skills/commit/7bda285d299f16a4d40b15d0a92a73c5de51d5c8) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb pr view <id> --json <fields>` no longer answers a false `HTTP 404`. The field list was read as the PR id. `pr view` now takes a field list and `--jq` like `pr list`, rejects a non-numeric id and `--comments` with a field list before any request, and `--json 42` keeps 42 as the id.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.17.1
 
 ### Patch Changes
