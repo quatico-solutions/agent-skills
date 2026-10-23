@@ -47,7 +47,7 @@
 
 ## Slices
 
-### pr view field projection (Branch: bug/bb-pr-view-json-fields)
+### pr view field projection (Branch: bug/bb-pr-view-json-fields) → #101
 
 - `bug/bb-pr-view-json-fields` — field projection, `--jq`, and numeric-id check for `bb pr view`, with cases in `tests/pr-view.test.ts` <!-- builds: --json <fields> and --jq on cmd_pr_view, reusing bb_pr_json_projection -->
 
