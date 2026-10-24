@@ -38,7 +38,7 @@ Measured 2026-10-24 against the same endpoint, three authenticated requests in a
 
 ## Slices
 
-### paginate backoff (Branch: bug/bb-paginate-backoff)
+### paginate backoff (Branch: bug/bb-paginate-backoff, PR: #106)
 
 - `bug/bb-paginate-backoff` — longer 429 backoff, `Retry-After` cap and a stderr line per retry in `bb_paginate`, with cases in `tests/pr-list.test.ts` <!-- builds: 429 backoff schedule and retry notice in bb_paginate -->
 
