@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.18.1
+
+### Patch Changes
+
+- [#106](https://github.com/quatico-solutions/agent-skills/pull/106) [`7780319`](https://github.com/quatico-solutions/agent-skills/commit/778031943173205b6227db0381487d4583a68c62) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: paged `bb` listings retry HTTP 429 up to 5 times per page, waiting 2, 4, 8, 16 and 32 seconds (or `Retry-After`, at most 60 seconds), and print each wait on stderr. Three short retries were too few for `bb pr list --all` on a repository with 3519 merged PRs.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.18.0
 
 ### Minor Changes
