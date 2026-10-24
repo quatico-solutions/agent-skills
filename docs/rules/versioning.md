@@ -69,6 +69,8 @@ At release, `pnpm run version` consumes the changesets:
 2. `changeset version` bumps `package.json` and writes `CHANGELOG.md`.
 3. `sync-versions.sh` propagates the version to the plugin manifests and regenerates `marketplace.json`.
 
+`release.yml` opens the release PR as a GitHub App when the repository holds the secrets `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`. The App needs repository permissions Contents and Pull requests, both read and write, and must be installed on this repository. Without those secrets the PR comes from `github-actions[bot]`, and GitHub runs its checks only after a maintainer approves them under "Awaiting approval" on the PR.
+
 ## Soft Gate
 
 CI only warns when a skill-touching PR has no changeset: `ci.yml` emits a warning and exits 0. Treat the changeset as required anyway. The release pipeline reads changesets to bump versions, so a missing one ships a skill change under an unchanged version number. Hardening the CI step into a failure would turn this rule into a gate (AGENTS.md Critical Rule 6).
