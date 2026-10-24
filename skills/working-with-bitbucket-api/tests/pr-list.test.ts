@@ -628,7 +628,37 @@ describe('bb pr list --limit', () => {
       assert.equal(server.getCalls().length, 2)
     })
 
-    it('Fails after 3 retries and prints no rows', async () => {
+    it('Logs the backoff schedule 2, 4, 8, 16, 32 s without Retry-After', async () => {
+      // Given page 1 answers 429 five times, then 200
+      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
+      const slow = { status: 429, body: { error: { message: 'slow down' } } }
+      server.stubSequence('GET', PR_PATH, {}, [slow, slow, slow, slow, slow, { status: 200, body: ok }])
+
+      // When I list
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
+
+      // Then the fifth retry succeeds and each wait is named on stderr, in order
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '1')
+      assert.equal(server.getCalls().length, 6)
+      const waits = [...result.stderr.matchAll(/retrying in (\d+) s \((\d)\/5\)/g)].map(m => `${m[1]}:${m[2]}`)
+      assert.deepEqual(waits, ['2:1', '4:2', '8:3', '16:4', '32:5'])
+    })
+
+    it('Caps a Retry-After above 60 s at 60 s', async () => {
+      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
+      server.stubSequence('GET', PR_PATH, {}, [
+        { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '120' } },
+        { status: 200, body: ok },
+      ])
+
+      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 0)
+      assert.match(result.stderr, /retrying in 60 s \(1\/5\)/)
+    })
+
+    it('Fails after 5 retries and prints no rows', async () => {
       // Given page 1 reads fine and page 2 answers 429 every time
       const first = {
         values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }],
@@ -642,11 +672,11 @@ describe('bb pr list --limit', () => {
       // When I read all pages
       const result = await bb('pr list --state merged --all --json', { port: server.port, env: noSleep })
 
-      // Then it exits non-zero after 1 + 4 requests, names the rows read, and prints nothing
+      // Then it exits non-zero after 1 + 6 requests, names the rows read, and prints nothing
       assert.equal(result.exitCode, 1)
       assert.equal(result.stdout, '')
       assert.match(result.stderr, /error: rate limited after 1 rows/)
-      assert.equal(server.getCalls().length, 5)
+      assert.equal(server.getCalls().length, 7)
     })
 
     it('Fails other non-2xx answers on the first attempt', async () => {

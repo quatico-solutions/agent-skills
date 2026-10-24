@@ -156,7 +156,7 @@ bb pr list --state merged --updated-since 2026-10-01   # only PRs updated at or 
 - `--all` has no ceiling: about 75 requests per state on a repository with 3700 PRs. Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
 - `--updated-since <ISO>` filters on the server and is inclusive (`>=`), so a caller that reads again from its last watermark gets the boundary PR twice, never zero times. It forces the `q=` filter form, like `--author`.
 - Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
-- Every paged listing retries a page that answers HTTP 429 up to 3 times (`Retry-After` seconds, otherwise 1 s, 2 s, 4 s). After that it exits non-zero with `error: rate limited after <n> rows` and prints no rows, so a short list never looks complete.
+- Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits non-zero with `error: rate limited after <n> rows` and prints no rows, so a short list never looks complete.
 
 ### Targeting another repository (`-R`)
 

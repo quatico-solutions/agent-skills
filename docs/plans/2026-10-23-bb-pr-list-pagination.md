@@ -43,7 +43,7 @@ This plan serves direct `bb` callers. Plot's `plot-host.sh` does not call `bb pr
 
 ### Open Points
 
-- [x] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires. (Not reproduced live; see Notes.)
+- [ ] Reproduce the 50-row cap against a live repo first: the 10-page cap with Bitbucket's default `pagelen` does not obviously give 50. The fix depends on which limit actually fires. (Not reproduced live; see Notes. Reopened 2026-10-24: the cause of the cap is still unknown.)
 - [x] Does `plot-host.sh` pass `--limit` to `bb`? No. It never calls `bb pr list` for its listing; see Motivation. That change belongs to the plot repo.
 - [x] File the plot-repo issue: plot-pm/plot#2400 switches `bb_state_listing` to `bb pr list --all` and removes the stale "refuses --limit" comment.
 
