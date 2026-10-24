@@ -4,13 +4,14 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** bug
 - **Review:** in-session
 - **Impl:** same branch
 - **Approved:** 2026-10-24, jwloka, in-session
 - **Started:** 2026-10-24, jwloka, `bug/bb-paginate-backoff`
 - **Delivered:** 2026-10-24
+- **Released:** 2026-10-24, v3.18.1
 
 ## Changelog
 
