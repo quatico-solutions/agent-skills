@@ -609,10 +609,11 @@ describe('bb pr list --limit', () => {
       // When I list
       const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
 
-      // Then the list succeeds after 2 requests
+      // Then the list succeeds after 2 requests and names the 0 s wait
       assert.equal(result.exitCode, 0)
       assert.equal(result.stdout.trim(), '1')
       assert.equal(server.getCalls().length, 2)
+      assert.match(result.stderr, /retrying in 0 s \(1\/5\)/)
     })
 
     it('Retries a 429 without Retry-After', async () => {
