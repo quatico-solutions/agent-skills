@@ -194,10 +194,14 @@ bb_api_call() {
 # empty. A limit of 0 means no row limit. The page size is the caller's
 # business: it belongs in $path, because the maximum differs per endpoint.
 #
-# HTTP 429 on a page is retried: Retry-After seconds when Bitbucket sends the
-# header, otherwise 1 s, 2 s, 4 s (times BB_RETRY_BASE_MS/1000, so tests can
-# set 0). After 3 retries the call fails and prints NO rows — a short list must
-# never look complete. Every other non-2xx fails on the first attempt.
+# HTTP 429 on a page is retried up to 5 times: Retry-After seconds when
+# Bitbucket sends the header (at most 60), otherwise 2, 4, 8, 16, 32 s. Bitbucket
+# throttles bursts and sends no Retry-After (measured 2026-10-24: three requests
+# in a row answered 429 200 429), so a wait of a few seconds lets a long listing
+# continue. Each wait is named on stderr before it starts; the actual sleep is
+# that wait times BB_RETRY_BASE_MS/1000, so tests set 0 and still see the
+# schedule. After the last retry the call fails and prints NO rows — a short
+# list must never look complete. Every other non-2xx fails on the first attempt.
 #
 # This runs inside $(…), so it cannot hand its caller a second value on stdout.
 # When BB_PAGINATE_NEXT_FILE names a file, it holds "1" afterwards if a `next`
@@ -227,17 +231,19 @@ bb_paginate() {
         "$url")"
       http_code="$(echo "$response" | tail -1)"
       body="$(echo "$response" | sed '$d')"
-      [[ "$http_code" == "429" && "$attempt" -lt 3 ]] || break
+      [[ "$http_code" == "429" && "$attempt" -lt 5 ]] || break
 
-      local wait_s
+      local wait_s sleep_s
       wait_s="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
-      if [[ ! "$wait_s" =~ ^[0-9]+$ ]]; then
-        # 1, 2, 4 seconds; BB_RETRY_BASE_MS=0 skips the sleep.
-        wait_s=$(( (base_ms * (1 << attempt) + 999) / 1000 ))
+      if [[ "$wait_s" =~ ^[0-9]+$ ]]; then
+        [[ "$wait_s" -gt 60 ]] && wait_s=60
+      else
+        wait_s=$(( 2 << attempt ))
       fi
-      [[ "$base_ms" -eq 0 ]] && wait_s=0
-      [[ "$wait_s" -gt 0 ]] && sleep "$wait_s"
       attempt=$((attempt + 1))
+      echo >&2 "bb: rate limited, retrying in ${wait_s} s (${attempt}/5)"
+      sleep_s=$(( (wait_s * base_ms + 999) / 1000 ))
+      [[ "$sleep_s" -gt 0 ]] && sleep "$sleep_s"
     done
 
     if [[ "$http_code" -ge 400 ]]; then
