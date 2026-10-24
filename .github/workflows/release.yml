@@ -15,10 +15,27 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      # GitHub runs workflows on a PR opened by github-actions[bot] only after a
+      # maintainer approves them (changelog 2026-06-11). A release PR opened by
+      # the release App runs its checks without that step. Without the App's
+      # secrets, the job falls back to GITHUB_TOKEN and the approval returns.
+      HAS_RELEASE_APP: ${{ secrets.RELEASE_APP_ID != '' }}
     steps:
+      - name: Mint release App token
+        id: app-token
+        if: env.HAS_RELEASE_APP == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # The token goes to checkout too: checkout stores its credentials for
+      # later pushes, and the release branch must be pushed as the App.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -52,7 +69,7 @@ jobs:
           commit: "release: ${{ steps.nextver.outputs.version }}"
           title: "release: ${{ steps.nextver.outputs.version }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
 
       - name: Assign release PR
