@@ -69,7 +69,7 @@ At release, `pnpm run version` consumes the changesets:
 2. `changeset version` bumps `package.json` and writes `CHANGELOG.md`.
 3. `sync-versions.sh` propagates the version to the plugin manifests and regenerates `marketplace.json`.
 
-`release.yml` opens the release PR as a GitHub App when the repository holds the secrets `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`. The App needs repository permissions Contents and Pull requests, both read and write, and must be installed on this repository. Without those secrets the PR comes from `github-actions[bot]`, and GitHub runs its checks only after a maintainer approves them under "Awaiting approval" on the PR.
+`release.yml` opens the release PR as a GitHub App when the repository holds the secrets `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`. This repository uses the org-owned App `quatico-agent-skills-release`, first used for release 3.18.1. The App needs repository permissions Contents and Pull requests, both read and write, and must be installed on this repository. Without those secrets the PR comes from `github-actions[bot]`, and GitHub runs its checks only after a maintainer approves them under "Awaiting approval" on the PR.
 
 ## Soft Gate
 
