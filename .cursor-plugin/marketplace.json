@@ -7,7 +7,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.18.1",
+      "version": "3.18.2",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -67,7 +67,7 @@
     {
       "name": "dedicated-browser",
       "description": "Use when the agent needs a web browser that is signed in to systems the human chose: a separate Chrome for Testing with its own saved logins, so the agent never touches the humans everyday browser....",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source": "./skills/dedicated-browser",
       "author": {
         "name": "Quatico Solutions AG",

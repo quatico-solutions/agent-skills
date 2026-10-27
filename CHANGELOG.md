@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.18.2
+
+### Patch Changes
+
+- [#109](https://github.com/quatico-solutions/agent-skills/pull/109) [`9fe3678`](https://github.com/quatico-solutions/agent-skills/commit/9fe367857e2d1ff12a53ed2c7098920886a8b35c) Thanks [@eins78](https://github.com/eins78)! - dedicated-browser: `start` opens Chrome for Testing through macOS `open`, so passkeys from a phone (QR code) work. Started from a shell, the terminal app was the browser's responsible process, and Chrome turns off Bluetooth when that process does not declare it: the sign-in dialog had no phone option. The smoke test checks this in `chrome://device-log`.
+
+  <!--
+  bumps:
+    skills:
+      dedicated-browser: patch
+  -->
+
 ## 3.18.1
 
 ### Patch Changes
