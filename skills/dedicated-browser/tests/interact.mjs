@@ -141,6 +141,21 @@ try {
     const frame = /--color-sys-header:\s*#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(await page.evaluate(() => document.body.innerText));
     const [red, green, blue] = frame ? frame.slice(1).map((hex) => parseInt(hex, 16)) : [0, 0, 0];
     check(red > green && green > blue && red - blue >= 24, `the window frame has the orange theme (frame color ${frame ? `#${frame.slice(1).join('')}` : 'not found'})`);
+    // Passkeys from a phone need Bluetooth, which Chrome uses only when it is its own responsible
+    // process (see backend_launch). Chrome logs that decision when a passkey request starts. The
+    // page is on localhost because an IP address cannot be a WebAuthn site. The request is aborted
+    // before anyone could answer the dialog. macOS may ask once whether Chrome for Testing may use
+    // Bluetooth; the check does not wait for that answer.
+    await page.goto(`http://localhost:${appPort}/`);
+    await page.evaluate(async () => {
+      const abort = new AbortController();
+      setTimeout(() => abort.abort(), 2000);
+      await navigator.credentials.get({ publicKey: { challenge: new Uint8Array(32) }, signal: abort.signal }).catch(() => {});
+    });
+    await page.goto('chrome://device-log/?types=FIDO');
+    const started = await page.getByText('Initializing FIDO discoveries').first().waitFor({ timeout: 5000 }).then(() => true, () => false);
+    const refused = await page.getByText('Cannot use Bluetooth because the responsible app').count();
+    check(started && refused === 0, `a passkey request may use Bluetooth, so a phone can sign in (${started ? `${refused} refusals in chrome://device-log` : 'no passkey request in chrome://device-log'})`);
   } else {
     await page.goto(app);
     check((await who()) === `Signed in as ${USER}`, 'after the restart the server still sees the cookie');

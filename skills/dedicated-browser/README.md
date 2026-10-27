@@ -150,7 +150,7 @@ Not implemented. The seam is `backend-<name>.sh`, selected with `DEDICATED_BROWS
 | `backend_installed_version` | installed version, empty if none |
 | `backend_latest_version` | what the vendor ships as stable; non-zero if unknown |
 | `backend_install [VERSION]` | install into `$DB_HOME`, replacing an older copy |
-| `backend_launch` | start it detached, with `$DB_PROFILE` and `$DB_PORT` |
+| `backend_launch` | start it detached and as its own app (not a child of the shell), with `$DB_PROFILE` and `$DB_PORT` |
 | `backend_quit` | quit it through `$DB_PORT` the way its Quit menu does, so logins reach disk |
 | `backend_main_pids [PORT]` | the main process of *this profile*, optionally only if it owns PORT |
 
