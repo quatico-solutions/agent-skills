@@ -111,6 +111,10 @@ Logins stay in the profile across the update. The keychain sees the new build as
   browser's launch flags prevent that. If it happens anyway, the browser was not started by
   `start`: `stop`, then `start`. Confirm with `document.visibilityState` reading `hidden` on a
   visible page.
+- **A passkey dialog offers no phone or QR code option:** the browser was not started by `start`
+  (by hand from a terminal, or by a version before this fix), so it may not use Bluetooth: `stop`,
+  then `start`. The first phone sign-in makes macOS ask whether Chrome for Testing may use
+  Bluetooth: the human clicks **Allow**.
 - **A sign-in page says the browser "behaves strangely" and refuses credentials, while the same
   login works in Safari on the same machine:** check `status` for the behind-stable note and
   update. Compare browsers on one machine. Do not diagnose from status codes: a `429` from a

@@ -24,8 +24,6 @@ backend_app_label() { printf 'Chrome for Testing'; }
 
 backend_app_path() { printf '%s/%s' "${DB_HOME}" "${CFT_APP_NAME}"; }
 
-backend_binary() { printf '%s/Contents/MacOS/Google Chrome for Testing' "$(backend_app_path)"; }
-
 # Read from Info.plist: does not start the browser, so it is safe while it is running.
 backend_installed_version() {
   defaults read "$(backend_app_path)/Contents/Info" CFBundleShortVersionString 2>/dev/null || true
@@ -203,10 +201,18 @@ JXA
 #   --disable-prompt-on-repost                    a reload would re-send a form without asking
 #   --disable-background-networking,              Safe Browsing stays current while the profile
 #   --disable-client-side-phishing-detection      holds live logins and the agent visits any site
+#
+# The browser starts through LaunchServices (`open`), as from the Dock, not as a child of this
+# shell. macOS holds one process "responsible" for each program, and a program a shell starts
+# inherits the terminal app as that process. Chrome uses Bluetooth only when the responsible
+# process declares it (NSBluetoothAlwaysUsageDescription), and Terminal does not, so passkeys from
+# a phone (QR code, which needs Bluetooth) were missing from the sign-in dialog. Chrome logs this in
+# chrome://device-log as "Cannot use Bluetooth because the responsible app for the process does not
+# have Bluetooth metadata". -n starts a new instance even when another Chrome for Testing runs.
 backend_launch() {
   mkdir -p "${DB_PROFILE}"
   backend_prepare_profile
-  "$(backend_binary)" \
+  open -n -a "$(backend_app_path)" --args \
     --remote-debugging-port="${DB_PORT}" \
     --user-data-dir="${DB_PROFILE}" \
     --no-first-run \
@@ -223,9 +229,7 @@ backend_launch() {
     --disable-sync \
     --metrics-recording-only \
     --allow-browser-signin=false \
-    --disable-features="${CFT_DISABLED_FEATURES}" \
-    &>/dev/null &
-  disown
+    --disable-features="${CFT_DISABLED_FEATURES}"
 }
 
 # Opening chrome://quit runs the same shutdown as the Quit menu item, and that writes cookies to
