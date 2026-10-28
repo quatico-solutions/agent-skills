@@ -60,7 +60,7 @@ bash "${CLAUDE_SKILL_DIR}/install-dependencies.sh"   # installs quatico-bb, migr
 brew upgrade quatico-bb
 ```
 
-Then check auth with `bb auth status`. If not logged in, tell the user to run `bb auth login`.
+Then check auth with `bb whoami`. If not logged in, tell the user to run `bb auth login`.
 
 **Never diagnose a `bb` command or auth error before ruling out a version mismatch.** Do NOT
 silently fall back to `curl` or browser automation.
@@ -114,7 +114,7 @@ Non-interactive (Claude Code / CI):
 echo "$TOKEN" | bb auth login --email user@example.com
 ```
 
-Verify with `bb auth status`. Override with env vars: `BB_TOKEN`, `BB_EMAIL`.
+Verify with `bb whoami` (shows the account and whether the token came from `BB_TOKEN` or the keychain). Override with env vars: `BB_TOKEN`, `BB_EMAIL`.
 
 ### Required API Token Scopes
 
@@ -122,7 +122,7 @@ Create an API token at https://id.atlassian.com/manage-profile/security/api-toke
 
 | Scope | Required For |
 |-------|-------------|
-| **read:user:bitbucket** | `bb auth status` |
+| **read:user:bitbucket** | `bb whoami` |
 | **read:repository:bitbucket** | `bb pr list`, `bb pr view`, `bb source ls/cat` |
 | **read:pullrequest:bitbucket** | `bb pr list`, `bb pr view --comments` |
 | **write:pullrequest:bitbucket** | `bb pr create`, `bb pr edit`, `bb pr comment`, `bb pr review`, `bb pr merge`, `bb pr close`, `bb pr tasks --resolve/--reopen` |

@@ -667,17 +667,24 @@ cmd_auth_status() {
     case "$1" in
       --help|-h)
         cat <<'HELP'
-Show the currently authenticated Bitbucket user.
+Show the authenticated Bitbucket account and where its credentials come from.
+Alias: bb whoami. Never prints the token or the email.
 
 USAGE
+  bb whoami [--json]
   bb auth status [--json]
 
 FLAGS
-  --json   Output raw JSON from the /user endpoint
+  --json   Output {nickname, display_name, account_id, uuid, credentials}
+
+OUTPUT
+  credentials is "BB_TOKEN env" when BB_TOKEN is set, otherwise
+  "keychain (com.quatico.bitbucket-cli)".
 
 EXAMPLES
-  bb auth status
-  bb auth status --json | jq .account_id
+  bb whoami
+  bb whoami --json | jq -r .nickname
+  bb api /user    # raw /user body
 HELP
         exit 0
         ;;
@@ -687,14 +694,27 @@ HELP
     esac
   done
 
-  local result
-  result="$(bb_api_call GET /user)"
-  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
-    echo "$result" | jq .
+  local result source
+  result="$(bb_api_call GET /user)" || exit $?
+  if [[ -n "${BB_TOKEN:-}" ]]; then
+    source="BB_TOKEN env"
   else
-    echo "$result" | jq -r '"Logged in as: " + (.display_name // "?") + " (" + (.username // "?") + ")"'
-    echo "$result" | jq -r '"Account ID:   " + (.account_id // "?")'
-    echo "$result" | jq -r '"UUID:         " + (.uuid // "?")'
+    source="keychain (com.quatico.bitbucket-cli)"
+  fi
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    echo "$result" | jq --arg credentials "$source" '{
+      nickname: (.nickname // .username),
+      display_name: .display_name,
+      account_id: .account_id,
+      uuid: .uuid,
+      credentials: $credentials
+    }'
+  else
+    echo "$result" | jq -r --arg credentials "$source" '
+      "nickname: " + (.nickname // .username // "?"),
+      "display_name: " + (.display_name // "?"),
+      "account_id: " + (.account_id // "?"),
+      "credentials: " + $credentials'
   fi
 }
 
@@ -2737,6 +2757,7 @@ Setup:
 Auth:
   auth login          Log in with an Atlassian API token
   auth status         Show authenticated user
+  whoami              Show authenticated user and credential source
 
 Pull Requests:
   pr list             List pull requests
@@ -2866,6 +2887,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${1:-help}" in
+  whoami)    shift; cmd_auth_status "$@" ;;
   auth)
     case "${2:-status}" in
       status)    shift 2; cmd_auth_status "$@" ;;
