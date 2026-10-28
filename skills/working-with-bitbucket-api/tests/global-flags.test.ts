@@ -1,5 +1,6 @@
 import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 import user from './fixtures/user.json' with { type: 'json' }
@@ -13,17 +14,32 @@ describe('bb global flags', () => {
   after(() => server.stop())
   beforeEach(() => server.reset())
 
-  it('Prints the version with --version', async () => {
-    const result = await bb('--version', { port: server.port })
-    assert.match(result.stdout, /^bb \d+\.\d+\.\d+\n$/)
-    assert.equal(result.exitCode, 0)
-  })
+  const INSTALL = 'quatico-bb — brew install quatico-solutions/tap/quatico-bb'
+  const bbVersion = readFileSync(new URL('../../../cli/bb', import.meta.url), 'utf8')
+    .match(/^BB_VERSION="([^"]+)"/m)![1]
 
-  it('Prints the version with -v', async () => {
-    const result = await bb('-v', { port: server.port })
-    assert.match(result.stdout, /^bb \d+\.\d+\.\d+\n$/)
-    assert.equal(result.exitCode, 0)
-  })
+  for (const flag of ['--version', '-v']) {
+    it(`Prints the version and install source with ${flag}`, async () => {
+      const result = await bb(flag, { port: server.port })
+      const line = result.stdout.trimEnd()
+
+      // Then the line is "bb <version> (<package> — <install command>)"
+      assert.equal(result.exitCode, 0)
+      assert.equal(line, `bb ${bbVersion} (${INSTALL})`)
+      assert.equal(line.split(' ').slice(0, 2).join(' '), `bb ${bbVersion}`)
+    })
+
+    // Plot's bb_identify reads the first X.Y.Z as the version, treats a pure-hex
+    // parenthesis as craftamap's bb, and the word "quatico" as Quatico's.
+    it(`Keeps ${flag} readable by Plot's bb_identify`, async () => {
+      const result = await bb(flag, { port: server.port })
+      const line = result.stdout.trimEnd()
+
+      assert.equal(line.match(/\d+\.\d+\.\d+/g)?.length, 1)
+      assert.doesNotMatch(line, /\([0-9a-f]+\)/)
+      assert.match(line, /quatico/)
+    })
+  }
 
   it('Validates -R requires workspace/repo format', async () => {
     // When -R is given without a slash
@@ -70,6 +86,13 @@ describe('bb global flags', () => {
     const result = await bb('help', { port: server.port })
     assert.match(result.stdout, /bb — Bitbucket Cloud CLI/)
     assert.equal(result.exitCode, 0)
+  })
+
+  it('Names the package and install command on the first line of help', async () => {
+    const result = await bb('--help', { port: server.port })
+    const first = result.stdout.split('\n')[0]
+    assert.match(first, /quatico-bb/)
+    assert.ok(first.includes('brew install quatico-solutions/tap/quatico-bb'))
   })
 
   it('Rejects a non-loopback BB_API_URL (credential-exfiltration guard)', async () => {
