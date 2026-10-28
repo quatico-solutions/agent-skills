@@ -122,16 +122,46 @@ cmux workspace close "${WS2}" >/dev/null 2>&1 || true
 WS2=""
 if [[ "$(focused)" == "${FOCUSED_BEFORE}" ]]; then ok "the second workspace left the focus where it was"; else bad "the second workspace moved the focus"; fi
 
-# --- Task 4 inserts steps 3 to 5 here ---
+echo "3. run: cookies, localStorage, state between calls"
+expect_output "signed in" "run: sign in on the local app" db run "await page.goto('${APP}/login'); await page.evaluate(() => document.body.innerText)"
+expect_output "session=smoke" "run: the server gets the session cookie" db run "await page.goto('${APP}/whoami'); await page.evaluate(() => document.body.innerText)"
+expect_output "session=smoke" "run: fetch() sends the pane's cookies" db run "await fetch('${APP}/whoami').then((r) => r.text())"
+expect_output "kept" "run: localStorage" db run "await page.evaluate(() => { localStorage.setItem('smoke', 'kept'); return localStorage.getItem('smoke'); })"
+db run 'const smokeValue = 41 + 1' >/dev/null 2>&1 || true
+expect_output "42" "run: a top-level const lives on into the next call" db run 'smokeValue'
+expect_output "session=smoke" "run: a script on stdin" db run - <<< "await page.goto('${APP}/whoami'); await page.evaluate(() => document.body.innerText)"
+expect_status 1 "run: a script error exits 1" db run 'throw new Error("smoke")'
+
+echo "4. the guards"
+for call in "tabs.open('about:blank')" "tabs.content({ urls: ['${APP}/'] })" "tabs.history({})"; do
+  expect_status 1 "run: ${call} fails" db run "await ${call}"
+  expect_output "blocked" "run: ${call} says why" db run "await ${call}"
+done
+
+echo "5. profiles keep logins apart; pop-ups stay in the profile"
+cmux browser profiles add "${OTHER}" >/dev/null
+OTHER_PANE="$(cmux --id-format uuids browser open-split "${APP}/whoami" --profile "${OTHER}" --workspace "${CMUX_WORKSPACE_ID}" --focus false | sed -n 's/.*surface=\([^ ]*\).*/\1/p')"
+sleep 2
+expect_no_output "session=smoke" "a pane in another profile does not get the session cookie" pane_text "${OTHER_PANE}"
+# Control first: a REPL session without the pin sees the other pane too, so the next check tests the
+# pin. Labels, because the REPL's own "[ok | 1ms]" line would match a bare number.
+expect_output "control: more than one tab" "an unpinned REPL session lists the other pane too" \
+  cmux browser repl --session "db-smoke-unpinned-$$" "(await tabs.list({ all: true })).length > 1 ? 'control: more than one tab' : 'control: one tab'"
+cmux browser repl reset "db-smoke-unpinned-$$" >/dev/null 2>&1 || true
+expect_output "listed 1" "run: tabs.list({ all: true }) shows only the dedicated pane" db run "'listed ' + (await tabs.list({ all: true })).length"
+expect_status 1 "run: tabs.use of another pane fails" db run "await tabs.use('${OTHER_PANE}')"
+expect_output "session=smoke" "a pop-up opens in the agent's profile" db run "await page.goto('${APP}/popup'); const [popup] = await Promise.all([page.waitForEvent('popup'), page.click('#open')]); await popup.waitForLoadState(); const text = await popup.evaluate(() => document.body.innerText); await popup.close(); text"
 
 echo "6. stop and start"
-cmux browser profiles add "${OTHER}" >/dev/null
+cmux close-surface --surface "${OTHER_PANE}" >/dev/null 2>&1 || true
 OTHER_PANE="$(cmux --id-format uuids browser open-split "${APP}/whoami" --profile "${OTHER}" --workspace "${CMUX_WORKSPACE_ID}" --focus false | sed -n 's/.*surface=\([^ ]*\).*/\1/p')"
 expect_output "stopped" "stop" db stop
 expect_status 1 "status after stop exits 1" db status
 start_out="$(db start 2>&1 || true)"
 case "${start_out}" in *"started"*) ok "start after stop" ;; *) bad "start after stop (${start_out})" ;; esac
 if [[ "$(last_used)" == "${OTHER}" ]]; then ok "start restored the last-used profile"; else bad "start restored the last-used profile ($(last_used))"; fi
+expect_output "session=smoke" "the session cookie survived stop and start" db run "await page.goto('${APP}/whoami'); await page.evaluate(() => document.body.innerText)"
+expect_output "kept" "localStorage survived stop and start" db run "await page.goto('${APP}/'); await page.evaluate(() => localStorage.getItem('smoke'))"
 
 echo "7. run without a pane"
 db stop >/dev/null 2>&1 || true

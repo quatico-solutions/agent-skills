@@ -182,3 +182,78 @@ backend_cmd_stop() {
 backend_cmd_update() {
   echo "cmux updates itself; there is nothing to update here."
 }
+
+# JavaScript run before every `run`, in the pane's own REPL session. It makes `page` the pane and
+# turns the calls that would reach other tabs or other profiles into errors: tabs.open and
+# tabs.content open tabs in whichever profile was used last, tabs.history is cmux's whole history,
+# and tabs.use/get/list reach the human's tabs in every workspace. It guards against mistakes; it is
+# no sandbox: code written to get around it can. The profile is the boundary. page.context() has no
+# newPage and its pages() lists only the claimed pane (cmux 0.65.2), so it needs no guard. The
+# JavaScript avoids "$" and backticks, because it sits in an unquoted heredoc.
+dbc_pin_js() {
+  local pane="$1"
+  cat <<JS
+if (globalThis.__dedicatedBrowserPane !== "${pane}") {
+  const pane = "${pane}";
+  const isPane = (t) => t === pane || (t != null && t.id === pane);
+  const blocked = (name) => async () => {
+    throw new Error("dedicated-browser: tabs." + name + " is blocked. Work in page, the agent's pane: a new tab would open in whichever cmux profile was used last.");
+  };
+  const notOurs = () => new Error("dedicated-browser: only the agent's pane " + pane + " is allowed; tabs.use and tabs.get of other tabs are blocked.");
+  const use = tabs.use.bind(tabs);
+  const get = tabs.get.bind(tabs);
+  const list = tabs.list.bind(tabs);
+  tabs.open = blocked("open");
+  tabs.content = blocked("content");
+  tabs.history = blocked("history");
+  tabs.use = async (t) => { if (!isPane(t)) throw notOurs(); return use(t); };
+  tabs.get = (t) => { if (!isPane(t)) throw notOurs(); return get(t); };
+  tabs.list = async () => (await list()).filter((t) => t.id === pane);
+  page = await use(pane);
+  globalThis.__dedicatedBrowserPane = pane;
+}
+undefined
+JS
+}
+
+backend_cmd_run() {
+  local pane session code="" have_code=false
+  local passthrough=()
+  dbc_require_cmux || return $?
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --timeout | --max-output)
+        [[ $# -ge 2 ]] || { echo "$1 needs a value." >&2; return 2; }
+        passthrough+=("$1" "$2")
+        shift 2
+        ;;
+      -)
+        code="$(cat)"
+        have_code=true
+        shift
+        ;;
+      *)
+        code="$1"
+        have_code=true
+        shift
+        ;;
+    esac
+  done
+  if [[ "${have_code}" == false || -z "${code}" ]]; then
+    echo "usage: ${SELF} run '<js>'   or   ${SELF} run - < script.js   [--timeout <ms>] [--max-output <chars>]" >&2
+    return 2
+  fi
+  pane="$(dbc_current_pane)"
+  if [[ -z "${pane}" ]]; then
+    echo "No agent pane in this workspace. Run: ${SELF} start" >&2
+    return 1
+  fi
+  # One session per pane: a new pane after stop and start gets a fresh session and a fresh pin.
+  session="dedicated-browser-${pane}"
+  if ! dbc_pin_js "${pane}" | cmux browser repl --session "${session}" --workspace "${CMUX_WORKSPACE_ID}" --eval - >/dev/null 2>&1; then
+    echo "Could not attach to the agent's pane ${pane}. Run: ${SELF} stop, then ${SELF} start" >&2
+    return 1
+  fi
+  printf '%s\n' "${code}" | cmux browser repl --session "${session}" --workspace "${CMUX_WORKSPACE_ID}" \
+    ${passthrough[@]+"${passthrough[@]}"} --eval -
+}
