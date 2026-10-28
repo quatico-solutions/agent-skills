@@ -4,12 +4,13 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** bug
 - **Sprint:** bb-cli-hardening
 - **Issue:** #111
 - **Review:** in-session
 - **Impl:** own branches
+- **Approved:** 2026-10-28, jwloka, in-session
 
 ## Changelog
 
