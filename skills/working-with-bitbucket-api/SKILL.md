@@ -150,11 +150,13 @@ Run `bb --help` for the full command list, or `bb <command> <subcommand> --help`
 bb pr list --state merged --limit 120                  # exactly 120 rows, across 3 pages
 bb pr list --state merged --all --json number          # every page, no row limit
 bb pr list --state merged --updated-since 2026-10-01   # only PRs updated at or after the bound
+bb pr list --head feature/login --state merged  # the PR of one branch, in one request
 ```
 
 - Without `--limit` or `--all`, `pr list` prints at most 50 rows. When more exist, it writes `warning: listing truncated at 50 rows; use --limit or --all` to stderr. Stdout stays pure JSON with `--json`.
 - `--all` has no ceiling: about 75 requests per state on a repository with 3700 PRs. Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
 - `--updated-since <ISO>` filters on the server and is inclusive (`>=`), so a caller that reads again from its last watermark gets the boundary PR twice, never zero times. It forces the `q=` filter form, like `--author`.
+- `--head <branch>` filters on the source branch on the server. Repeat it to cover several branches. It forces the `q=` filter form, like `--author`, and keeps the open default for `--state`: a merged branch needs `--state merged`. A branch name containing `"` exits 1, because Bitbucket documents no escape rule for it.
 - Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
 - Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits 75 with `error: rate limited after <n> rows` (plus ` — Bitbucket asked to wait <s> s` when the final answer carries `Retry-After`, printed as sent) and prints no rows, so a short list never looks complete.
 

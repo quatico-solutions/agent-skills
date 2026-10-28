@@ -496,11 +496,11 @@ bb_str_contains_line() {
 # point of this function — three inline constructions were free to drift, and
 # the drift is invisible until someone combines --author with two states.
 bb_pr_list_query() {
-  local states="$1" authors="$2" since="${3:-}"
-  local s a expr ors path
+  local states="$1" authors="$2" since="${3:-}" heads="${4:-}"
+  local s a h expr ors path
   local IFS=$'\n'
 
-  if [[ -z "$authors" && -z "$since" ]]; then
+  if [[ -z "$authors" && -z "$since" && -z "$heads" ]]; then
     # No author: repeated state= parameters. Bitbucket returns the union,
     # already sorted descending by updated_on — one call, nothing to re-sort.
     path=""
@@ -511,13 +511,21 @@ bb_pr_list_query() {
     return 0
   fi
 
-  # An author or an --updated-since bound forces the q= form, so the states
-  # must travel inside it too.
+  # An author, a head branch or an --updated-since bound forces the q= form,
+  # so the states must travel inside it too.
   ors=""
   for s in $states; do
     ors="${ors:+$ors OR }state = \"${s}\""
   done
   expr="(${ors})"
+
+  if [[ -n "$heads" ]]; then
+    ors=""
+    for h in $heads; do
+      ors="${ors:+$ors OR }source.branch.name = \"${h}\""
+    done
+    expr="${expr} AND (${ors})"
+  fi
 
   if [[ -n "$authors" ]]; then
     ors=""
@@ -799,7 +807,7 @@ cmd_pr_list() {
   # whole thing stays bash 3.2 (see the compatibility note at the top).
   # Empty means "not given" — the OPEN default is applied after parsing, so a
   # caller passing no --state is unaffected.
-  local states="" authors="" since="" limit=50 limit_given=0 all=0
+  local states="" authors="" heads="" since="" limit=50 limit_given=0 all=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -807,7 +815,7 @@ cmd_pr_list() {
 List pull requests in the current repository.
 
 USAGE
-  bb pr list [--state <state>] [--author <name>] [--limit <n> | --all] [--updated-since <ISO>] [--json [<fields>]] [--jq <expr>]
+  bb pr list [--state <state>] [--author <name>] [--head <branch>] [--limit <n> | --all] [--updated-since <ISO>] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
   --state <state>    Filter by state: open, merged, declined, superseded (default: open)
@@ -817,6 +825,10 @@ FLAGS
                      repeated identical state is harmless.
   --author <name>    Filter by author (nickname or display name).
                      May be repeated to cover several authors.
+  --head <branch>    Filter by source branch name. May be repeated to cover
+                     several branches. Combines with --state, which keeps its
+                     open default: a merged branch needs --state merged.
+                     A branch name containing '"' is refused.
   --limit <n>        Maximum number of items to fetch (default: 50). Follows
                      Bitbucket's next links across as many pages as needed.
   --all              Fetch every page, with no row limit. Cannot be combined
@@ -854,6 +866,7 @@ EXAMPLES
   bb pr list
   bb pr list --state merged
   bb pr list --author alice --json
+  bb pr list --head feature/login --state merged
   bb pr list --json number,headRefName,isDraft
   bb pr list --state open --json headRefName --jq '.[].headRefName'
   bb pr list --limit 5
@@ -895,6 +908,17 @@ HELP
       --author)
         bb_str_contains_line "$authors" "$2" || authors="${authors:+$authors$'\n'}$2"
         shift 2 ;;
+      --head)
+        if [[ $# -lt 2 ]]; then
+          echo >&2 "error: --head requires a branch name"
+          exit 1
+        fi
+        if [[ "$2" == *'"'* ]]; then
+          echo >&2 "error: --head cannot contain '\"'"
+          exit 1
+        fi
+        bb_str_contains_line "$heads" "$2" || heads="${heads:+$heads$'\n'}$2"
+        shift 2 ;;
       --json)
         JSON_OUTPUT=1; shift
         # `pr list` takes no positional args, so a bare word after --json is the
@@ -931,7 +955,7 @@ HELP
   # pagelen is set here, not in bb_paginate: the maximum page size differs per
   # endpoint, and the pull-request endpoint takes 50. Both query forms start
   # with `?`, so `&pagelen=` always appends.
-  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since")&pagelen=50"
+  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since" "$heads")&pagelen=50"
 
   local result next_file rc
   next_file="$(mktemp)"
@@ -942,7 +966,7 @@ HELP
     # Refetch without the author filter, but across EVERY requested state — a
     # recovery path that silently narrows the result fails the same way the bug
     # it recovers from does.
-    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since")&pagelen=50"
+    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since" "$heads")&pagelen=50"
     result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rc=$?; rm -f "$next_file"; exit "$rc"; }
     local nfc_author a_nfc names_filter
     names_filter=""
