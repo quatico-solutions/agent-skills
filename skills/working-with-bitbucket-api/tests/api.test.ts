@@ -106,11 +106,11 @@ describe('bb api', () => {
     server.stub('GET', '/user', user)
 
     // When I pass a full URL with a query
-    const result = await bb(['api', `http://localhost:${server.port}/mockbb?page=2`], { port: server.port })
+    const result = await bb(['api', `http://localhost:${server.port}/mockbb/user?page=2`], { port: server.port })
 
-    // Then the request goes to the root with the query intact
+    // Then the request reaches /user
     assert.equal(result.exitCode, 0)
-    assert.equal(server.getCalls().length, 1)
+    assert.equal(server.getLastCall().path, '/user')
   })
 
   it('Refuses a URL on another host without sending a request', async () => {
