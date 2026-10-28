@@ -137,8 +137,8 @@ bb_resolve_user() {
   local ws repo
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
-  local prs account_id
-  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50)" || prs="[]"
+  local prs account_id rc
+  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50)" || { rc=$?; [[ "$rc" -eq 75 ]] && return 75; prs="[]"; }
   account_id="$(echo "$prs" | jq -r --arg name "$input" '
     [.[] | (.author, .reviewers[]?) |
      select(.display_name == $name or .nickname == $name) |
@@ -146,7 +146,7 @@ bb_resolve_user() {
 
   if [[ -z "$account_id" ]]; then
     # Also search open PRs
-    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50)" || prs="[]"
+    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50)" || { rc=$?; [[ "$rc" -eq 75 ]] && return 75; prs="[]"; }
     account_id="$(echo "$prs" | jq -r --arg name "$input" '
       [.[] | (.author, .reviewers[]?) |
        select(.display_name == $name or .nickname == $name) |
@@ -167,13 +167,20 @@ bb_resolve_user() {
 
 # Only a 2xx answer is success. curl writes 000 when no response arrives, and
 # 1xx/3xx never carry the data the caller asked for. Prints the error and
-# returns 1 on anything else; $2 is the response body for the message.
+# returns 1 on anything else; $2 is the response body for the message. HTTP 429
+# returns 75 (EX_TEMPFAIL) so a caller can tell "wait and retry" from "fix the
+# call"; the message says "rate limited" and never the number, because Plot
+# reads a 429 in stderr as a short burst, not a spent quota.
 bb_check_status() {
   local http_code="$1" body="${2:-}"
   [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && return 0
   if [[ "$http_code" == "000" ]]; then
     echo >&2 "error: no response from Bitbucket"
     return 1
+  fi
+  if [[ "$http_code" == "429" ]]; then
+    echo >&2 "error: rate limited"
+    return 75
   fi
   local msg
   msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
@@ -197,7 +204,7 @@ bb_api_call() {
   local body
   body="$(echo "$response" | sed '$d')"
 
-  bb_check_status "$http_code" "$body" || return 1
+  bb_check_status "$http_code" "$body" || return $?
   echo "$body"
 }
 
@@ -258,11 +265,20 @@ bb_paginate() {
     done
 
     if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
-      rm -f "$hdr_file" "$acc_file"
       if [[ "$http_code" == "429" ]]; then
-        echo >&2 "error: rate limited after ${rows} rows"
-        return 1
+        # The raw header, not the 60 s cap the retry loop applies: an hourly
+        # quota reported as "60 s" is the wrong advice.
+        local final_wait
+        final_wait="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
+        rm -f "$hdr_file" "$acc_file"
+        if [[ "$final_wait" =~ ^[0-9]+$ ]]; then
+          echo >&2 "error: rate limited after ${rows} rows — Bitbucket asked to wait ${final_wait} s"
+        else
+          echo >&2 "error: rate limited after ${rows} rows"
+        fi
+        return 75
       fi
+      rm -f "$hdr_file" "$acc_file"
       bb_check_status "$http_code" "$body"
       return 1
     fi
@@ -294,7 +310,7 @@ bb_api_raw() {
   http_code="$(echo "$response" | tail -1)"
   local body
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" || return 1
+  bb_check_status "$http_code" "$body" || return $?
   printf '%s' "$body"
 }
 
@@ -338,7 +354,7 @@ bb_download_upload() {
     "${BB_API}/repositories/${ws}/${repo}/downloads")"
   http_code="$(echo "$response" | tail -1)"
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" || return 1
+  bb_check_status "$http_code" "$body" || return $?
 }
 
 # --- Output formatting -------------------------------------------------------
@@ -917,9 +933,9 @@ HELP
   # with `?`, so `&pagelen=` always appends.
   path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since")&pagelen=50"
 
-  local result next_file
+  local result next_file rc
   next_file="$(mktemp)"
-  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
+  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rc=$?; rm -f "$next_file"; exit "$rc"; }
 
   # If author filter returned nothing, fall back to client-side display_name match
   if [[ -n "$authors" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
@@ -927,7 +943,7 @@ HELP
     # recovery path that silently narrows the result fails the same way the bug
     # it recovers from does.
     path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since")&pagelen=50"
-    result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
+    result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rc=$?; rm -f "$next_file"; exit "$rc"; }
     local nfc_author a_nfc names_filter
     names_filter=""
     local IFS=$'\n'
@@ -1175,7 +1191,7 @@ HELP
     local resolved=()
     for r in "${reviewers[@]}"; do
       local obj
-      obj="$(bb_resolve_user "$r")" || exit 1
+      obj="$(bb_resolve_user "$r")" || exit $?
       resolved+=("$obj")
     done
     reviewer_json="$(printf '%s\n' "${resolved[@]}" | jq -s '.')"
@@ -1321,7 +1337,7 @@ HELP
     # is an OR — so both loops use the empty-safe expansion.
     for r in ${add_reviewers[@]+"${add_reviewers[@]}"}; do
       local obj
-      obj="$(bb_resolve_user "$r")" || exit 1
+      obj="$(bb_resolve_user "$r")" || exit $?
       local aid
       aid="$(echo "$obj" | jq -r '.account_id // empty')"
       if [[ -n "$aid" ]]; then
@@ -1574,7 +1590,7 @@ HELP
       fi
       base="$(basename "$img")"
       upload_name="pr${pr_id}-${base}"
-      bb_download_upload "$ws" "$repo" "$img" "$upload_name" || exit 1
+      bb_download_upload "$ws" "$repo" "$img" "$upload_name" || exit $?
       img_url="https://bitbucket.org/${ws}/${repo}/downloads/${upload_name}"
       if [[ -n "$body" ]]; then
         body="${body}"$'\n\n'"![${base}](${img_url})"
@@ -1748,7 +1764,7 @@ HELP
 
   if [[ -n "$pin_l" ]]; then
     local pr_json head head_l
-    pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit 1
+    pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit $?
     head="$(printf '%s' "$pr_json" | jq -r '.source.commit.hash // empty')"
     head_l="$(printf '%s' "$head" | tr '[:upper:]' '[:lower:]')"
     if [[ ! "$head_l" =~ ^[0-9a-f]{7,}$ ]]; then
@@ -2152,7 +2168,7 @@ HELP
 
   # Check if path is a directory by fetching metadata
   local meta
-  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${resolved_ref}/${path}?format=meta")" || exit 1
+  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${resolved_ref}/${path}?format=meta")" || exit $?
   local file_type
   file_type="$(echo "$meta" | jq -r '.type // empty')"
   if [[ "$file_type" == "commit_directory" ]]; then
@@ -2608,7 +2624,7 @@ HELP
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
 
-  bb_download_upload "$ws" "$repo" "$file" "$name" || exit 1
+  bb_download_upload "$ws" "$repo" "$file" "$name" || exit $?
 
   local url="https://bitbucket.org/${ws}/${repo}/downloads/${name}"
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
@@ -2651,7 +2667,7 @@ HELP
   repo="$(bb_repo)"
 
   local result
-  result="$(bb_paginate "/repositories/${ws}/${repo}/downloads" "$limit")" || exit 1
+  result="$(bb_paginate "/repositories/${ws}/${repo}/downloads" "$limit")" || exit $?
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     echo "$result" | jq .
@@ -2729,6 +2745,12 @@ Untrusted content:
   written by the comment author and is itself a finding to report. Fencing covers
   comment bodies only — PR descriptions, the summary comment table, `pr tasks`
   and `pr activity` are equally untrusted but are not fenced.
+
+Exit status:
+  0    success
+  1    error: usage error, failed request, or no answer from Bitbucket
+  75   rate limited (HTTP 429): wait, then retry; the same call can succeed later
+  With --jq, a jq failure exits with jq's own code (2, 3 or 5).
 
 Environment:
   BB_TOKEN            API token (overrides keychain)

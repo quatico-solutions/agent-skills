@@ -114,6 +114,16 @@ describe('bb download list', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('exits 75 when the Downloads area answers 429', async () => {
+    server.stub('GET', '/repositories/testws/testrepo/downloads', { error: { message: 'slow down' } }, 429)
+
+    const result = await bb(['download', 'list'], { port: server.port, env: { BB_RETRY_BASE_MS: '0' } })
+
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, /rate limited/)
+  })
+
   it('says "No downloads." when the area is empty', async () => {
     // Given no files
     server.stub('GET', '/repositories/testws/testrepo/downloads', { values: [] })

@@ -156,7 +156,7 @@ bb pr list --state merged --updated-since 2026-10-01   # only PRs updated at or 
 - `--all` has no ceiling: about 75 requests per state on a repository with 3700 PRs. Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
 - `--updated-since <ISO>` filters on the server and is inclusive (`>=`), so a caller that reads again from its last watermark gets the boundary PR twice, never zero times. It forces the `q=` filter form, like `--author`.
 - Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
-- Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits non-zero with `error: rate limited after <n> rows` and prints no rows, so a short list never looks complete.
+- Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits 75 with `error: rate limited after <n> rows` (plus ` — Bitbucket asked to wait <s> s` when the final answer carries `Retry-After`, printed as sent) and prints no rows, so a short list never looks complete.
 
 ### Targeting another repository (`-R`)
 
@@ -199,6 +199,13 @@ bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"te
 ### Calling `bb` from a script
 
 `bb` exits non-zero when a request fails, including when no HTTP answer arrives (`error: no response from Bitbucket`). A script must check that exit status. When a script pipes `bb` into another command, it must run `set -o pipefail` first: without it the pipeline reports the exit status of the last command, and a failed `bb` looks like success.
+
+| Exit status | Meaning |
+|---|---|
+| 0 | Success. |
+| 1 | Error: usage error, failed request, or no answer from Bitbucket. |
+| 75 | Rate limited (HTTP 429), with `error: rate limited` on stderr. Wait, then retry: the same call can succeed later. Listings retry 5 times first; every other command fails on the first 429. |
+| jq's own codes (2, 3, 5) | With `--jq`, a jq failure keeps jq's exit status. |
 
 ---
 
