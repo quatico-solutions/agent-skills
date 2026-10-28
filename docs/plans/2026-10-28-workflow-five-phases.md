@@ -41,11 +41,11 @@ AGENTS.md § Agentic Workflow (commit `e7e87a9`) copies the skill's map, so this
   The Released row keeps the template's RC path (`/plot-release rc` → checklist → `/plot-release`) as one option, since other repositories cut RCs.
 - **Skill phase names elsewhere.** Change the four-phase wording in the frontmatter `description`, the H1 title, the intro, step 3's lead sentence and the "Discovery is optional" line. Keep the trigger words `agentic workflow` and `four-phase workflow` in the description, so existing prompts still trigger the skill, and add `five-phase workflow`.
 - **AGENTS.md § Agentic Workflow.** Apply the same five rows, adapted to this repository: Released names the changesets release PR from `docs/rules/versioning.md`, and no RC path.
-- **Changeset.** `adopt-agentic-workflow: minor` (a feature: the map the skill writes changes shape). Root bump minor.
+- **Changeset.** `adopt-agentic-workflow: patch`, root bump patch, so the change ships in the sprint's release 3.18.2.
 
 ### Open Points
 
-- [ ] The sprint names release 3.18.2, a patch; a `feature` plan with a minor bump makes the release 3.19.0. Decide the bump, or rename the sprint's `Release:` before commit.
+- [x] Bump level: patch, decided by the operator on 2026-10-28 to keep the sprint's release 3.18.2, although the plan's Type is `feature`.
 
 ## Slices
 
