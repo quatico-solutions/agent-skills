@@ -19,7 +19,17 @@ Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX)
 >     brew trust --tap quatico-solutions/tap
 >     brew install quatico-bb
 >
-> The fully qualified `brew install quatico-solutions/tap/quatico-bb` also works and auto-taps + auto-trusts. Do **not** use a bare `bb` — that name resolves to an unrelated cask in homebrew-cask (an agent IDE from getbb.app).
+> The fully qualified `brew install quatico-solutions/tap/quatico-bb` also works and auto-taps + auto-trusts.
+>
+> Three unrelated Homebrew packages answer to `bb`. Only the tap is supported:
+>
+> | Install | What it is |
+> |---|---|
+> | `brew install --cask bb` | getbb.app, an IDE for coding agents |
+> | `brew install bb-cli` | a PHP Bitbucket CLI (bb-cli.github.io) with different commands, no `api`, no `--json` |
+> | `brew install quatico-solutions/tap/quatico-bb` | this CLI (supported) |
+>
+> `bb --version` prints `bb <version> (quatico-bb — brew install quatico-solutions/tap/quatico-bb)`. If the output does not contain `quatico-bb`, stop and report which `bb` is installed. Do **not** install another package to fix it, and do **not** use a bare `bb` name in `brew install`.
 
 > **Remote detection:** If `git remote get-url origin` contains `bitbucket.org`, this is a Bitbucket repository — use `bb` CLI for all PR and source operations.
 

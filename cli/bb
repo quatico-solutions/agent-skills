@@ -3,6 +3,7 @@
 set -euo pipefail
 
 BB_VERSION="1.12.1"
+BB_INSTALL_SOURCE="quatico-bb — brew install quatico-solutions/tap/quatico-bb"
 # BB_API_URL lets the test suite redirect API calls to a local mock server.
 # It is restricted to loopback so it can never be used to exfiltrate the
 # auth token (sent as HTTP Basic on every call) to a remote host — there is
@@ -2726,8 +2727,8 @@ HELP
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
+  echo "bb — Bitbucket Cloud CLI (${BB_INSTALL_SOURCE})"
   cat <<'EOF'
-bb — Bitbucket Cloud CLI
 
 Usage: bb <command> [flags]
 
@@ -2852,7 +2853,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --version|-v)
-      echo "bb ${BB_VERSION}"
+      echo "bb ${BB_VERSION} (${BB_INSTALL_SOURCE})"
       exit 0
       ;;
     --json)
