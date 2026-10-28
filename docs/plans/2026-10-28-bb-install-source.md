@@ -12,6 +12,7 @@
 - **Impl:** same branch
 - **Approved:** 2026-10-28, jwloka, in-session
 - **Started:** 2026-10-28, jwloka, `feature/bb-install-source`
+- **Started:** 2026-10-28, Jan Wloka, `feature/bb-self-check`
 
 ## Changelog
 
