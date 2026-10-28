@@ -1,16 +1,16 @@
 ---
 name: adopt-agentic-workflow
-description: "Use when adopting the four-phase agentic workflow (Discovery → Design → Development → Endgame) in a repository: installs Plot for the plan lifecycle, then wires this org's skills to the phases they serve. Triggers: adopt workflow, agentic workflow, install plot, set up plot, bootstrap workflow, four-phase workflow, plot adoption."
+description: "Use when adopting the five-phase agentic workflow (Discovery → Design → Development → Testing → Released) in a repository: installs Plot for the plan lifecycle, then wires this org's skills to the phases they serve. Triggers: adopt workflow, agentic workflow, install plot, set up plot, bootstrap workflow, five-phase workflow, four-phase workflow, plot adoption."
 license: MIT
 compatibility: claude-code, cursor
 metadata:
   version: "1.1.1"
 ---
 
-# Adopt the Four-Phase Agentic Workflow
+# Adopt the Five-Phase Agentic Workflow
 
-Set up Discovery → Design → Development → Endgame in a repository: the plan
-lifecycle, plus the skills that serve each phase.
+Set up Discovery → Design → Development → Testing → Released in a repository:
+the plan lifecycle, plus the skills that serve each phase.
 
 ## What this does, and what it delegates
 
@@ -78,16 +78,18 @@ worse than no map.
 ```markdown
 ## Agentic Workflow
 
-Four phases, each turning one durable artifact into the next.
+Five phases, each tied to a plan state on Plot's board.
 
-| Phase | Produces | Commands and skills |
-|-------|----------|---------------------|
-| **Discovery** | a story (`docs/stories/`) or a ticket assessment | `triage-ticket` for an incoming ticket · `story-tracking` for multi-session work |
-| **Design** | an approved plan (`docs/plans/`) | `/plot-idea` → `challenge-the-plan` → `/plot-approve` |
-| **Development** | merged branches | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
-| **Endgame** | a verified release | `reality-check` before claiming done · `/plot-release rc` → verify the checklist → `/plot-release` |
+| Phase | Plan state | Commands and skills |
+|-------|------------|---------------------|
+| **Discovery** | Draft | `triage-ticket` for an incoming ticket · `story-tracking` for multi-session work · `/plot-idea` → `challenge-the-plan` |
+| **Design** (optional) | Design | needs-design or spike work before approval → `/plot-approve` |
+| **Development** | Approved | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
+| **Testing** | Delivered | `/plot-deliver --verify` · `reality-check` |
+| **Released** | Released | `/plot-release rc` → verify the checklist → `/plot-release`, or the project's own release process |
 
-Discovery is optional: small, well-understood work goes straight to Design.
+Design is optional: small, well-understood work skips it and goes from a
+Draft plan to approval.
 
 **Plans vs. session logs.** A plan says what will be built and is frozen on
 approval. A session log says how it was decided — including the alternatives
