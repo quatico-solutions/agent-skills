@@ -44,7 +44,7 @@ describe('bb global flags', () => {
 
     // Then output is JSON (the global flag set JSON_OUTPUT)
     const parsed = JSON.parse(result.stdout)
-    assert.equal(parsed.username, 'testuser')
+    assert.equal(parsed.nickname, 'testuser')
     assert.equal(result.exitCode, 0)
   })
 
