@@ -77,6 +77,62 @@ describe('bb api', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('Adds the missing leading slash to the path', async () => {
+    // Given the API has a repo endpoint
+    server.stub('GET', '/repositories/testws/testrepo', { name: 'testrepo' })
+
+    // When I call bb api without a leading slash
+    const result = await bb('api repositories/testws/testrepo', { port: server.port })
+
+    // Then the request path is /repositories/testws/testrepo, not <base>repositories/...
+    assert.equal(server.getLastCall().path, '/repositories/testws/testrepo')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Strips the API base from a full URL', async () => {
+    // Given the API has a user endpoint
+    server.stub('GET', '/user', user)
+
+    // When I pass a full URL on the API base (as a `next` link would be)
+    const result = await bb(['api', `http://localhost:${server.port}/mockbb/user`], { port: server.port })
+
+    // Then the request path is /user
+    assert.equal(server.getLastCall().path, '/user')
+    assert.equal(result.exitCode, 0)
+  })
+
+  it('Keeps the query string of a full URL on the API base', async () => {
+    // Given the API has a user endpoint
+    server.stub('GET', '/user', user)
+
+    // When I pass a full URL with a query
+    const result = await bb(['api', `http://localhost:${server.port}/mockbb?page=2`], { port: server.port })
+
+    // Then the request goes to the root with the query intact
+    assert.equal(result.exitCode, 0)
+    assert.equal(server.getCalls().length, 1)
+  })
+
+  it('Refuses a URL on another host without sending a request', async () => {
+    // When I pass a URL on a foreign host
+    const result = await bb(['api', 'https://example.com/x'], { port: server.port })
+
+    // Then it exits 1 with an error and no request carries the token
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /error: bb api takes a path/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
+  it('Refuses a URL that only shares the API base as a string prefix', async () => {
+    // When the URL continues the base without a path boundary
+    const result = await bb(['api', `http://localhost:${server.port}/mockbbevil/x`], { port: server.port })
+
+    // Then it is refused and nothing is sent
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /error: bb api takes a path/)
+    assert.equal(server.getCalls().length, 0)
+  })
+
   it('Pretty-prints the JSON response', async () => {
     // Given the API returns a user
     server.stub('GET', '/user', user)
