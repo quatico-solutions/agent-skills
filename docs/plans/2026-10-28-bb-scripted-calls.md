@@ -68,7 +68,7 @@
 
 ### api path (Branch: bug/bb-api-path-slash)
 
-- `bug/bb-api-path-slash` — `cmd_api` strips the API base URL, prepends a missing `/`, refuses other hosts, with cases in `tests/api.test.ts` <!-- builds: path normalisation in cmd_api -->
+- `bug/bb-api-path-slash` — `cmd_api` strips the API base URL, prepends a missing `/`, refuses other hosts, with cases in `tests/api.test.ts` → #123 <!-- builds: path normalisation in cmd_api -->
 
 ## Definition of Done
 

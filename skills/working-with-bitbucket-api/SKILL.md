@@ -192,11 +192,14 @@ For API endpoints not yet wrapped by `bb` commands, use `bb api` as an escape ha
 
 ```bash
 bb api /repositories/{ws}/{repo}                        # GET (default)
+bb api repositories/{ws}/{repo}                         # leading slash is optional
 bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
 bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"test"}'
 ```
 
 `{ws}` and `{repo}` are auto-replaced with the current repo's workspace and slug — or with the repo named by a global `-R workspace/repo` flag (see [Targeting another repository](#targeting-another-repository--r)).
+
+The leading `/` is optional. A full URL on the API base (`https://api.bitbucket.org/2.0/…`, such as a `next` link from a listing) is accepted. Any other URL exits 1 without sending a request, because `bb` sends the token with every call.
 
 ### Calling `bb` from a script
 

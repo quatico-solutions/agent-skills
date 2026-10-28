@@ -2535,6 +2535,13 @@ Make a raw Bitbucket API call with correct authentication.
 Escape hatch for API endpoints not yet wrapped by bb commands.
 Paths are relative to https://api.bitbucket.org/2.0.
 
+PATH FORMS
+  /user               Leading slash is optional: `user` works too
+  https://api.bitbucket.org/2.0/user
+                      A full URL on the API base (e.g. a `next` link) is accepted
+  Any other URL is refused with exit 1 and no request, so the token
+  never goes to another host.
+
 USAGE
   bb api <path>
   bb api <path> --method <METHOD> [--data <json>]
@@ -2550,6 +2557,7 @@ PATH SHORTCUTS
 
 EXAMPLES
   bb api /user
+  bb api repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}/pullrequests/42
   bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
@@ -2579,6 +2587,18 @@ HELP
     path="${path//\{ws\}/$ws}"
     path="${path//\{repo\}/$repo}"
   fi
+
+  # Normalise: strip our own API base, refuse any other host (the token goes
+  # out on every call), then make the path absolute.
+  if [[ "$path" == "$BB_API"* ]]; then
+    local rest="${path#"$BB_API"}"
+    if [[ -z "$rest" || "$rest" == /* || "$rest" == \?* ]]; then path="$rest"; fi
+  fi
+  if [[ "$path" == http://* || "$path" == https://* ]]; then
+    echo >&2 "error: bb api takes a path on $BB_API, not a URL: $path"
+    exit 1
+  fi
+  [[ "$path" == /* ]] || path="/$path"
 
   local result
   if [[ -n "$data" ]]; then
