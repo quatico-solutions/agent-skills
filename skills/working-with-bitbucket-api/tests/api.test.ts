@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
+import { closedPort } from './closed-port.ts'
 import user from './fixtures/user.json' with { type: 'json' }
 import prCreateResponse from './fixtures/pr-create-response.json' with { type: 'json' }
 
@@ -131,5 +132,20 @@ describe('bb api', () => {
     assert.notEqual(result.exitCode, 0)
     assert.match(result.stderr, /HTTP 500/)
     assert.match(result.stderr, /boom/)
+  })
+})
+
+describe('transport failure', () => {
+  it('Exits 1 with "no response" when nothing listens on the API port', async () => {
+    // Given no server listens on the API port
+    const port = await closedPort()
+
+    // When I call the API
+    const result = await bb('api /user', { port })
+
+    // Then bb exits 1 and prints nothing on stdout
+    assert.equal(result.exitCode, 1)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, /error: no response from Bitbucket/)
   })
 })
