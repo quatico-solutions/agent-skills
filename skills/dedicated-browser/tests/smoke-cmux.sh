@@ -163,6 +163,26 @@ if [[ "$(last_used)" == "${OTHER}" ]]; then ok "start restored the last-used pro
 expect_output "session=smoke" "the session cookie survived stop and start" db run "await page.goto('${APP}/whoami'); await page.evaluate(() => document.body.innerText)"
 expect_output "kept" "localStorage survived stop and start" db run "await page.goto('${APP}/'); await page.evaluate(() => localStorage.getItem('smoke'))"
 
+echo "6b. after cmux restores the agent's pane, run and start put the human's profile back"
+# When cmux reopens after a restart, it restores the agent's pane, and that makes the agent's
+# profile the last-used one again while the pane is still open. A blank tab in the agent's profile,
+# in a workspace of its own that is closed at once, does the same without a restart.
+simulate_pane_restore() {
+  local ws
+  ws="$(cmux workspace create --name db-smoke-restore --focus false 2>&1 | sed -n 's/.*\(workspace:[0-9][0-9]*\).*/\1/p' | sed -n 1p || true)"
+  [[ -n "${ws}" ]] || return 0
+  cmux browser open about:blank --profile "${PROFILE}" --workspace "${ws}" --focus false >/dev/null 2>&1 || true
+  cmux workspace close "${ws}" >/dev/null 2>&1 || true
+}
+simulate_pane_restore
+if [[ "$(last_used)" == "${PROFILE}" ]]; then ok "simulated restore: the agent's profile is last used"; else bad "simulated restore: the agent's profile is last used ($(last_used))"; fi
+db run '1' >/dev/null 2>&1 || true
+if [[ "$(last_used)" == "${OTHER}" ]]; then ok "run put the human's last-used profile back"; else bad "run put the human's last-used profile back ($(last_used))"; fi
+simulate_pane_restore
+expect_output "already running" "start finds the pane" db start
+if [[ "$(last_used)" == "${OTHER}" ]]; then ok "start put the human's last-used profile back"; else bad "start put the human's last-used profile back ($(last_used))"; fi
+if [[ "$(focused)" == "${FOCUSED_BEFORE}" ]]; then ok "putting it back left the focus where it was"; else bad "putting it back moved the focus"; fi
+
 echo "7. run without a pane"
 db stop >/dev/null 2>&1 || true
 expect_status 1 "run with no pane exits 1" db run '1'

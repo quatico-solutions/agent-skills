@@ -79,25 +79,47 @@ dbc_open_pane() {
   printf '%s' "${pane}"
 }
 
-# Opening our pane made our profile cmux's last-used one, and cmux opens a pane without an explicit
-# profile in the last-used one: the human's next pane would land in the agent's profile. Opening a
-# blank tab in the previous profile, in a workspace that never gets focus and is closed at once,
-# makes that profile the last-used one again. Measured on cmux 0.65.2 with no change to focus or
-# layout. `workspace create` prints a ref (OK workspace:<n>), not a UUID. Should the restore not
-# take, the human is told instead.
-dbc_after_open() {
-  local before="$1" out workspace
-  [[ -n "${before}" && "${before}" != "${DB_CMUX_PROFILE}" ]] || return 0
+# cmux opens a pane without an explicit profile in the last-used one, and opening a pane in our
+# profile makes it the last-used one: the human's next pane would land in the agent's profile.
+# Opening a blank tab in the human's profile, in a workspace that never gets focus and is closed at
+# once, makes that profile the last-used one again. Measured on cmux 0.65.2 with no change to focus
+# or layout. `workspace create` prints a ref (OK workspace:<n>), not a UUID. Should it not take, the
+# human is told instead.
+dbc_make_last_used() {
+  local profile="$1" out workspace
   if out="$(cmux workspace create --name dedicated-browser-restore --focus false 2>&1)"; then
     workspace="$(printf '%s' "${out}" | sed -n 's/.*\(workspace:[0-9][0-9]*\).*/\1/p' | sed -n 1p)"
     if [[ -n "${workspace}" ]]; then
-      cmux browser open about:blank --profile "${before}" --workspace "${workspace}" --focus false >/dev/null 2>&1 || true
+      cmux browser open about:blank --profile "${profile}" --workspace "${workspace}" --focus false >/dev/null 2>&1 || true
       cmux workspace close "${workspace}" >/dev/null 2>&1 || true
     fi
   fi
-  [[ "$(dbc_last_used)" == "${before}" ]] && return 0
+  [[ "$(dbc_last_used)" == "${profile}" ]] && return 0
   echo "note: cmux now opens new browser panes in the agent's profile '${DB_CMUX_PROFILE}' until you pick another." >&2
   echo "      Anything you sign in to there, the agent can use. Pick your own profile when you open a pane." >&2
+}
+
+# The human's last-used profile from before our pane opened, so it can be put back later as well.
+DBC_HUMAN_PROFILE="${DB_HOME}/cmux/human-profile"
+
+dbc_after_open() {
+  local before="$1"
+  [[ -n "${before}" && "${before}" != "${DB_CMUX_PROFILE}" ]] || return 0
+  printf '%s\n' "${before}" > "${DBC_HUMAN_PROFILE}"
+  dbc_make_last_used "${before}"
+}
+
+# cmux also makes our profile the last-used one when it restores the agent's pane, as it does when
+# it reopens after a restart (measured on 0.65.2), while the pane stays open: start then opens
+# nothing, and dbc_after_open never runs. So start and run put the human's profile back whenever
+# ours is the last-used one.
+dbc_keep_human_last_used() {
+  local human=""
+  [[ "$(dbc_last_used)" == "${DB_CMUX_PROFILE}" ]] || return 0
+  [[ -f "${DBC_HUMAN_PROFILE}" ]] && human="$(sed -n 1p "${DBC_HUMAN_PROFILE}")"
+  [[ -n "${human}" && "${human}" != "${DB_CMUX_PROFILE}" ]] || return 0
+  cmux_profile_listed "${human}" || return 0
+  dbc_make_last_used "${human}"
 }
 
 backend_cmd_setup() {
@@ -133,12 +155,14 @@ backend_cmd_start() {
   mkdir -p "${DB_HOME}/cmux"
   pane="$(dbc_current_pane)"
   if [[ -n "${pane}" ]]; then
+    dbc_keep_human_last_used
     echo "already running: pane ${pane}, profile '${DB_CMUX_PROFILE}'"
     return 0
   fi
   before="$(dbc_last_used)"
   pane="$(dbc_open_pane)" || return 1
   dbc_after_open "${before}"
+  dbc_keep_human_last_used
   echo "started: pane ${pane} beside this agent's terminal, profile '${DB_CMUX_PROFILE}'"
 }
 
@@ -248,6 +272,7 @@ backend_cmd_run() {
     echo "No agent pane in this workspace. Run: ${SELF} start" >&2
     return 1
   fi
+  dbc_keep_human_last_used
   # One session per pane: a new pane after stop and start gets a fresh session and a fresh pin.
   session="dedicated-browser-${pane}"
   if ! dbc_pin_js "${pane}" | cmux browser repl --session "${session}" --workspace "${CMUX_WORKSPACE_ID}" --eval - >/dev/null 2>&1; then
