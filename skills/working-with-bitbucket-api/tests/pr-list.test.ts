@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
+import { closedPort } from './closed-port.ts'
 import prListOpen from './fixtures/pr-list-open.json' with { type: 'json' }
 import prListMerged from './fixtures/pr-list-merged.json' with { type: 'json' }
 import prListFive from './fixtures/pr-list-five.json' with { type: 'json' }
@@ -689,5 +690,20 @@ describe('bb pr list --limit', () => {
       assert.match(result.stderr, /HTTP 500/)
       assert.equal(server.getCalls().length, 1)
     })
+  })
+})
+
+describe('bb pr list transport failure', () => {
+  it('Exits 1 and prints no rows when nothing listens on the API port', async () => {
+    // Given no server listens on the API port
+    const port = await closedPort()
+
+    // When I list all pull requests as JSON
+    const result = await bb('pr list --all --json', { port })
+
+    // Then bb exits 1, prints no array, and says no response arrived
+    assert.equal(result.exitCode, 1)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, /error: no response from Bitbucket/)
   })
 })

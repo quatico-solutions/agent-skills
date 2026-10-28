@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
+import { closedPort } from './closed-port.ts'
 import user from './fixtures/user.json' with { type: 'json' }
 
 // `bb auth login` validates the token against GET /user, then stores it in the
@@ -110,5 +111,24 @@ Token stored in keychain.
     // Then it errors
     assert.notEqual(result.exitCode, 0)
     assert.match(result.stderr, /unknown flag/)
+  })
+})
+
+describe('bb auth login transport failure', () => {
+  it('Exits 1 and stores nothing when nothing listens on the API port', async () => {
+    // Given no server listens on the API port, and a shimmed Keychain
+    const port = await closedPort()
+
+    // When I log in
+    const result = await bb(['auth', 'login', '--email', 'alice@example.com'], {
+      port,
+      input: 'my-api-token\n',
+      env: withShim,
+    })
+
+    // Then bb exits 1 and never reaches the credential store
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /error: no response from Bitbucket/)
+    assert.doesNotMatch(result.stdout + result.stderr, /Logged in|Stored|Saved/i)
   })
 })

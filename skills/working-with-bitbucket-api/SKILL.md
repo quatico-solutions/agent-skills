@@ -196,6 +196,10 @@ bb api /repositories/{ws}/{repo}/pullrequests --method POST --data '{"title":"te
 
 `{ws}` and `{repo}` are auto-replaced with the current repo's workspace and slug — or with the repo named by a global `-R workspace/repo` flag (see [Targeting another repository](#targeting-another-repository--r)).
 
+### Calling `bb` from a script
+
+`bb` exits non-zero when a request fails, including when no HTTP answer arrives (`error: no response from Bitbucket`). A script must check that exit status. When a script pipes `bb` into another command, it must run `set -o pipefail` first: without it the pipeline reports the exit status of the last command, and a failed `bb` looks like success.
+
 ---
 
 ## Attaching Images to PRs (no browser)

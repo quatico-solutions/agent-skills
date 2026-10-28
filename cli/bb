@@ -165,6 +165,22 @@ bb_resolve_user() {
 
 # --- HTTP core ---------------------------------------------------------------
 
+# Only a 2xx answer is success. curl writes 000 when no response arrives, and
+# 1xx/3xx never carry the data the caller asked for. Prints the error and
+# returns 1 on anything else; $2 is the response body for the message.
+bb_check_status() {
+  local http_code="$1" body="${2:-}"
+  [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && return 0
+  if [[ "$http_code" == "000" ]]; then
+    echo >&2 "error: no response from Bitbucket"
+    return 1
+  fi
+  local msg
+  msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+  echo >&2 "error: HTTP $http_code — $msg"
+  return 1
+}
+
 bb_api_call() {
   local method="$1" path="$2"; shift 2
   local token email
@@ -181,12 +197,7 @@ bb_api_call() {
   local body
   body="$(echo "$response" | sed '$d')"
 
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return 1
   echo "$body"
 }
 
@@ -246,15 +257,13 @@ bb_paginate() {
       [[ "$sleep_s" -gt 0 ]] && sleep "$sleep_s"
     done
 
-    if [[ "$http_code" -ge 400 ]]; then
+    if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
       rm -f "$hdr_file" "$acc_file"
       if [[ "$http_code" == "429" ]]; then
         echo >&2 "error: rate limited after ${rows} rows"
         return 1
       fi
-      local msg
-      msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-      echo >&2 "error: HTTP $http_code — $msg"
+      bb_check_status "$http_code" "$body"
       return 1
     fi
 
@@ -285,12 +294,7 @@ bb_api_raw() {
   http_code="$(echo "$response" | tail -1)"
   local body
   body="$(echo "$response" | sed '$d')"
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return 1
   printf '%s' "$body"
 }
 
@@ -334,12 +338,7 @@ bb_download_upload() {
     "${BB_API}/repositories/${ws}/${repo}/downloads")"
   http_code="$(echo "$response" | tail -1)"
   body="$(echo "$response" | sed '$d')"
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return 1
 }
 
 # --- Output formatting -------------------------------------------------------
@@ -742,11 +741,15 @@ HELP
   result="$(curl -sS -w '\n%{http_code}' \
     -u "${email}:${token}" \
     -H "Accept: application/json" \
-    "${BB_API}/user")"
+    "${BB_API}/user")" || true  # curl exits non-zero when no response arrives; http_code is then 000
   http_code="$(echo "$result" | tail -1)"
   body="$(echo "$result" | sed '$d')"
 
-  if [[ "$http_code" -ge 400 ]]; then
+  if [[ "$http_code" == "000" ]]; then
+    echo >&2 "error: no response from Bitbucket"
+    exit 1
+  fi
+  if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
     echo >&2 "error: authentication failed (HTTP ${http_code})"
     [[ "$http_code" == "401" ]] && echo >&2 "  Check that the email and token are correct"
     exit 1
