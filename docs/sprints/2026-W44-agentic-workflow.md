@@ -21,7 +21,7 @@
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [ ] [workflow-five-phases] adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases (#114) <!-- pr: #0, branch: feature/workflow-five-phases -->
+- [x] [workflow-five-phases] adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases (#114) <!-- pr: #0, branch: feature/workflow-five-phases -->
 
 ### Should Have
 
