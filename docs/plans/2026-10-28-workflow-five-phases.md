@@ -4,12 +4,13 @@
 
 ## Status
 
-- **Phase:** Draft
+- **Phase:** Approved
 - **Type:** feature
 - **Issue:** #114
 - **Sprint:** agentic-workflow
 - **Review:** in-session
 - **Impl:** own branches
+- **Approved:** 2026-10-28, jwloka, in-session
 
 ## Changelog
 
