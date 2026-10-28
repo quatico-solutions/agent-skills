@@ -50,7 +50,7 @@ AGENTS.md § Agentic Workflow (commit `e7e87a9`) copies the skill's map, so this
 
 ## Slices
 
-### five-phase map (Branch: feature/workflow-five-phases)
+### five-phase map (Branch: feature/workflow-five-phases, PR: #115)
 
 - `feature/workflow-five-phases` — five-phase map in the adopt-agentic-workflow template and AGENTS.md <!-- builds: five-phase Agentic Workflow map in adopt-agentic-workflow step 3 -->
 
