@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** bug
 - **Sprint:** bb-cli-hardening
 - **Issue:** #111
@@ -16,6 +16,7 @@
 - **Started:** 2026-10-28, Jan Wloka, `bug/bb-rate-limit-exit`
 - **Started:** 2026-10-28, Jan Wloka, `feature/bb-pr-list-head`
 - **Started:** 2026-10-28, Jan Wloka, `bug/bb-api-path-slash`
+- **Delivered:** 2026-10-28
 
 ## Changelog
 
