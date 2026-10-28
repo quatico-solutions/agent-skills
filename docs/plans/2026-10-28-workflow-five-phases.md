@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** feature
 - **Issue:** #114
 - **Sprint:** agentic-workflow
@@ -12,6 +12,7 @@
 - **Impl:** own branches
 - **Approved:** 2026-10-28, jwloka, in-session
 - **Delivered:** 2026-10-28
+- **Released:** 2026-10-28, v3.18.3
 
 ## Changelog
 
