@@ -52,7 +52,10 @@ After restoring history, classify the session:
    sits idle — a wrap-up once listed a PR as "awaiting review and merge" hours
    after it had been merged. For every item the summary or sessionlog will call
    pending, done or blocked, check its source now: the PR's state
-   (`gh pr view` / `bb pr view`), the CI status of the latest commit, the
+   (`gh pr view` / `bb pr view` — before the first `bb` call, run
+   `bb --version | grep -q quatico-bb`; on a miss, skip `bb`, mark the item
+   *unverified* and name the installed `bb` and
+   `brew install quatico-solutions/tap/quatico-bb`), the CI status of the latest commit, the
    ticket's status in the tracker, the branch after `git fetch`. Drop what is
    already done; mark what cannot be checked as *unverified*. Never carry a
    status forward from memory.

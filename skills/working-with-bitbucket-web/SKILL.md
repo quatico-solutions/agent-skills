@@ -11,7 +11,7 @@ metadata:
 
 ## Use `bb` CLI First
 
-**Before using the browser, try `bb` CLI (`working-with-bitbucket-api` skill).** It handles all PR operations — create, edit, comment, approve, merge, resolve — including markdown descriptions. Run `bb --help` for the full command list.
+**Before using the browser, try `bb` CLI (`working-with-bitbucket-api` skill).** It handles all PR operations — create, edit, comment, approve, merge, resolve — including markdown descriptions. Run `bb --help` for the full command list. Before the first `bb` call, run step 0 of that skill (`bb --version | grep -q quatico-bb`); on a miss, stop with the one line it defines.
 
 **Only use this browser skill for:**
 - SSO-gated pages that require browser authentication
