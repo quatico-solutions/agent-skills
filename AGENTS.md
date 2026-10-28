@@ -63,16 +63,17 @@ Plot was in use here before it was configured, so every key above records a path
 
 ## Agentic Workflow
 
-Four phases, each turning one durable artifact into the next.
+Five phases, each tied to a plan state on Plot's board.
 
-| Phase | Produces | Commands and skills |
-|-------|----------|---------------------|
-| **Discovery** | an issue assessment, or a story for multi-session work | `triage-ticket` for an incoming bug report or feature request · `story-tracking` for multi-session work |
-| **Design** | an approved plan (`docs/plans/`) | `/plot-idea` → `challenge-the-plan` → `/plot-approve` |
-| **Development** | merged branches | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
-| **Endgame** | a verified release | `reality-check` before claiming done · `/plot-release`, then merge the changesets release PR |
+| Phase | Plan state | Commands and skills |
+|-------|------------|---------------------|
+| **Discovery** | Draft | `triage-ticket` for an incoming bug report or feature request · `story-tracking` for multi-session work · `/plot-idea` → `challenge-the-plan` |
+| **Design** (optional) | Design | needs-design or spike work before approval → `/plot-approve` |
+| **Development** | Approved | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
+| **Testing** | Delivered | `/plot-deliver --verify` · `reality-check` before claiming done |
+| **Released** | Released | `/plot-release`, then merge the changesets release PR |
 
-Discovery is optional: small, well-understood work goes straight to Design. The release is the changesets pipeline in `docs/rules/versioning.md`; `/plot-release` checks the sprint and the changelog, then records the released version in each plan.
+Design is optional: small, well-understood work skips it and goes from a Draft plan to approval. The release is the changesets pipeline in `docs/rules/versioning.md`; `/plot-release` checks the sprint and the changelog, then records the released version in each plan.
 
 **Plans and session logs.** A plan says what will be built and is frozen on approval. A session log says how it was decided, including the rejected alternatives, stays amendable, and outlives the plan. A fact that must hold before building starts goes in the plan; the answer to "why not the other way?" goes in a log.
 
