@@ -10,6 +10,7 @@
 - **Issue:** #111
 - **Review:** in-session
 - **Impl:** own branches
+- **Rounds:** 1
 - **Approved:** 2026-10-28, jwloka, in-session
 
 ## Changelog
