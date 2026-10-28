@@ -15,6 +15,7 @@
 
 - `bb --version` and `bb --help` name the package and its install command: `bb 1.12.1 (quatico-bb — brew install quatico-solutions/tap/quatico-bb)`.
 - The `working-with-bitbucket-api` skill names `bb-cli` and the `bb` cask as look-alikes an agent must not install in its place.
+- `install-dependencies.sh` and the skills that call `bb` check `bb --version` for `quatico-bb` first, and name the wrong install instead of failing later on an unknown flag.
 
 ## Motivation
 
@@ -35,17 +36,22 @@ On 2026-10-28 a user asked to "use bb from Homebrew everywhere" and installed `b
 - `--version` prints `bb <version> (quatico-bb — brew install quatico-solutions/tap/quatico-bb)`. The first two words stay `bb <version>`, so a caller that reads the version with `awk '{print $2}'` keeps working.
 - The first line of `bb --help` carries the same package name and install command.
 - `SKILL.md`: one table of the three packages, the tap as the supported install, and the rule that an agent stops and reports when `bb --version` does not contain `quatico-bb`, instead of installing another package.
-- Search `skills/` and `cli/` for callers that parse `bb --version` before changing the line.
+- Search `skills/` and `cli/` for callers that parse `bb --version` before changing the line. Plot's `bb_identify` (`plot-host.sh:2749`) reads the first semver and the word `quatico`; the new line keeps both and its parenthesis is not a hex SHA, so Plot identifies the build as `quatico/<version>` instead of `unknown/<version>`.
+- **Self-check (second slice).** `install-dependencies.sh` and the skills that call `bb` — `working-with-bitbucket-api`, `handling-pull-requests`, `working-with-bitbucket-web`, `bye` — run `bb --version | grep -q quatico-bb` before the first `bb` call. On a miss they stop with one line naming the installed `bb` and the install command. The check needs the first slice's `--version` line, so the slice waits on it.
 
 ### Open Points
 
-- [ ] #113 lists a self-check in every script that calls `bb` as optional. It is the sprint's Could Have; decide during implementation whether it lands here as a second slice or in a follow-up plan.
+- [x] #113 lists the self-check as optional. Decided 2026-10-28: it lands here as a second slice; it stays the sprint's Could Have.
 
 ## Slices
 
 ### install source (Branch: feature/bb-install-source)
 
 - `feature/bb-install-source` — package name and install command in `bb --version` and `bb --help`, look-alike table in `SKILL.md`, with cases in `tests/global-flags.test.ts` <!-- builds: install source in bb --version and bb --help -->
+
+### bb self-check (Branch: feature/bb-self-check) <!-- waits: feature/bb-install-source -->
+
+- `feature/bb-self-check` — `quatico-bb` check before the first `bb` call in `install-dependencies.sh` and the four skills that call `bb` <!-- builds: quatico-bb self-check in skills that call bb -->
 
 ## Definition of Done
 
@@ -56,3 +62,5 @@ On 2026-10-28 a user asked to "use bb from Homebrew everywhere" and installed `b
 - [ ] `README.md` skills table matches `skills/` — required when adding or removing a skill
 
 ## Notes
+
+- The plan rides `feature/bb-install-source` with the first slice. The self-check slice opens its own branch once that merges.
