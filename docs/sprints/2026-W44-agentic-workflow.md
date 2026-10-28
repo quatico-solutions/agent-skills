@@ -7,7 +7,7 @@
 - **State:** Active
 - **Start:** 2026-10-28
 - **End:** 2026-10-30
-- **Release:** 3.18.2
+- **Release:** 3.18.3
 
 ## Sprint Goal
 
@@ -48,3 +48,4 @@
 
 - 2026-10-28: Item #114 now names its plan [workflow-five-phases] (Draft, on `feature/workflow-five-phases`). <!-- pr: #0, branch: feature/workflow-five-phases -->
 - 2026-10-28: #111, #112 and #113 (bb follow-ups) left out by the operator's decision; they are bb work, not workflow.
+- 2026-10-28: Release target 3.18.2 → 3.18.3. A teammate cut 3.18.2 on 2026-10-27 (PR #110), before this sprint named it; release PR #116 carries this sprint's change as 3.18.3.
