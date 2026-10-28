@@ -279,10 +279,12 @@ script on stdin, a script error; the guards, against an unpinned REPL session as
 without the cookie; a pop-up in the agent's profile; cookie and localStorage after `stop` and `start`; the last-used
 profile; focus unchanged; profiles as before at the end.
 
-Run on 2026-10-28 on `katoz` (macOS [version], cmux 0.65.2): [N] of [N] checks pass. `tests/smoke.sh`: [N] of [N].
+Run on 2026-10-28 on `katoz` (macOS 27.0.1, Apple silicon, cmux 0.65.2): 47 of 47 checks pass. `tests/dispatch.sh`:
+11 of 11. `tests/smoke.sh` with the mock keychain, CfT 156 and 154, playwright-core 1.64.1: 61 of 61, so the Chrome
+path is unchanged by the backend choice.
 
 **By hand, cmux restart:** sign in to a site in the agent's pane, quit cmux (Cmd-Q), reopen it, `status` and `run`
-in a new agent session: the site still knows the login. [Result, or "not yet run".]
+in a new agent session: the site still knows the login. Not yet run; Max checks it at review.
 
 **Keychain, measured in the VM and on the Mac.** Chrome for Testing keeps its key in the login keychain as "Chromium Safe Storage". The item's access list names each trusted build by code hash. On a fresh keychain the first start shows no prompt, and later starts of the same build show none either. A different build, including the one `update` installs, makes macOS ask again: `SecurityAgent` runs and cookie access blocks until someone answers. Always Allow adds that build to the list for good: on the Mac, 154 did not ask again after its one prompt. Every Chromium build that uses this item name shares the key. On the Mac the item already existed, created on 2026-03-30 by another Chromium build, so the first start prompted too.
 
