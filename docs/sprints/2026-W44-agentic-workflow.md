@@ -21,7 +21,7 @@
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [ ] [#114](https://github.com/quatico-solutions/agent-skills/issues/114) adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases
+- [ ] [workflow-five-phases] adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases (#114)
 
 ### Should Have
 
@@ -46,4 +46,5 @@
 <!-- Log scope changes here: added/removed items, tier changes, with date and reason -->
 <!-- Format: - YYYY-MM-DD: Added/Moved/Removed [slug] reason -->
 
+- 2026-10-28: Item #114 now names its plan [workflow-five-phases] (Draft, on `feature/workflow-five-phases`).
 - 2026-10-28: #111, #112 and #113 (bb follow-ups) left out by the operator's decision; they are bb work, not workflow.
