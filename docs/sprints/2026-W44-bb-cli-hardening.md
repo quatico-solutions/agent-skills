@@ -35,7 +35,7 @@
 
 ### Could Have
 
-- [ ] [#113](https://github.com/quatico-solutions/agent-skills/issues/113) skills and scripts that call `bb` run a one-line self-check (`bb --version | grep -q quatico-bb`) and print a clear message instead of failing on an unknown flag — optional in the ticket
+- [ ] [bb-install-source] ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)) skills and scripts that call `bb` run a one-line self-check (`bb --version | grep -q quatico-bb`) and print a clear message instead of failing on an unknown flag — second slice of the plan, optional in the ticket
 
 ### Deferred
 
