@@ -12,6 +12,7 @@
 - **Impl:** own branches
 - **Rounds:** 1
 - **Approved:** 2026-10-28, jwloka, in-session
+- **Started:** 2026-10-28, Jan Wloka, `bug/bb-transport-failure`
 
 ## Changelog
 
