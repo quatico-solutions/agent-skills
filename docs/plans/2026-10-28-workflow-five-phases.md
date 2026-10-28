@@ -9,7 +9,7 @@
 - **Issue:** #114
 - **Sprint:** agentic-workflow
 - **Review:** in-session
-- **Impl:** same branch
+- **Impl:** own branches
 
 ## Changelog
 
@@ -65,3 +65,4 @@ AGENTS.md § Agentic Workflow (commit `e7e87a9`) copies the skill's map, so this
 
 - Design question: no. The change follows plot's documented phases and needs no spec.
 - Reference: plot 2.29.0 `skills/plot/SKILL.md` § Phases, `docs/board-domain-model.md`, `docs/plot-in-the-pipeline.md`.
+- Impl changed from `same branch` to `own branches` on 2026-10-28: the plan lands on main so the board can approve it and the fleet can cut the branch (plot-pm/plot#2528 blocks in-session approval of a same-branch plan).
