@@ -25,9 +25,9 @@
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [ ] [#111](https://github.com/quatico-solutions/agent-skills/issues/111) exhausted 429 retries exit with a distinct code and `Retry-After` on stderr; a failed `--all` walk prints no partial array; repeatable `pr list --head` combines with `--state`; `bb api` normalises or refuses a path without leading `/`
-- [ ] [#112](https://github.com/quatico-solutions/agent-skills/issues/112) `bb whoami` prints account and credential source without the token, exits non-zero when unauthenticated, supports `--json`
-- [ ] [#113](https://github.com/quatico-solutions/agent-skills/issues/113) `bb --help` and `--version` name the install source; `working-with-bitbucket-api` names the supported tap and the two look-alikes
+- [ ] [bb-scripted-calls] ([#111](https://github.com/quatico-solutions/agent-skills/issues/111)) exhausted 429 retries exit with a distinct code and `Retry-After` on stderr; a failed `--all` walk prints no partial array; repeatable `pr list --head` combines with `--state`; `bb api` normalises or refuses a path without leading `/`
+- [ ] [bb-whoami] ([#112](https://github.com/quatico-solutions/agent-skills/issues/112)) `bb whoami` prints account and credential source without the token, exits non-zero when unauthenticated, supports `--json`
+- [ ] [bb-install-source] ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)) `bb --help` and `--version` name the install source; `working-with-bitbucket-api` names the supported tap and the two look-alikes
 
 ### Should Have
 
