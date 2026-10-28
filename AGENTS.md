@@ -60,3 +60,30 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 `Worker command` starts plot's worker loop in each desk `/plot-dispatch` prepares. The loop runs one unattended `claude` session (Sonnet) per claimed slice, with that slice's brief. The path points at the marketplace checkout, which plugin updates change in place, so the command survives a plot upgrade. The fleet supervisor for this repo runs under the launchd label `com.plot-pm.fleetd.agent-skills`; pass `PLOT_FLEET_LABEL` with that value to `/plot-fleet --status` and `--stop`.
 
 Plot was in use here before it was configured, so every key above records a path this repo already uses. Commit style is `arlo-colon`: a risk letter, a colon and the subject (`F: …`, `B: …`, `D: …`, `E: …`, `t: …` per [commit-notation](skills/commit-notation/SKILL.md)). Plot records go as `plot: …`. Older commits, up to release 3.18.0, use the dash form `F - …`; write new commits with the colon.
+
+## Agentic Workflow
+
+Four phases, each turning one durable artifact into the next.
+
+| Phase | Produces | Commands and skills |
+|-------|----------|---------------------|
+| **Discovery** | an issue assessment, or a story for multi-session work | `triage-ticket` for an incoming bug report or feature request · `story-tracking` for multi-session work |
+| **Design** | an approved plan (`docs/plans/`) | `/plot-idea` → `challenge-the-plan` → `/plot-approve` |
+| **Development** | merged branches | `/plot-implement` · `test-driven-development` · `commit-notation` · `handling-pull-requests` → `/plot-deliver` |
+| **Endgame** | a verified release | `reality-check` before claiming done · `/plot-release`, then merge the changesets release PR |
+
+Discovery is optional: small, well-understood work goes straight to Design. The release is the changesets pipeline in `docs/rules/versioning.md`; `/plot-release` checks the sprint and the changelog, then records the released version in each plan.
+
+**Plans and session logs.** A plan says what will be built and is frozen on approval. A session log says how it was decided, including the rejected alternatives, stays amendable, and outlives the plan. A fact that must hold before building starts goes in the plan; the answer to "why not the other way?" goes in a log.
+
+## Session Wrap Up
+
+- **Sessionlog directory:** docs/sessionlogs/
+
+Include the Plot context for this session in the log:
+
+    ~/.claude/plugins/marketplaces/plot-marketplace/skills/plot/scripts/plot-context.sh
+
+It reports the governing plan, its phase, its wave, and its PRs as JSON. An empty `plan_slug` means the branch belongs to no plan; say so rather than guess, because a log attributed to the wrong plan outlives the session that wrote it.
+
+Record decisions and their rejected alternatives in the log, not in the plan.
