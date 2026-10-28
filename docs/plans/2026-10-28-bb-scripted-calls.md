@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** bug
 - **Sprint:** bb-cli-hardening
 - **Issue:** #111
@@ -12,6 +12,11 @@
 - **Impl:** own branches
 - **Rounds:** 1
 - **Approved:** 2026-10-28, jwloka, in-session
+- **Started:** 2026-10-28, Jan Wloka, `bug/bb-transport-failure`
+- **Started:** 2026-10-28, Jan Wloka, `bug/bb-rate-limit-exit`
+- **Started:** 2026-10-28, Jan Wloka, `feature/bb-pr-list-head`
+- **Started:** 2026-10-28, Jan Wloka, `bug/bb-api-path-slash`
+- **Delivered:** 2026-10-28
 
 ## Changelog
 
@@ -52,19 +57,19 @@
 
 ### no false success (Branch: bug/bb-transport-failure)
 
-- `bug/bb-transport-failure` — `bb_paginate`, `bb_api_call` and `bb_api_raw` fail on any non-2xx status including `000`; exit-status guidance in `SKILL.md`; cases for a closed port in `tests/pr-list.test.ts` and `tests/api.test.ts` <!-- builds: non-2xx-is-failure check in bb_paginate, bb_api_call and bb_api_raw -->
+- `bug/bb-transport-failure` — `bb_paginate`, `bb_api_call` and `bb_api_raw` fail on any non-2xx status including `000`; exit-status guidance in `SKILL.md`; cases for a closed port in `tests/pr-list.test.ts` and `tests/api.test.ts` → #117 <!-- builds: non-2xx-is-failure check in bb_paginate, bb_api_call and bb_api_raw -->
 
 ### rate-limit exit code (Branch: bug/bb-rate-limit-exit) <!-- waits: bug/bb-transport-failure -->
 
-- `bug/bb-rate-limit-exit` — exit 75 on 429 in `bb_paginate`, `bb_api_call` and `bb_api_raw`, passed through at `cli/bb:141`, `:149`, `:919`, `:927`, `:2651`; final line with uncapped `Retry-After`; exit codes in `bb --help` and `SKILL.md`; `tests/pr-list.test.ts:677` changes from 1 to 75 <!-- builds: exit status 75 for HTTP 429 -->
+- `bug/bb-rate-limit-exit` — exit 75 on 429 in `bb_paginate`, `bb_api_call` and `bb_api_raw`, passed through at `cli/bb:141`, `:149`, `:919`, `:927`, `:2651`; final line with uncapped `Retry-After`; exit codes in `bb --help` and `SKILL.md`; `tests/pr-list.test.ts:677` changes from 1 to 75 → #119 <!-- builds: exit status 75 for HTTP 429 -->
 
 ### pr list --head (Branch: feature/bb-pr-list-head) <!-- waits: bug/bb-rate-limit-exit -->
 
-- `feature/bb-pr-list-head` — repeatable `--head` on `cmd_pr_list`, passed into both `bb_pr_list_query` calls, `"` refused, with cases in `tests/pr-list.test.ts` (alone, with `--state`, with `--author` matching nothing) <!-- builds: --head on cmd_pr_list -->
+- `feature/bb-pr-list-head` — repeatable `--head` on `cmd_pr_list`, passed into both `bb_pr_list_query` calls, `"` refused, with cases in `tests/pr-list.test.ts` (alone, with `--state`, with `--author` matching nothing) → #120 <!-- builds: --head on cmd_pr_list -->
 
 ### api path (Branch: bug/bb-api-path-slash)
 
-- `bug/bb-api-path-slash` — `cmd_api` strips the API base URL, prepends a missing `/`, refuses other hosts, with cases in `tests/api.test.ts` <!-- builds: path normalisation in cmd_api -->
+- `bug/bb-api-path-slash` — `cmd_api` strips the API base URL, prepends a missing `/`, refuses other hosts, with cases in `tests/api.test.ts` → #123 <!-- builds: path normalisation in cmd_api -->
 
 ## Definition of Done
 

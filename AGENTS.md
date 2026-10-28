@@ -57,8 +57,12 @@ Plus a changeset for any skill-touching change, per Critical Rule 2. `ci.yml` on
 - **Plan template:** .plot/templates/plan.md
 - **Shipped code paths:** ^(cli/|skills/[^/]+/[^/]+$|skills/[^/]+/(diagrams|references|scripts|sources)/)
 - **Worker command:** PLOT_UNATTENDED=1 PLOT_MODEL=sonnet ~/.claude/plugins/marketplaces/plot-marketplace/skills/plot/scripts/plot-worker-loop.sh
+- **Implement command:** PLOT_UNATTENDED=1 claude -p --model sonnet ${PLOT_AGENT_SETTINGS:+--settings "$PLOT_AGENT_SETTINGS"} --permission-mode bypassPermissions
+- **Idea command:** PLOT_UNATTENDED=1 claude -p --model sonnet ${PLOT_AGENT_SETTINGS:+--settings "$PLOT_AGENT_SETTINGS"} --permission-mode bypassPermissions
 
 `Worker command` starts plot's worker loop in each desk `/plot-dispatch` prepares. The loop runs one unattended `claude` session (Sonnet) per claimed slice, with that slice's brief. The path points at the marketplace checkout, which plugin updates change in place, so the command survives a plot upgrade. The fleet supervisor for this repo runs under the launchd label `com.plot-pm.fleetd.agent-skills`; pass `PLOT_FLEET_LABEL` with that value to `/plot-fleet --status` and `--stop`.
+
+`Implement command` and `Idea command` run the board's Implement and Create-plan actions: one unattended `claude -p` session (Sonnet) that runs `/plot-implement <slug>` or `/plot-idea` on an issue. Without them the board refuses both actions. Both use `--permission-mode bypassPermissions`, because an unattended session cannot answer a permission prompt; Plot's own repository configures them the same way.
 
 Plot was in use here before it was configured, so every key above records a path this repo already uses. Commit style is `arlo-colon`: a risk letter, a colon and the subject (`F: …`, `B: …`, `D: …`, `E: …`, `t: …` per [commit-notation](skills/commit-notation/SKILL.md)). Plot records go as `plot: …`. Older commits, up to release 3.18.0, use the dash form `F - …`; write new commits with the colon. `Shipped code paths` tells `/plot-reconcile` which merges need a changeset: `cli/` and a skill's own files, not its `tests/`.
 

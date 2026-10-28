@@ -137,8 +137,8 @@ bb_resolve_user() {
   local ws repo
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
-  local prs account_id
-  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50)" || prs="[]"
+  local prs account_id rc
+  prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=MERGED" 50)" || { rc=$?; [[ "$rc" -eq 75 ]] && return 75; prs="[]"; }
   account_id="$(echo "$prs" | jq -r --arg name "$input" '
     [.[] | (.author, .reviewers[]?) |
      select(.display_name == $name or .nickname == $name) |
@@ -146,7 +146,7 @@ bb_resolve_user() {
 
   if [[ -z "$account_id" ]]; then
     # Also search open PRs
-    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50)" || prs="[]"
+    prs="$(bb_paginate "/repositories/${ws}/${repo}/pullrequests?state=OPEN" 50)" || { rc=$?; [[ "$rc" -eq 75 ]] && return 75; prs="[]"; }
     account_id="$(echo "$prs" | jq -r --arg name "$input" '
       [.[] | (.author, .reviewers[]?) |
        select(.display_name == $name or .nickname == $name) |
@@ -165,6 +165,29 @@ bb_resolve_user() {
 
 # --- HTTP core ---------------------------------------------------------------
 
+# Only a 2xx answer is success. curl writes 000 when no response arrives, and
+# 1xx/3xx never carry the data the caller asked for. Prints the error and
+# returns 1 on anything else; $2 is the response body for the message. HTTP 429
+# returns 75 (EX_TEMPFAIL) so a caller can tell "wait and retry" from "fix the
+# call"; the message says "rate limited" and never the number, because Plot
+# reads a 429 in stderr as a short burst, not a spent quota.
+bb_check_status() {
+  local http_code="$1" body="${2:-}"
+  [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && return 0
+  if [[ "$http_code" == "000" ]]; then
+    echo >&2 "error: no response from Bitbucket"
+    return 1
+  fi
+  if [[ "$http_code" == "429" ]]; then
+    echo >&2 "error: rate limited"
+    return 75
+  fi
+  local msg
+  msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+  echo >&2 "error: HTTP $http_code — $msg"
+  return 1
+}
+
 bb_api_call() {
   local method="$1" path="$2"; shift 2
   local token email
@@ -181,12 +204,7 @@ bb_api_call() {
   local body
   body="$(echo "$response" | sed '$d')"
 
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return $?
   echo "$body"
 }
 
@@ -246,15 +264,22 @@ bb_paginate() {
       [[ "$sleep_s" -gt 0 ]] && sleep "$sleep_s"
     done
 
-    if [[ "$http_code" -ge 400 ]]; then
-      rm -f "$hdr_file" "$acc_file"
+    if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
       if [[ "$http_code" == "429" ]]; then
-        echo >&2 "error: rate limited after ${rows} rows"
-        return 1
+        # The raw header, not the 60 s cap the retry loop applies: an hourly
+        # quota reported as "60 s" is the wrong advice.
+        local final_wait
+        final_wait="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
+        rm -f "$hdr_file" "$acc_file"
+        if [[ "$final_wait" =~ ^[0-9]+$ ]]; then
+          echo >&2 "error: rate limited after ${rows} rows — Bitbucket asked to wait ${final_wait} s"
+        else
+          echo >&2 "error: rate limited after ${rows} rows"
+        fi
+        return 75
       fi
-      local msg
-      msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-      echo >&2 "error: HTTP $http_code — $msg"
+      rm -f "$hdr_file" "$acc_file"
+      bb_check_status "$http_code" "$body"
       return 1
     fi
 
@@ -285,12 +310,7 @@ bb_api_raw() {
   http_code="$(echo "$response" | tail -1)"
   local body
   body="$(echo "$response" | sed '$d')"
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return $?
   printf '%s' "$body"
 }
 
@@ -334,12 +354,7 @@ bb_download_upload() {
     "${BB_API}/repositories/${ws}/${repo}/downloads")"
   http_code="$(echo "$response" | tail -1)"
   body="$(echo "$response" | sed '$d')"
-  if [[ "$http_code" -ge 400 ]]; then
-    local msg
-    msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
-    echo >&2 "error: HTTP $http_code — $msg"
-    return 1
-  fi
+  bb_check_status "$http_code" "$body" || return $?
 }
 
 # --- Output formatting -------------------------------------------------------
@@ -481,11 +496,11 @@ bb_str_contains_line() {
 # point of this function — three inline constructions were free to drift, and
 # the drift is invisible until someone combines --author with two states.
 bb_pr_list_query() {
-  local states="$1" authors="$2" since="${3:-}"
-  local s a expr ors path
+  local states="$1" authors="$2" since="${3:-}" heads="${4:-}"
+  local s a h expr ors path
   local IFS=$'\n'
 
-  if [[ -z "$authors" && -z "$since" ]]; then
+  if [[ -z "$authors" && -z "$since" && -z "$heads" ]]; then
     # No author: repeated state= parameters. Bitbucket returns the union,
     # already sorted descending by updated_on — one call, nothing to re-sort.
     path=""
@@ -496,13 +511,21 @@ bb_pr_list_query() {
     return 0
   fi
 
-  # An author or an --updated-since bound forces the q= form, so the states
-  # must travel inside it too.
+  # An author, a head branch or an --updated-since bound forces the q= form,
+  # so the states must travel inside it too.
   ors=""
   for s in $states; do
     ors="${ors:+$ors OR }state = \"${s}\""
   done
   expr="(${ors})"
+
+  if [[ -n "$heads" ]]; then
+    ors=""
+    for h in $heads; do
+      ors="${ors:+$ors OR }source.branch.name = \"${h}\""
+    done
+    expr="${expr} AND (${ors})"
+  fi
 
   if [[ -n "$authors" ]]; then
     ors=""
@@ -742,11 +765,15 @@ HELP
   result="$(curl -sS -w '\n%{http_code}' \
     -u "${email}:${token}" \
     -H "Accept: application/json" \
-    "${BB_API}/user")"
+    "${BB_API}/user")" || true  # curl exits non-zero when no response arrives; http_code is then 000
   http_code="$(echo "$result" | tail -1)"
   body="$(echo "$result" | sed '$d')"
 
-  if [[ "$http_code" -ge 400 ]]; then
+  if [[ "$http_code" == "000" ]]; then
+    echo >&2 "error: no response from Bitbucket"
+    exit 1
+  fi
+  if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
     echo >&2 "error: authentication failed (HTTP ${http_code})"
     [[ "$http_code" == "401" ]] && echo >&2 "  Check that the email and token are correct"
     exit 1
@@ -780,7 +807,7 @@ cmd_pr_list() {
   # whole thing stays bash 3.2 (see the compatibility note at the top).
   # Empty means "not given" — the OPEN default is applied after parsing, so a
   # caller passing no --state is unaffected.
-  local states="" authors="" since="" limit=50 limit_given=0 all=0
+  local states="" authors="" heads="" since="" limit=50 limit_given=0 all=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -788,7 +815,7 @@ cmd_pr_list() {
 List pull requests in the current repository.
 
 USAGE
-  bb pr list [--state <state>] [--author <name>] [--limit <n> | --all] [--updated-since <ISO>] [--json [<fields>]] [--jq <expr>]
+  bb pr list [--state <state>] [--author <name>] [--head <branch>] [--limit <n> | --all] [--updated-since <ISO>] [--json [<fields>]] [--jq <expr>]
 
 FLAGS
   --state <state>    Filter by state: open, merged, declined, superseded (default: open)
@@ -798,6 +825,10 @@ FLAGS
                      repeated identical state is harmless.
   --author <name>    Filter by author (nickname or display name).
                      May be repeated to cover several authors.
+  --head <branch>    Filter by source branch name. May be repeated to cover
+                     several branches. Combines with --state, which keeps its
+                     open default: a merged branch needs --state merged.
+                     A branch name containing '"' is refused.
   --limit <n>        Maximum number of items to fetch (default: 50). Follows
                      Bitbucket's next links across as many pages as needed.
   --all              Fetch every page, with no row limit. Cannot be combined
@@ -835,6 +866,7 @@ EXAMPLES
   bb pr list
   bb pr list --state merged
   bb pr list --author alice --json
+  bb pr list --head feature/login --state merged
   bb pr list --json number,headRefName,isDraft
   bb pr list --state open --json headRefName --jq '.[].headRefName'
   bb pr list --limit 5
@@ -876,6 +908,17 @@ HELP
       --author)
         bb_str_contains_line "$authors" "$2" || authors="${authors:+$authors$'\n'}$2"
         shift 2 ;;
+      --head)
+        if [[ $# -lt 2 ]]; then
+          echo >&2 "error: --head requires a branch name"
+          exit 1
+        fi
+        if [[ "$2" == *'"'* ]]; then
+          echo >&2 "error: --head cannot contain '\"'"
+          exit 1
+        fi
+        bb_str_contains_line "$heads" "$2" || heads="${heads:+$heads$'\n'}$2"
+        shift 2 ;;
       --json)
         JSON_OUTPUT=1; shift
         # `pr list` takes no positional args, so a bare word after --json is the
@@ -912,19 +955,19 @@ HELP
   # pagelen is set here, not in bb_paginate: the maximum page size differs per
   # endpoint, and the pull-request endpoint takes 50. Both query forms start
   # with `?`, so `&pagelen=` always appends.
-  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since")&pagelen=50"
+  path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "$authors" "$since" "$heads")&pagelen=50"
 
-  local result next_file
+  local result next_file rc
   next_file="$(mktemp)"
-  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
+  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rc=$?; rm -f "$next_file"; exit "$rc"; }
 
   # If author filter returned nothing, fall back to client-side display_name match
   if [[ -n "$authors" && "$(echo "$result" | jq 'length')" -eq 0 ]]; then
     # Refetch without the author filter, but across EVERY requested state — a
     # recovery path that silently narrows the result fails the same way the bug
     # it recovers from does.
-    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since")&pagelen=50"
-    result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rm -f "$next_file"; exit 1; }
+    path="/repositories/${ws}/${repo}/pullrequests$(bb_pr_list_query "$states" "" "$since" "$heads")&pagelen=50"
+    result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "$path" "$limit")" || { rc=$?; rm -f "$next_file"; exit "$rc"; }
     local nfc_author a_nfc names_filter
     names_filter=""
     local IFS=$'\n'
@@ -1172,7 +1215,7 @@ HELP
     local resolved=()
     for r in "${reviewers[@]}"; do
       local obj
-      obj="$(bb_resolve_user "$r")" || exit 1
+      obj="$(bb_resolve_user "$r")" || exit $?
       resolved+=("$obj")
     done
     reviewer_json="$(printf '%s\n' "${resolved[@]}" | jq -s '.')"
@@ -1318,7 +1361,7 @@ HELP
     # is an OR — so both loops use the empty-safe expansion.
     for r in ${add_reviewers[@]+"${add_reviewers[@]}"}; do
       local obj
-      obj="$(bb_resolve_user "$r")" || exit 1
+      obj="$(bb_resolve_user "$r")" || exit $?
       local aid
       aid="$(echo "$obj" | jq -r '.account_id // empty')"
       if [[ -n "$aid" ]]; then
@@ -1571,7 +1614,7 @@ HELP
       fi
       base="$(basename "$img")"
       upload_name="pr${pr_id}-${base}"
-      bb_download_upload "$ws" "$repo" "$img" "$upload_name" || exit 1
+      bb_download_upload "$ws" "$repo" "$img" "$upload_name" || exit $?
       img_url="https://bitbucket.org/${ws}/${repo}/downloads/${upload_name}"
       if [[ -n "$body" ]]; then
         body="${body}"$'\n\n'"![${base}](${img_url})"
@@ -1745,7 +1788,7 @@ HELP
 
   if [[ -n "$pin_l" ]]; then
     local pr_json head head_l
-    pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit 1
+    pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit $?
     head="$(printf '%s' "$pr_json" | jq -r '.source.commit.hash // empty')"
     head_l="$(printf '%s' "$head" | tr '[:upper:]' '[:lower:]')"
     if [[ ! "$head_l" =~ ^[0-9a-f]{7,}$ ]]; then
@@ -2149,7 +2192,7 @@ HELP
 
   # Check if path is a directory by fetching metadata
   local meta
-  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${resolved_ref}/${path}?format=meta")" || exit 1
+  meta="$(bb_api_call GET "/repositories/${ws}/${repo}/src/${resolved_ref}/${path}?format=meta")" || exit $?
   local file_type
   file_type="$(echo "$meta" | jq -r '.type // empty')"
   if [[ "$file_type" == "commit_directory" ]]; then
@@ -2492,6 +2535,13 @@ Make a raw Bitbucket API call with correct authentication.
 Escape hatch for API endpoints not yet wrapped by bb commands.
 Paths are relative to https://api.bitbucket.org/2.0.
 
+PATH FORMS
+  /user               Leading slash is optional: `user` works too
+  https://api.bitbucket.org/2.0/user
+                      A full URL on the API base (e.g. a `next` link) is accepted
+  Any other URL is refused with exit 1 and no request, so the token
+  never goes to another host.
+
 USAGE
   bb api <path>
   bb api <path> --method <METHOD> [--data <json>]
@@ -2507,6 +2557,7 @@ PATH SHORTCUTS
 
 EXAMPLES
   bb api /user
+  bb api repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}/pullrequests/42
   bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
@@ -2536,6 +2587,18 @@ HELP
     path="${path//\{ws\}/$ws}"
     path="${path//\{repo\}/$repo}"
   fi
+
+  # Normalise: strip our own API base, refuse any other host (the token goes
+  # out on every call), then make the path absolute.
+  if [[ "$path" == "$BB_API"* ]]; then
+    local rest="${path#"$BB_API"}"
+    if [[ -z "$rest" || "$rest" == /* || "$rest" == \?* ]]; then path="$rest"; fi
+  fi
+  if [[ "$path" == http://* || "$path" == https://* ]]; then
+    echo >&2 "error: bb api takes a path on $BB_API, not a URL: $path"
+    exit 1
+  fi
+  [[ "$path" == /* ]] || path="/$path"
 
   local result
   if [[ -n "$data" ]]; then
@@ -2605,7 +2668,7 @@ HELP
   ws="$(bb_workspace)"
   repo="$(bb_repo)"
 
-  bb_download_upload "$ws" "$repo" "$file" "$name" || exit 1
+  bb_download_upload "$ws" "$repo" "$file" "$name" || exit $?
 
   local url="https://bitbucket.org/${ws}/${repo}/downloads/${name}"
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
@@ -2648,7 +2711,7 @@ HELP
   repo="$(bb_repo)"
 
   local result
-  result="$(bb_paginate "/repositories/${ws}/${repo}/downloads" "$limit")" || exit 1
+  result="$(bb_paginate "/repositories/${ws}/${repo}/downloads" "$limit")" || exit $?
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     echo "$result" | jq .
@@ -2726,6 +2789,12 @@ Untrusted content:
   written by the comment author and is itself a finding to report. Fencing covers
   comment bodies only — PR descriptions, the summary comment table, `pr tasks`
   and `pr activity` are equally untrusted but are not fenced.
+
+Exit status:
+  0    success
+  1    error: usage error, failed request, or no answer from Bitbucket
+  75   rate limited (HTTP 429): wait, then retry; the same call can succeed later
+  With --jq, a jq failure exits with jq's own code (2, 3 or 5).
 
 Environment:
   BB_TOKEN            API token (overrides keychain)
