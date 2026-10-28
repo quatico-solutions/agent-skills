@@ -53,7 +53,7 @@
 
 ### no false success (Branch: bug/bb-transport-failure)
 
-- `bug/bb-transport-failure` — `bb_paginate`, `bb_api_call` and `bb_api_raw` fail on any non-2xx status including `000`; exit-status guidance in `SKILL.md`; cases for a closed port in `tests/pr-list.test.ts` and `tests/api.test.ts` <!-- builds: non-2xx-is-failure check in bb_paginate, bb_api_call and bb_api_raw -->
+- `bug/bb-transport-failure` — `bb_paginate`, `bb_api_call` and `bb_api_raw` fail on any non-2xx status including `000`; exit-status guidance in `SKILL.md`; cases for a closed port in `tests/pr-list.test.ts` and `tests/api.test.ts` → #117 <!-- builds: non-2xx-is-failure check in bb_paginate, bb_api_call and bb_api_raw -->
 
 ### rate-limit exit code (Branch: bug/bb-rate-limit-exit) <!-- waits: bug/bb-transport-failure -->
 
