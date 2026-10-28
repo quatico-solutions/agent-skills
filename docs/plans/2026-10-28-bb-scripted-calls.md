@@ -63,7 +63,7 @@
 
 ### pr list --head (Branch: feature/bb-pr-list-head) <!-- waits: bug/bb-rate-limit-exit -->
 
-- `feature/bb-pr-list-head` — repeatable `--head` on `cmd_pr_list`, passed into both `bb_pr_list_query` calls, `"` refused, with cases in `tests/pr-list.test.ts` (alone, with `--state`, with `--author` matching nothing) <!-- builds: --head on cmd_pr_list -->
+- `feature/bb-pr-list-head` — repeatable `--head` on `cmd_pr_list`, passed into both `bb_pr_list_query` calls, `"` refused, with cases in `tests/pr-list.test.ts` (alone, with `--state`, with `--author` matching nothing) → #120 <!-- builds: --head on cmd_pr_list -->
 
 ### api path (Branch: bug/bb-api-path-slash)
 
