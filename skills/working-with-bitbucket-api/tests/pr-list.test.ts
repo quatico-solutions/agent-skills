@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
+import { closedPort } from './closed-port.ts'
 import prListOpen from './fixtures/pr-list-open.json' with { type: 'json' }
 import prListMerged from './fixtures/pr-list-merged.json' with { type: 'json' }
 import prListFive from './fixtures/pr-list-five.json' with { type: 'json' }
@@ -598,6 +599,81 @@ describe('bb pr list --limit', () => {
       assert.match(result.stderr, /--updated-since must be an ISO date or time/)
     })
 
+    it('Puts --head into the q= expression under the open default', async () => {
+      servePages(1, 2)
+
+      const result = await bb('pr list --head b', { port: server.port })
+
+      assert.equal(result.exitCode, 0)
+      const q = server.getLastCall().query
+      assert.equal(q.q, '(state = "OPEN") AND (source.branch.name = "b")')
+      assert.equal(q.state, undefined)
+    })
+
+    it('ORs repeated --head flags in one request', async () => {
+      servePages(1, 2)
+
+      const result = await bb('pr list --head a --head b --state merged', { port: server.port })
+
+      assert.equal(result.exitCode, 0)
+      assert.equal(server.getCalls().length, 1)
+      assert.equal(
+        server.getCalls()[0].query.q,
+        '(state = "MERGED") AND (source.branch.name = "a" OR source.branch.name = "b")',
+      )
+    })
+
+    it('Keeps --head in the refetch when the author query returns no rows', async () => {
+      // Given the nickname query returns nothing and the refetch returns a PR by display name
+      const pr = { id: 1, title: 't', state: 'OPEN', author: { display_name: 'x', nickname: 'other' }, source: { branch: { name: 'b' } }, destination: { branch: { name: 'main' } } }
+      server.stubSequence('GET', PR_PATH, {}, [
+        { status: 200, body: { values: [] } },
+        { status: 200, body: { values: [pr] } },
+      ])
+
+      // When I list by author and head
+      const result = await bb('pr list --head b --author x --json number --jq length', { port: server.port })
+
+      // Then both requests carry the head clause, and the refetch drops only the author
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '1')
+      const calls = server.getCalls()
+      assert.equal(calls.length, 2)
+      assert.equal(calls[0].query.q, '(state = "OPEN") AND (source.branch.name = "b") AND (author.nickname = "x")')
+      assert.equal(calls[1].query.q, '(state = "OPEN") AND (source.branch.name = "b")')
+    })
+
+    it('Orders --head between the states and --updated-since', async () => {
+      servePages(1, 2)
+
+      const result = await bb('pr list --head b --updated-since 2026-10-01T00:00:00Z', { port: server.port })
+
+      assert.equal(result.exitCode, 0)
+      assert.equal(
+        server.getCalls()[0].query.q,
+        '(state = "OPEN") AND (source.branch.name = "b") AND updated_on >= "2026-10-01T00:00:00Z"',
+      )
+    })
+
+    it('Refuses a double quote in --head without sending a request', async () => {
+      const result = await bb(['pr', 'list', '--head', 'we"ird'], { port: server.port })
+
+      assert.equal(result.exitCode, 1)
+      assert.match(result.stderr, /error: --head cannot contain '"'/)
+      assert.equal(server.getCalls().length, 0)
+    })
+
+    it('Follows next links with --head and --all', async () => {
+      servePages(3, 2)
+
+      const result = await bb('pr list --head src --state merged --all --json number --jq length', { port: server.port })
+
+      assert.equal(result.exitCode, 0)
+      assert.equal(result.stdout.trim(), '6')
+      assert.equal(server.getCalls().length, 3)
+      assert.equal(server.getCalls()[0].query.q, '(state = "MERGED") AND (source.branch.name = "src")')
+    })
+
     it('Retries a page that answers 429 once, then succeeds', async () => {
       // Given page 1 answers 429 with Retry-After, then 200
       const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
@@ -673,11 +749,33 @@ describe('bb pr list --limit', () => {
       // When I read all pages
       const result = await bb('pr list --state merged --all --json', { port: server.port, env: noSleep })
 
-      // Then it exits non-zero after 1 + 6 requests, names the rows read, and prints nothing
-      assert.equal(result.exitCode, 1)
+      // Then it exits 75 after 1 + 6 requests, names the rows read, and prints nothing
+      assert.equal(result.exitCode, 75)
       assert.equal(result.stdout, '')
       assert.match(result.stderr, /error: rate limited after 1 rows/)
       assert.equal(server.getCalls().length, 7)
+    })
+
+    it('Names the raw Retry-After of the final 429, not the 60 s cap', async () => {
+      const limited = { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '3600' } }
+      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
+
+      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 75)
+      assert.equal(result.stdout, '')
+      assert.match(result.stderr, /error: rate limited after 0 rows — Bitbucket asked to wait 3600 s/)
+      assert.doesNotMatch(result.stderr, /429/)
+    })
+
+    it('Prints no wait suffix when the final 429 has no Retry-After', async () => {
+      const limited = { status: 429, body: { error: { message: 'slow down' } } }
+      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
+
+      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 75)
+      assert.match(result.stderr, /error: rate limited after 0 rows\s*$/)
     })
 
     it('Fails other non-2xx answers on the first attempt', async () => {
@@ -689,5 +787,20 @@ describe('bb pr list --limit', () => {
       assert.match(result.stderr, /HTTP 500/)
       assert.equal(server.getCalls().length, 1)
     })
+  })
+})
+
+describe('bb pr list transport failure', () => {
+  it('Exits 1 and prints no rows when nothing listens on the API port', async () => {
+    // Given no server listens on the API port
+    const port = await closedPort()
+
+    // When I list all pull requests as JSON
+    const result = await bb('pr list --all --json', { port })
+
+    // Then bb exits 1, prints no array, and says no response arrived
+    assert.equal(result.exitCode, 1)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, /error: no response from Bitbucket/)
   })
 })

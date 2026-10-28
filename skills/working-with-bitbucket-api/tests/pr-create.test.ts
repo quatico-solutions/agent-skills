@@ -182,6 +182,23 @@ describe('bb pr create', () => {
     assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
   })
 
+  it('Exits 75, not "cannot resolve reviewer", when the user lookup answers 429', async () => {
+    // Given the PR lookup used to resolve the reviewer is rate limited
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    server.stubWithQuery('GET', '/repositories/testws/testrepo/pullrequests', { state: 'MERGED' }, { error: { message: 'slow down' } }, 429)
+
+    // When I add a reviewer by display name
+    const result = await bb(
+      ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--reviewer', 'Ghost Person'],
+      { port: server.port, env: { BB_RETRY_BASE_MS: '0' } }
+    )
+
+    // Then it exits 75 and does not create the PR
+    assert.equal(result.exitCode, 75)
+    assert.doesNotMatch(result.stderr, /cannot resolve reviewer/)
+    assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
+  })
+
   it('Sends reviewers array with UUID --reviewer', async () => {
     // Given the API accepts PR creation
     server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
