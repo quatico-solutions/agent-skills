@@ -58,7 +58,7 @@
 
 ### rate-limit exit code (Branch: bug/bb-rate-limit-exit) <!-- waits: bug/bb-transport-failure -->
 
-- `bug/bb-rate-limit-exit` — exit 75 on 429 in `bb_paginate`, `bb_api_call` and `bb_api_raw`, passed through at `cli/bb:141`, `:149`, `:919`, `:927`, `:2651`; final line with uncapped `Retry-After`; exit codes in `bb --help` and `SKILL.md`; `tests/pr-list.test.ts:677` changes from 1 to 75 <!-- builds: exit status 75 for HTTP 429 -->
+- `bug/bb-rate-limit-exit` — exit 75 on 429 in `bb_paginate`, `bb_api_call` and `bb_api_raw`, passed through at `cli/bb:141`, `:149`, `:919`, `:927`, `:2651`; final line with uncapped `Retry-After`; exit codes in `bb --help` and `SKILL.md`; `tests/pr-list.test.ts:677` changes from 1 to 75 → #119 <!-- builds: exit status 75 for HTTP 429 -->
 
 ### pr list --head (Branch: feature/bb-pr-list-head) <!-- waits: bug/bb-rate-limit-exit -->
 
