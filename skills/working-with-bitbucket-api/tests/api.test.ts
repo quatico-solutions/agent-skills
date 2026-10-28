@@ -121,6 +121,19 @@ describe('bb api', () => {
     assert.match(result.stderr, /unknown flag/)
   })
 
+  it('Exits 75 with "rate limited" and no status number on HTTP 429', async () => {
+    // Given the API answers 429
+    server.stub('GET', '/user', { error: { message: 'slow down' } }, 429)
+
+    // When I call bb api /user
+    const result = await bb('api /user', { port: server.port })
+
+    // Then it exits 75 and the message never carries the number Plot reads as a burst
+    assert.equal(result.exitCode, 75)
+    assert.match(result.stderr, /error: rate limited/)
+    assert.doesNotMatch(result.stderr, /429/)
+  })
+
   it('Surfaces HTTP errors from the API (shared bb_api_call path)', async () => {
     // Given the API returns a 500 with an error message
     server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'boom' } }, 500)
@@ -128,8 +141,8 @@ describe('bb api', () => {
     // When I make a call that hits that endpoint
     const result = await bb('api /repositories/testws/testrepo', { port: server.port })
 
-    // Then bb surfaces the status and message, and exits non-zero
-    assert.notEqual(result.exitCode, 0)
+    // Then bb surfaces the status and message, and exits 1 (not the rate-limit status)
+    assert.equal(result.exitCode, 1)
     assert.match(result.stderr, /HTTP 500/)
     assert.match(result.stderr, /boom/)
   })

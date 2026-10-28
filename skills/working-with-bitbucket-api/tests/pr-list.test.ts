@@ -674,11 +674,33 @@ describe('bb pr list --limit', () => {
       // When I read all pages
       const result = await bb('pr list --state merged --all --json', { port: server.port, env: noSleep })
 
-      // Then it exits non-zero after 1 + 6 requests, names the rows read, and prints nothing
-      assert.equal(result.exitCode, 1)
+      // Then it exits 75 after 1 + 6 requests, names the rows read, and prints nothing
+      assert.equal(result.exitCode, 75)
       assert.equal(result.stdout, '')
       assert.match(result.stderr, /error: rate limited after 1 rows/)
       assert.equal(server.getCalls().length, 7)
+    })
+
+    it('Names the raw Retry-After of the final 429, not the 60 s cap', async () => {
+      const limited = { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '3600' } }
+      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
+
+      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 75)
+      assert.equal(result.stdout, '')
+      assert.match(result.stderr, /error: rate limited after 0 rows — Bitbucket asked to wait 3600 s/)
+      assert.doesNotMatch(result.stderr, /429/)
+    })
+
+    it('Prints no wait suffix when the final 429 has no Retry-After', async () => {
+      const limited = { status: 429, body: { error: { message: 'slow down' } } }
+      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
+
+      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
+
+      assert.equal(result.exitCode, 75)
+      assert.match(result.stderr, /error: rate limited after 0 rows\s*$/)
     })
 
     it('Fails other non-2xx answers on the first attempt', async () => {
