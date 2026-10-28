@@ -1,6 +1,6 @@
 {
   "name": "@quatico-solutions/agent-skills",
-  "version": "3.18.2",
+  "version": "3.18.3",
   "description": "Quatico agent skills — the quatico-skills plugin for Claude Code and Cursor",
   "author": "Quatico Solutions AG",
   "license": "MIT",

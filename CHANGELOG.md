@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.18.3
+
+### Patch Changes
+
+- [#115](https://github.com/quatico-solutions/agent-skills/pull/115) [`e041a2f`](https://github.com/quatico-solutions/agent-skills/commit/e041a2f0f67c64477174a53cada69dd85984cc14) Thanks [@jwloka](https://github.com/jwloka)! - adopt-agentic-workflow: the phase map it writes into a hub doc has five phases (Discovery, Design, Development, Testing, Released) and names the Plot plan state of each, matching the phases on Plot 2.29.0's board. Design is marked optional. The trigger list keeps `agentic workflow` and `four-phase workflow` and adds `five-phase workflow`.
+
+  <!--
+  bumps:
+    skills:
+      adopt-agentic-workflow: patch
+  -->
+
 ## 3.18.2
 
 ### Patch Changes

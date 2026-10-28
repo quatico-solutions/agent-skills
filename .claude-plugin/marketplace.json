@@ -11,7 +11,7 @@
     {
       "name": "quatico-skills",
       "description": "Quatico development essentials: commit conventions, PR workflows, TDD, testing, Bitbucket/Jira integration, and team standards",
-      "version": "3.18.2",
+      "version": "3.18.3",
       "source": "./",
       "author": {
         "name": "Quatico Solutions AG",
@@ -20,8 +20,8 @@
     },
     {
       "name": "adopt-agentic-workflow",
-      "description": "Use when adopting the four-phase agentic workflow (Discovery → Design → Development → Endgame) in a repository: installs Plot for the plan lifecycle, then wires this orgs skills to the phases they ...",
-      "version": "1.1.1",
+      "description": "Use when adopting the five-phase agentic workflow (Discovery → Design → Development → Testing → Released) in a repository: installs Plot for the plan lifecycle, then wires this orgs skills to the p...",
+      "version": "1.1.2",
       "source": "./skills/adopt-agentic-workflow",
       "author": {
         "name": "Quatico Solutions AG",
