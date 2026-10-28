@@ -15,6 +15,7 @@
 - **Started:** 2026-10-28, Jan Wloka, `bug/bb-transport-failure`
 - **Started:** 2026-10-28, Jan Wloka, `bug/bb-rate-limit-exit`
 - **Started:** 2026-10-28, Jan Wloka, `feature/bb-pr-list-head`
+- **Started:** 2026-10-28, Jan Wloka, `bug/bb-api-path-slash`
 
 ## Changelog
 
