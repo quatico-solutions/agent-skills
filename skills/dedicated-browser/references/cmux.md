@@ -24,7 +24,8 @@ the profile's logins. The engine is WebKit, like Safari.
    to in this profile is the agent's.
 3. If `setup` or a later `start` printed a `note:` about new browser panes, tell the human once: cmux now opens their
    new browser panes in the agent's profile until they pick another; anything they sign in to there, the agent can
-   use. Normally `start` sets cmux's last-used profile back and prints no note.
+   use. Normally `start` sets cmux's last-used profile back and prints no note; `start` and `run` also set it back
+   after cmux reopens and restores the agent's pane.
 
 From then on, every session inside cmux uses this backend on its own (`status` says `backend: cmux`). To use Chrome for
 one session instead (a site that needs Chromium, a phone passkey): `DEDICATED_BROWSER_BACKEND=chrome`.

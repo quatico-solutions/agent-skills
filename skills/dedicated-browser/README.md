@@ -190,6 +190,10 @@ cmux 0.65.2: a cookie set in one profile is not sent from a pane in another.
 Opening a pane sets the last-used profile; navigating in one does not. After opening its pane, the backend makes the
 previous profile the last-used one again, with a blank tab in a workspace that never gets focus and is closed at once.
 Measured: focus and layout unchanged. If that does not take, `start` prints a note and the agent tells the human.
+cmux also sets the last-used profile when it restores the agent's pane on reopening after a restart, while the pane
+stays open, so nothing new is opened. The backend therefore remembers the human's profile
+(`$DEDICATED_BROWSER_HOME/cmux/human-profile`), and `start` and `run` put it back whenever the agent's profile is the
+last-used one.
 `cmux workspace create` prints a ref (`OK workspace:<n>`), not a UUID, also with `--id-format uuids`; the backend
 uses the ref.
 
@@ -277,14 +281,19 @@ choice before and after setup, also from outside cmux; `setup`, `status`, `start
 own pane; with `run`, a server-set cookie, `fetch()` with the pane's cookies, localStorage, state between calls, a
 script on stdin, a script error; the guards, against an unpinned REPL session as a control; a pane in another profile
 without the cookie; a pop-up in the agent's profile; cookie and localStorage after `stop` and `start`; the last-used
-profile; focus unchanged; profiles as before at the end.
+profile, after `start` and after a simulated pane restore (a blank tab in the agent's profile, as cmux's restore does);
+focus unchanged; profiles as before at the end.
 
-Run on 2026-10-28 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 47 of 47 checks pass. `tests/dispatch.sh`:
+Run on 2026-10-28 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 52 of 52 checks pass. `tests/dispatch.sh`:
 11 of 11. `tests/smoke.sh` with the mock keychain, CfT 156 and 154, playwright-core 1.64.1: 61 of 61, so the Chrome
 path is unchanged by the backend choice.
 
-**By hand, cmux restart:** sign in to a site in the agent's pane, quit cmux (Cmd-Q), reopen it, `status` and `run`
-in a new agent session: the site still knows the login. Not yet run.
+**By hand, cmux restart**, run on 2026-10-28 on the same Mac. In a throwaway profile: sign in on a local app (a
+server-set cookie), set a cookie from page script and a localStorage value, wait 20 seconds (both cookies were then in
+`Cookies.binarycookies`), quit cmux (Cmd-Q), reopen it. In the restored agent session: cmux had restored the pane with
+the same surface id in the same workspace, so `status` exited 0 on the recorded pane and `start` opened none; `run` read
+back both cookies and the localStorage value. The agent's profile was the last-used one again after reopening, which
+the restore check in `start` and `run` now handles (simulated in step 6b of `smoke-cmux.sh`).
 
 **Keychain, measured in the VM and on the Mac.** Chrome for Testing keeps its key in the login keychain as "Chromium Safe Storage". The item's access list names each trusted build by code hash. On a fresh keychain the first start shows no prompt, and later starts of the same build show none either. A different build, including the one `update` installs, makes macOS ask again: `SecurityAgent` runs and cookie access blocks until someone answers. Always Allow adds that build to the list for good: on the Mac, 154 did not ask again after its one prompt. Every Chromium build that uses this item name shares the key. On the Mac the item already existed, created on 2026-03-30 by another Chromium build, so the first start prompted too.
 
