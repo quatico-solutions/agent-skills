@@ -4,7 +4,8 @@
 
 ## Status
 
-- **State:** Active
+- **State:** Closed
+- **Actual End:** 2026-10-28
 - **Start:** 2026-10-28
 - **End:** 2026-10-30
 - **Release:** 3.18.3
@@ -21,7 +22,7 @@
      checkbox. Strike a reference — `~~[<plan-slug>]~~` — to mark an item that
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
-- [x] [workflow-five-phases] adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases (#114) <!-- pr: #0, branch: feature/workflow-five-phases -->
+- [x] [workflow-five-phases] adopt-agentic-workflow and AGENTS.md map skills to plot's five board phases (#114) <!-- pr: #115, branch: feature/workflow-five-phases -->
 
 ### Should Have
 
@@ -37,7 +38,35 @@
 
 ## Retrospective
 
-<!-- Filled during /plot-sprint close: What went well / What could improve / Action items -->
+Drafted from the session record on 2026-10-28; edit freely.
+
+### What went well
+
+- Issue #114 went from filing to release v3.18.3 on one day: plan, approval, fleet implementation (PR #115, CI green), auto-delivery and release.
+- The fleet agent built the change from the brief alone; the PR needed no rework.
+- The release App opened release PR #116, and its checks ran without a manual approval.
+
+### What could improve
+
+- In-session approval of a same-branch plan failed on the board (plot-pm/plot#2528); the plan moved to main with `Impl: own branches`, and a stale plan branch had to be deleted before the fleet would take the slice.
+- The fleet held the slice for a missing brief; `/plot-implement` was skipped and the brief was written by hand.
+- The sprint named release 3.18.2 without checking the tags; a teammate had cut 3.18.2 the day before, so the target moved to 3.18.3.
+- The plan shipped without `/plot-deliver --verify`, the Testing step this change adds to the workflow.
+
+### Action items
+
+- [ ] Check `git tag` before naming a sprint's `Release:`.
+- [ ] Run `/plot-implement` after approval so the brief and the Started record exist before the fleet looks.
+- [ ] Run `/plot-deliver --verify` on a delivered plan before merging its release PR.
+
+### Metrics
+
+- **Must-haves completed:** 1/1
+- **Should-haves completed:** 0/0
+- **Could-haves completed:** 0/0
+- **Deferred items:** 0
+- **Scope changes during sprint:** 3
+- **Duration:** planned 3 days, actual 1 day
 
 ## Notes
 
