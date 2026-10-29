@@ -4,7 +4,7 @@ description: "Use when the agent needs a web browser that is signed in to system
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # Dedicated Browser
