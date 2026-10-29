@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** feature
 - **Sprint:** bb-cli-hardening
 - **Issue:** #113
@@ -14,6 +14,7 @@
 - **Started:** 2026-10-28, jwloka, `feature/bb-install-source`
 - **Started:** 2026-10-28, Jan Wloka, `feature/bb-self-check`
 - **Delivered:** 2026-10-28
+- **Released:** 2026-10-29, v3.19.0
 
 ## Changelog
 
