@@ -2,7 +2,7 @@
 # bb — Bitbucket Cloud CLI (gh-style wrapper around REST API v2)
 set -euo pipefail
 
-BB_VERSION="1.12.1"
+BB_VERSION="1.13.0"
 BB_INSTALL_SOURCE="quatico-bb — brew install quatico-solutions/tap/quatico-bb"
 # BB_API_URL lets the test suite redirect API calls to a local mock server.
 # It is restricted to loopback so it can never be used to exfiltrate the

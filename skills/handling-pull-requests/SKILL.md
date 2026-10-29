@@ -4,7 +4,7 @@ description: "Guides PR workflows: creating PRs, addressing review feedback, rep
 license: MIT
 compatibility: claude-code, cursor
 metadata:
-  version: "1.2.1"
+  version: "1.2.2"
 ---
 
 # Handling Pull Requests

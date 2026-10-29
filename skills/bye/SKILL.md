@@ -6,7 +6,7 @@ license: MIT
 metadata:
   author: eins78
   repo: https://github.com/quatico-solutions/agent-skills
-  version: 2.3.1
+  version: 2.3.2
 compatibility: Designed for Claude Code and Cursor
 ---
 

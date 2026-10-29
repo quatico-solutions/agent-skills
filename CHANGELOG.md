@@ -1,5 +1,87 @@
 # @quatico-solutions/agent-skills
 
+## 3.19.0
+
+### Minor Changes
+
+- [#122](https://github.com/quatico-solutions/agent-skills/pull/122) [`2a5891f`](https://github.com/quatico-solutions/agent-skills/commit/2a5891f9f865e300867e70f0b0539149494c077c) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb --version` prints `bb <version> (quatico-bb — brew install quatico-solutions/tap/quatico-bb)` and the first line of `bb --help` names the same package and install command. Before, `bb --version` printed `bb 1.12.1`, which did not tell the three Homebrew packages that answer to `bb` apart ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)). The SKILL.md lists the three packages and tells an agent to stop and report when `bb --version` does not contain `quatico-bb`. The first two words stay `bb <version>`; Plot's `bb_identify` reads the first semver and the word `quatico` from the line.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+- [#120](https://github.com/quatico-solutions/agent-skills/pull/120) [`3313740`](https://github.com/quatico-solutions/agent-skills/commit/3313740a18fea2c712b07c72cce5e0a440745330) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb pr list --head <branch>` lists the PRs of one source branch in one request, e.g. `bb pr list --head <branch> --state merged`. Repeat the flag to cover several branches. Before, finding the merged PR of a deleted branch took `--state merged --all` (3532 PRs in `quatico/ewz-kus-portal`) or a hand-built `bb api` query. `--head` keeps the open default for `--state`. A branch name containing `"` exits 1 with `error: --head cannot contain '"'`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+- [#124](https://github.com/quatico-solutions/agent-skills/pull/124) [`bfc0de2`](https://github.com/quatico-solutions/agent-skills/commit/bfc0de2e72e8b837c9d3141c02210d773f4d4047) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api, handling-pull-requests, working-with-bitbucket-web, bye: run `bb --version | grep -q quatico-bb` before the first `bb` call. `install-dependencies.sh` runs the same check on the installed binary and exits 1 with the install command when it prints another package. In `working-with-bitbucket-api` step 0, an absent `bb` says `bb is not installed`; a foreign `bb` (`bb-cli`, the `bb` cask) stops with one line naming it and `brew install quatico-solutions/tap/quatico-bb`. Before, a wrong `bb` failed later on an unknown flag with no hint of the wrong install.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+      handling-pull-requests: patch
+      working-with-bitbucket-web: patch
+      bye: patch
+  -->
+
+- [#121](https://github.com/quatico-solutions/agent-skills/pull/121) [`73d4260`](https://github.com/quatico-solutions/agent-skills/commit/73d4260074e0141309e291173c8d692e08885060) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb whoami` prints the authenticated Bitbucket account and where its credentials come from, one fact per line: `nickname`, `display_name`, `account_id`, `credentials` (`BB_TOKEN env` or `keychain (com.quatico.bitbucket-cli)`). It never prints the token or the email, and exits 1 when no credentials work. `bb auth status` runs the same code. Both `--json` forms now print `{nickname, display_name, account_id, uuid, credentials}` instead of the raw `/user` body; `bb api /user` still returns the raw body. Before, `bb whoami` answered `unknown command: whoami`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
+- [#125](https://github.com/quatico-solutions/agent-skills/pull/125) [`71771b5`](https://github.com/quatico-solutions/agent-skills/commit/71771b5ea90eb4516a68b50875a2067583642740) Thanks [@eins78](https://github.com/eins78)! - dedicated-browser: a second backend, the browser built into cmux, for agents running inside the cmux terminal. It opens a pane beside the agent's terminal in a cmux browser profile of its own; the agent drives it with `dedicated-browser run`.
+
+  <!--
+  bumps:
+    skills:
+      dedicated-browser: minor
+    tuned-against: claude-opus-5-5
+  -->
+
+### Patch Changes
+
+- [#123](https://github.com/quatico-solutions/agent-skills/pull/123) [`9feb758`](https://github.com/quatico-solutions/agent-skills/commit/9feb7582e703f20336e0062d357f1d2f517f2d5b) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb api` accepts a path without a leading `/`. Before, `bb api repositories/…` requested `…/2.0repositories/…` and answered `HTTP 403 — Forbidden`. A full URL on the API base, such as a `next` link from a listing, is also accepted. Any other URL exits 1 with `error: bb api takes a path on <base>, not a URL` and sends no request, so the token never goes to another host.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
+- [#119](https://github.com/quatico-solutions/agent-skills/pull/119) [`16ea1b4`](https://github.com/quatico-solutions/agent-skills/commit/16ea1b46c2cd418bde55d5522228c876d9d26b99) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb` exits 75 (`EX_TEMPFAIL`) on HTTP 429 in every command, so a script can tell "wait and retry" from "fix the call". Before, a rate limit exited 1, the status of every usage error. Listings print `error: rate limited after <n> rows`, plus ` — Bitbucket asked to wait <s> s` when the final answer carries `Retry-After`, with the raw value instead of the 60 s retry cap. Single requests print `error: rate limited`. Neither message contains `429`. `pr create --reviewer` no longer reports "cannot resolve reviewer" when the lookup is rate limited. `bb --help` and SKILL.md list the exit codes.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
+- [#117](https://github.com/quatico-solutions/agent-skills/pull/117) [`e215a16`](https://github.com/quatico-solutions/agent-skills/commit/e215a16a778c68e805d024c253b5ab41662c50d7) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: `bb` exits 1 with `error: no response from Bitbucket` when a request gets no HTTP answer. Before, `bb pr list --all --json` against an unreachable API printed `[]` and exited 0, and `bb auth status` printed nothing and exited 0. Only a 2xx status now counts as success in all five status checks (`bb api`, listings, raw reads, uploads, `auth login`). `auth login` no longer stores credentials after a failed connection. SKILL.md tells script authors to check `bb`'s exit status, or to set `pipefail` when piping `bb`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
+- [#126](https://github.com/quatico-solutions/agent-skills/pull/126) [`fcc8196`](https://github.com/quatico-solutions/agent-skills/commit/fcc8196fe2b56118795f697caddfb18dba271d16) Thanks [@jwloka](https://github.com/jwloka)! - working-with-bitbucket-api: every `bb` command now prints one stderr line when it has no credentials and one when a request gets no HTTP answer. Missing credentials print `error: no Bitbucket API token found — run: bb auth login, or export BB_TOKEN=<token>` (three lines before). No response prints `error: no response from Bitbucket (<reason>)`, where the reason is curl's own text, for example `Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server`; curl's separate `curl: (N) …` line no longer appears. Exit codes stay the same (1 for errors, 75 for HTTP 429). Scripts that match the old multi-line text must match the new line. `bb auth status` text output also changed in [#121](https://github.com/quatico-solutions/agent-skills/pull/121): it prints `nickname`, `display_name`, `account_id` and `credentials` lines, and its `--json` form prints `{nickname, display_name, account_id, uuid, credentials}`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.18.3
 
 ### Patch Changes
