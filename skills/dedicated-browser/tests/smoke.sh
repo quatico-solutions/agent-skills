@@ -58,7 +58,7 @@ SCRIPTS="${SRC_SCRIPTS}"
 if [[ "${REAL_KEYCHAIN}" == false ]]; then
   SCRIPTS="${TMP}/scripts"
   mkdir -p "${SCRIPTS}"
-  cp "${SRC_SCRIPTS}/dedicated-browser" "${SRC_SCRIPTS}/backend-chrome.sh" "${SCRIPTS}/"
+  cp "${SRC_SCRIPTS}/dedicated-browser" "${SRC_SCRIPTS}/backend-chrome.sh" "${SRC_SCRIPTS}/backend-cmux.sh" "${SCRIPTS}/"
   awk '{ print } /--no-first-run \\$/ { print "    --use-mock-keychain \\"; print "    --password-store=basic \\" }' \
     "${SRC_SCRIPTS}/backend-chrome.sh" > "${SCRIPTS}/backend-chrome.sh"
   grep -q -- '--use-mock-keychain' "${SCRIPTS}/backend-chrome.sh" || { echo "could not patch the flags" >&2; exit 2; }
@@ -70,9 +70,9 @@ FAIL=0
 ok() { PASS=$((PASS + 1)); echo "  ok    $1"; }
 bad() { FAIL=$((FAIL + 1)); echo "  FAIL  $1" >&2; }
 
-db() { DEDICATED_BROWSER_HOME="${HOME_A}" DEDICATED_BROWSER_PORT="${PORT}" /bin/bash "${CLI}" "$@"; }
-db_b() { DEDICATED_BROWSER_HOME="${HOME_B}" DEDICATED_BROWSER_PORT="${DECOY_PORT}" /bin/bash "${CLI}" "$@"; }
-db_a_on_decoy_port() { DEDICATED_BROWSER_HOME="${HOME_A}" DEDICATED_BROWSER_PORT="${DECOY_PORT}" /bin/bash "${CLI}" "$@"; }
+db() { DEDICATED_BROWSER_BACKEND=chrome DEDICATED_BROWSER_HOME="${HOME_A}" DEDICATED_BROWSER_PORT="${PORT}" /bin/bash "${CLI}" "$@"; }
+db_b() { DEDICATED_BROWSER_BACKEND=chrome DEDICATED_BROWSER_HOME="${HOME_B}" DEDICATED_BROWSER_PORT="${DECOY_PORT}" /bin/bash "${CLI}" "$@"; }
+db_a_on_decoy_port() { DEDICATED_BROWSER_BACKEND=chrome DEDICATED_BROWSER_HOME="${HOME_A}" DEDICATED_BROWSER_PORT="${DECOY_PORT}" /bin/bash "${CLI}" "$@"; }
 
 # Exit status of a command, without tripping set -e.
 status_of() { local s=0; "$@" >/dev/null 2>&1 || s=$?; echo "${s}"; }

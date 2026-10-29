@@ -4,24 +4,29 @@ set -euo pipefail
 # dedicated-browser: a separate browser for your agent, with its own saved logins.
 #
 # Usage: dedicated-browser <command>
-#   setup    Install the browser, start it, print the MCP server config for your agent
+#   setup    Install or prepare the browser, start it, say how to connect your agent
 #   start    Start the browser (does nothing if it already runs)
-#   status   Is it running, which version, which pages are open
+#   status   Which backend, is it running, which version, which pages are open
 #   stop     Quit the browser (its logins stay in the profile)
 #   update   Install the current stable browser version (the browser must be stopped)
+#   run      cmux backend only: run JavaScript in the agent's pane ('<js>', or - to read stdin)
 #
 # Exit codes of `status`:
-#   0  running, and the debugging port answers as this browser
-#   1  not running (or not installed)
-#   2  something answers on the port, but it is not this browser: another profile, or another host
+#   0  running, and the browser is the dedicated one
+#   1  not running (or not set up)
+#   2  do not use: another browser answers on the port, the MCP server points at another host, or
+#      (cmux) the agent is not inside cmux or cmux's browser is off
 #
-# Three settings, all optional, all environment variables:
-#   DEDICATED_BROWSER_PORT   debugging port (default 9393)
-#   DEDICATED_BROWSER_HOME   install directory, holds the browser app and its profile
-#                            (default ~/Library/Application Support/dedicated-browser)
-#   DEDICATED_BROWSER_COLOR  theme color of the browser window, by the name of a Chrome theme
-#                            color, or "none" (default orange). Read once, when the profile is
-#                            created: a profile that exists keeps its look.
+# Settings, all optional, all environment variables:
+#   DEDICATED_BROWSER_BACKEND       chrome or cmux. Unset: cmux when the agent runs inside cmux and
+#                                   the cmux profile exists, else chrome. `setup` without it: chrome.
+#   DEDICATED_BROWSER_PORT          chrome: debugging port (default 9393)
+#   DEDICATED_BROWSER_HOME          install directory, holds the browser app and its profile
+#                                   (default ~/Library/Application Support/dedicated-browser)
+#   DEDICATED_BROWSER_COLOR         chrome: theme color of the browser window, by the name of a Chrome
+#                                   theme color, or "none" (default orange). Read once, when the
+#                                   profile is created: a profile that exists keeps its look.
+#   DEDICATED_BROWSER_CMUX_PROFILE  cmux: the cmux browser profile (default dedicated-browser)
 #
 # Everything browser-specific lives in backend-<name>.sh next to this file.
 
@@ -32,7 +37,33 @@ DB_PORT="${DEDICATED_BROWSER_PORT:-9393}"
 DB_HOME="${DEDICATED_BROWSER_HOME:-${HOME}/Library/Application Support/dedicated-browser}"
 DB_PROFILE="${DB_HOME}/profile"
 DB_COLOR="${DEDICATED_BROWSER_COLOR:-orange}"
-DB_BACKEND="${DEDICATED_BROWSER_BACKEND:-chrome}"
+DB_CMUX_PROFILE="${DEDICATED_BROWSER_CMUX_PROFILE:-dedicated-browser}"
+
+# True when cmux lists a browser profile of this name. A cmux that answers here also has a working
+# socket. The list is captured first: grep -q on a pipe could end the writer early under pipefail.
+cmux_profile_listed() {
+  local names
+  names="$(cmux browser profiles list 2>/dev/null | cut -f1)" || return 1
+  case $'\n'"${names}"$'\n' in
+    *$'\n'"$1"$'\n'*) return 0 ;;
+  esac
+  return 1
+}
+
+# Which backend. DEDICATED_BROWSER_BACKEND when set. Otherwise cmux when the agent runs inside cmux
+# and the cmux profile exists, else chrome. `setup` never guesses: without the variable it sets up
+# chrome, as before there was a choice.
+choose_backend() {
+  if [[ -n "${DEDICATED_BROWSER_BACKEND:-}" ]]; then
+    printf '%s' "${DEDICATED_BROWSER_BACKEND}"
+  elif [[ "${1:-}" != setup && -n "${CMUX_WORKSPACE_ID:-}" ]] && command -v cmux >/dev/null 2>&1 \
+    && cmux_profile_listed "${DB_CMUX_PROFILE}"; then
+    printf 'cmux'
+  else
+    printf 'chrome'
+  fi
+}
+DB_BACKEND="$(choose_backend "${1:-}")"
 CDP="http://127.0.0.1:${DB_PORT}"
 LATEST_CACHE="${DB_HOME}/.latest-stable"
 
@@ -298,12 +329,33 @@ In the browser window that just opened:
 EOF
 }
 
+# A backend may replace a whole command with backend_cmd_<command>. Chrome replaces none, so its
+# commands are the cmd_* functions above; cmux, which has no debugging port, replaces all of them.
+dispatch() {
+  local command="$1"
+  shift
+  if declare -F "backend_cmd_${command}" >/dev/null; then
+    "backend_cmd_${command}" "$@"
+  else
+    "cmd_${command}" "$@"
+  fi
+}
+
+cmd_run() {
+  echo "'run' belongs to the cmux backend. With the ${DB_BACKEND} backend, use the mcp__dedicated-browser__browser_* tools." >&2
+  return 2
+}
+
 case "${1:-}" in
-  setup) cmd_setup ;;
-  start) cmd_start ;;
-  status) cmd_status ;;
-  stop) cmd_stop ;;
-  update) cmd_update ;;
+  setup | start | stop | update) dispatch "$1" ;;
+  status)
+    echo "backend: ${DB_BACKEND}"
+    dispatch status
+    ;;
+  run)
+    shift
+    dispatch run "$@"
+    ;;
   -h | --help | help) usage ;;
   *)
     usage >&2

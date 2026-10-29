@@ -1,6 +1,6 @@
 ---
 name: dedicated-browser
-description: "Use when the agent needs a web browser that is signed in to systems the human chose: a separate Chrome for Testing with its own saved logins, so the agent never touches the human's everyday browser. Installs, starts and checks it, and connects it to the agent through Playwright MCP. Triggers: browser, log in to a site, page behind a login, sign in, scrape, web UI, dedicated browser, separate browser, Playwright MCP."
+description: "Use when the agent needs a web browser that is signed in to systems the human chose: a separate browser with its own saved logins, so the agent never touches the human's everyday browser. Chrome for Testing through Playwright MCP, or, for an agent inside the cmux terminal, a cmux browser pane in a profile of its own. Installs, starts and checks it. Triggers: browser, log in to a site, page behind a login, sign in, scrape, web UI, dedicated browser, separate browser, Playwright MCP, cmux browser."
 license: MIT
 compatibility: claude-code, cursor
 metadata:
@@ -18,17 +18,26 @@ human can tell at a glance which window is the agent's. A new profile gets an or
 for the same reason. Since version 136, Chrome also refuses
 remote control of its default profile, so the agent needs a profile of its own anyway.
 
+There are two backends, and `status` says which one this session uses:
+
+- **chrome** (the default): Chrome for Testing, driven through Playwright MCP. Everything below is about it, unless a
+  part says otherwise.
+- **cmux**: for an agent running inside the cmux terminal, once the human set it up. A browser pane beside the agent's
+  terminal, in a cmux browser profile that holds only the agent's logins. The agent drives it with
+  `dedicated-browser run`. Read [references/cmux.md](references/cmux.md) when `status` says `backend: cmux`.
+
 For a human at their own Mac. Servers, headless runs and start-at-login are out of scope.
 
 ## Rules
 
-- Drive this browser only through the `mcp__dedicated-browser__browser_*` tools. Do not use
-  `mcp__playwright__*`, `mcp__claude-in-chrome__*`, `mcp__chrome-devtools__*` or any other browser
-  tool for this work: they may drive the human's everyday browser, or a browser without the
-  logins. If the tools are missing, stop and tell the human (see First run). Do not switch.
-- Never send raw HTTP or WebSocket calls to the debugging port, and never start Chrome by hand.
+- Drive this browser only the way `status` names. `backend: chrome`: only the `mcp__dedicated-browser__browser_*`
+  tools. `backend: cmux`: only `dedicated-browser run` (see [references/cmux.md](references/cmux.md)), never
+  `cmux browser …` directly. Do not use `mcp__playwright__*`, `mcp__claude-in-chrome__*`, `mcp__chrome-devtools__*`
+  or any other browser tool for this work: they may drive the human's everyday browser, or a browser without the
+  logins. If the way `status` names is missing, stop and tell the human (see First run). Do not switch.
+- **Chrome:** never send raw HTTP or WebSocket calls to the debugging port, and never start Chrome by hand.
   Playwright tracks browser state; calls behind its back break the next tool call.
-- While the browser runs, any program on this Mac can control it through the local debugging
+- **Chrome:** while the browser runs, any program on this Mac can control it through the local debugging
   port. Stop it when the work is done: `stop`.
 
 The CLI below is `${CLAUDE_SKILL_DIR}/scripts/dedicated-browser`. Where that variable is not set,
@@ -41,18 +50,23 @@ the CLI's full path.
 "${CLAUDE_SKILL_DIR}/scripts/dedicated-browser" status
 ```
 
+The first line says the backend: `backend: chrome` or `backend: cmux`. With cmux, read
+[references/cmux.md](references/cmux.md) now: its first run, rules and troubleshooting replace Chrome's below.
+
 | Result | Do |
 |---|---|
 | exit 0, `running: …` | Go on. If a `note:` says the browser is behind the current stable, tell the human once and offer the update (see Keeping it current). |
 | exit 1, `not installed` | First run, below. |
 | exit 1, `not running` | `dedicated-browser start`, then `status` again. |
-| exit 2 | Something else answers on the port, or the MCP server points at another host. **Do not use it**: it may be the human's own browser. Tell the human. |
+| exit 2 | Something else answers on the port, or the MCP server points at another host. **Do not use it**: it may be the human's own browser. Tell the human. With cmux: the agent is not inside cmux, or cmux's browser is off. |
 
-Then check that `mcp__dedicated-browser__browser_*` tools exist in this session. If not, the MCP
+With `backend: chrome`, also check that `mcp__dedicated-browser__browser_*` tools exist in this session. If not, the MCP
 server is not registered yet, or the agent was not restarted after registering it. Do First run
 step 2 with the human.
 
-## First run (with the human at the machine)
+## First run, Chrome (with the human at the machine)
+
+For the cmux backend, see [references/cmux.md](references/cmux.md), First run.
 
 1. `dedicated-browser setup`. It downloads Chrome for Testing (about 150 MB) into
    `~/Library/Application Support/dedicated-browser/`, starts it, and prints the MCP config.
@@ -75,19 +89,19 @@ step 2 with the human.
 ## Using the browser
 
 - **One call at a time.** Parallel tool calls race the same browser.
-- **One tab.** Close tabs when done with `browser_tabs` (action `close`). Closing through
+- **Chrome, one tab.** Close tabs when done with `browser_tabs` (action `close`). Closing through
   `page.close()` inside code, which has been seen to fail silently over the debugging port. With
   10 or more tabs, close all and start fresh.
 - **SPAs:** read text with `innerText`, not `textContent`. React can leave text nodes empty.
-- **Many pages:** call `page.goto()` inside `browser_run_code_unsafe` (called `browser_run_code`
+- **Chrome, many pages:** call `page.goto()` inside `browser_run_code_unsafe` (called `browser_run_code`
   in older Playwright MCP versions) rather than one tool call per page. Wait 1 to 2 seconds
   between pages. If a site starts blocking, stop and wait about 5 minutes.
-- **No files in that sandbox:** `require('fs')` is unavailable. Return the data as the result.
+- **Chrome, no files in that sandbox:** `require('fs')` is unavailable. Return the data as the result.
 - **Cloudflare or similar challenge page:** wait. It usually clears on its own. Do not retry in a
   loop or open a second tab to the same site. Real blocks are rare and need a different network,
   not another browser restart.
 
-## Keeping it current
+## Keeping it current (Chrome)
 
 Chrome for Testing does not update itself, and an old build can be refused by some login pages.
 `start` and `status` compare it with the published stable version (at most once a day) and print a
@@ -102,7 +116,7 @@ dedicated-browser stop && dedicated-browser update && dedicated-browser start
 
 Logins stay in the profile across the update. The keychain sees the new build as a different program, so on the first page that needs the logins macOS asks about "Chromium Safe Storage" again. Tell the human before you start, and ask them to click **Always Allow**.
 
-## Troubleshooting
+## Troubleshooting (Chrome)
 
 - **`status` says not running:** `start`. A `start` that finds the browser open but silent (opened
   by hand, or stuck) tells you to `stop`, then start again.
