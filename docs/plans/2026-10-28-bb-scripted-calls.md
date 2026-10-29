@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Delivered
+- **Phase:** Released
 - **Type:** bug
 - **Sprint:** bb-cli-hardening
 - **Issue:** #111
@@ -17,6 +17,7 @@
 - **Started:** 2026-10-28, Jan Wloka, `feature/bb-pr-list-head`
 - **Started:** 2026-10-28, Jan Wloka, `bug/bb-api-path-slash`
 - **Delivered:** 2026-10-28
+- **Released:** 2026-10-29, v3.19.0
 
 ## Changelog
 
