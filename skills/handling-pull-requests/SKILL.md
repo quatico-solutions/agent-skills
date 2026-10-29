@@ -106,7 +106,7 @@ Generated with Claude Code
 5. **Create PR**: `bb pr create --title "..." --body "..." [--base <branch>] --reviewer "Name"`
 6. **Verify** with `bb pr view <id>` — **check the `Dest:` line** to confirm the target branch is correct
 
-> All Bitbucket operations go through the `bb` CLI — see **working-with-bitbucket-api** for setup, flags and caveats.
+> All Bitbucket operations go through the `bb` CLI — see **working-with-bitbucket-api** for setup, flags and caveats. Before the first `bb` call, run its step 0 install-source check (`bb --version | grep -q quatico-bb`); on a miss, stop with the one line it defines.
 
 ---
 

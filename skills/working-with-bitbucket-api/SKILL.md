@@ -44,6 +44,8 @@ looks like an API or auth problem when the real fix is an install or upgrade. Ho
 install, so Homebrew answers the question:
 
 ```bash
+command -v bb >/dev/null || echo "bb is not installed"   # exit 1 = absent; run install-dependencies.sh
+bb --version | grep -q quatico-bb || echo "bb here is not quatico-bb"   # present but foreign: stop
 bb --version                                    # missing counts as outdated
 command -v bb                                   # must print "$(brew --prefix)/bin/bb" — anything else is a foreign bb earlier on PATH
 readlink "$(brew --prefix)/bin/bb"              # non-zero: that path is not a Homebrew symlink, so Homebrew does not upgrade it
@@ -53,6 +55,8 @@ brew outdated quatico-bb                        # prints the formula when newer 
 `brew list --formula` is not the check: it reports the keg as installed even while the keg is
 unlinked and PATH still serves an old copied `bb`. The link and the PATH resolution are what
 say which binary actually runs.
+
+**If `command -v bb` fails, `bb` is absent: say `bb is not installed` and install it (below). If `bb` runs but `bb --version` does not contain `quatico-bb`, it is a different package: stop with one line, `bb here is not quatico-bb (it prints: <first line of bb --version>) — install it with: brew install quatico-solutions/tap/quatico-bb`. Do not install over it and do not continue.**
 
 **If `bb` is missing, if `command -v bb` printed anything but `$(brew --prefix)/bin/bb`, if
 `readlink` failed** (the `bb` that runs is a copy, not a Homebrew link), **or if `readlink`

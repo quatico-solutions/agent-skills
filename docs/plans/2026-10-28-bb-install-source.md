@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Phase:** Approved
+- **Phase:** Delivered
 - **Type:** feature
 - **Sprint:** bb-cli-hardening
 - **Issue:** #113
@@ -13,6 +13,7 @@
 - **Approved:** 2026-10-28, jwloka, in-session
 - **Started:** 2026-10-28, jwloka, `feature/bb-install-source`
 - **Started:** 2026-10-28, Jan Wloka, `feature/bb-self-check`
+- **Delivered:** 2026-10-28
 
 ## Changelog
 
@@ -54,7 +55,7 @@ On 2026-10-28 a user asked to "use bb from Homebrew everywhere" and installed `b
 
 ### bb self-check (Branch: feature/bb-self-check) <!-- waits: feature/bb-install-source -->
 
-- `feature/bb-self-check` — `quatico-bb` check before the first `bb` call in `install-dependencies.sh` and the four skills that call `bb` <!-- builds: quatico-bb self-check in skills that call bb -->
+- `feature/bb-self-check` — `quatico-bb` check before the first `bb` call in `install-dependencies.sh` and the four skills that call `bb` → #124 <!-- builds: quatico-bb self-check in skills that call bb -->
 
 ## Definition of Done
 

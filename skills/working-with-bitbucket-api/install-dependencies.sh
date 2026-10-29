@@ -114,13 +114,12 @@ elif [[ -e "$HOME/bin/bb" ]]; then
     echo "         If it shadows $BIN_DIR/bb on your PATH, remove it yourself."
 fi
 
-# Migration from the old formula name. Until 2026-10-04 the formula was called `bb`. The tap's
-# formula_renames.json maps it to quatico-bb, but `brew update` does not migrate the keg on most
-# machines: installing by the fully qualified old name trusted only the FORMULA
-# quatico-solutions/tap/bb, so the renamed formula is refused as untrusted, and Homebrew drops the
-# keg from its migration without a message. So: trust the tap, then migrate by the FULL new name —
-# a bare `bb` resolves to an unrelated cask. A real directory at Cellar/bb is the old keg (after a
-# migration Homebrew leaves Cellar/bb behind as a symlink); the receipt says whether it is ours.
+# Migration from the old formula name. Until 2026-10-04 the formula was called `bb`. `brew update`
+# does not migrate that keg on most machines: the old install trusted only the FORMULA
+# quatico-solutions/tap/bb, so the renamed formula is refused as untrusted and Homebrew drops the
+# keg silently. So: trust the tap, then migrate by the FULL new name — a bare `bb` resolves to an
+# unrelated cask. A real directory at Cellar/bb is the old keg (a migrated one leaves a symlink);
+# the receipt says whether it is ours.
 OLD_RACK="$(brew --cellar)/bb"
 if [[ -d "$OLD_RACK" && ! -L "$OLD_RACK" ]] \
     && grep -qs '"tap": *"quatico-solutions/tap"' "$OLD_RACK"/*/INSTALL_RECEIPT.json; then
@@ -170,10 +169,7 @@ if [[ -n "$STAGED_COPY" ]]; then
     fi
 fi
 
-# Verify. Use the absolute path: a bare `bb` runs whatever PATH resolves first — which,
-# if the Homebrew prefix isn't on PATH yet, is nothing (exit 127, aborting here under
-# `set -e` before ever reaching the PATH warning below), or, if a foreign `bb` sits
-# earlier on PATH, that binary instead of the one just installed.
+# Verify by absolute path: a bare `bb` may be missing (127) or a foreign binary on PATH.
 echo ""
 echo "Verifying installation..."
 if [[ ! -x "$BIN_DIR/bb" ]]; then
@@ -182,14 +178,18 @@ if [[ ! -x "$BIN_DIR/bb" ]]; then
     echo "         brew link --overwrite \"$FORMULA\""
     exit 1
 fi
-"$BIN_DIR/bb" --version
+bb_version="$("$BIN_DIR/bb" --version)"
+echo "$bb_version"
+if ! grep -q quatico-bb <<< "$bb_version"; then
+    echo "ERROR: $BIN_DIR/bb is not quatico-bb. Install it: brew install quatico-solutions/tap/quatico-bb"
+    exit 1
+fi
 "$BIN_DIR/bb" auth status 2>/dev/null || echo "  (not logged in — run: bb auth login)"
 
 echo ""
 echo "All dependencies installed. Ready to use 'bb' CLI."
 
-# Checked last, after the success message, so it isn't buried: does the shell's own PATH
-# resolution agree with what was just verified above?
+# Last, so it isn't buried: does PATH resolve to the verified binary?
 resolved="$(command -v bb || true)"
 if [[ "$resolved" != "$BIN_DIR/bb" ]]; then
     echo ""
