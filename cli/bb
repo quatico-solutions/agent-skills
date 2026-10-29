@@ -50,9 +50,7 @@ bb_token() {
   fi
   local token
   token="$(security find-generic-password -s "com.quatico.bitbucket-cli" -a "token" -w 2>/dev/null)" || {
-    echo >&2 "error: no Bitbucket API token found"
-    echo >&2 "  Run: bb auth login"
-    echo >&2 "  Or export BB_TOKEN=<token>"
+    echo >&2 "error: no Bitbucket API token found — run: bb auth login, or export BB_TOKEN=<token>"
     exit 1
   }
   echo "$token"
@@ -166,6 +164,19 @@ bb_resolve_user() {
 
 # --- HTTP core ---------------------------------------------------------------
 
+# One-line message for "no HTTP answer". $1 is the file holding curl's stderr:
+# its first line names the cause (DNS, TLS, connect) and goes in parentheses,
+# without the "curl: (N) " prefix. curl's own line never reaches the terminal.
+bb_no_response_message() {
+  local reason=""
+  [[ -n "${1:-}" && -s "$1" ]] && reason="$(head -n 1 "$1" | sed -E 's/^curl: (\([0-9]+\) )?//')"
+  if [[ -n "$reason" ]]; then
+    printf 'error: no response from Bitbucket (%s)' "$reason"
+  else
+    printf 'error: no response from Bitbucket'
+  fi
+}
+
 # Only a 2xx answer is success. curl writes 000 when no response arrives, and
 # 1xx/3xx never carry the data the caller asked for. Prints the error and
 # returns 1 on anything else; $2 is the response body for the message. HTTP 429
@@ -173,10 +184,10 @@ bb_resolve_user() {
 # call"; the message says "rate limited" and never the number, because Plot
 # reads a 429 in stderr as a short burst, not a spent quota.
 bb_check_status() {
-  local http_code="$1" body="${2:-}"
+  local http_code="$1" body="${2:-}" err_file="${3:-}"
   [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && return 0
   if [[ "$http_code" == "000" ]]; then
-    echo >&2 "error: no response from Bitbucket"
+    echo >&2 "$(bb_no_response_message "$err_file")"
     return 1
   fi
   if [[ "$http_code" == "429" ]]; then
@@ -194,18 +205,21 @@ bb_api_call() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code
+  local response http_code err_file
+  err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X "$method" \
     -u "${email}:${token}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     "$@" \
-    "${BB_API}${path}")"
+    "${BB_API}${path}" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
-  local body
+  local body rc=0
   body="$(echo "$response" | sed '$d')"
 
-  bb_check_status "$http_code" "$body" || return $?
+  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
+  rm -f "$err_file"
+  [[ "$rc" -eq 0 ]] || return "$rc"
   echo "$body"
 }
 
@@ -236,9 +250,10 @@ bb_paginate() {
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
   local base_ms="${BB_RETRY_BASE_MS:-1000}"
-  local hdr_file
+  local hdr_file err_file
   hdr_file="$(mktemp)"
   acc_file="$(mktemp)"
+  err_file="$(mktemp)"
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" ]] && : > "$BB_PAGINATE_NEXT_FILE"
 
   while [[ -n "$url" ]]; do
@@ -247,7 +262,7 @@ bb_paginate() {
       response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
         -u "${email}:${token}" \
         -H "Accept: application/json" \
-        "$url")"
+        "$url" 2>"$err_file")" || true
       http_code="$(echo "$response" | tail -1)"
       body="$(echo "$response" | sed '$d')"
       [[ "$http_code" == "429" && "$attempt" -lt 5 ]] || break
@@ -271,7 +286,7 @@ bb_paginate() {
         # quota reported as "60 s" is the wrong advice.
         local final_wait
         final_wait="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
-        rm -f "$hdr_file" "$acc_file"
+        rm -f "$hdr_file" "$acc_file" "$err_file"
         if [[ "$final_wait" =~ ^[0-9]+$ ]]; then
           echo >&2 "error: rate limited after ${rows} rows — Bitbucket asked to wait ${final_wait} s"
         else
@@ -279,8 +294,8 @@ bb_paginate() {
         fi
         return 75
       fi
-      rm -f "$hdr_file" "$acc_file"
-      bb_check_status "$http_code" "$body"
+      bb_check_status "$http_code" "$body" "$err_file" || true
+      rm -f "$hdr_file" "$acc_file" "$err_file"
       return 1
     fi
 
@@ -293,7 +308,7 @@ bb_paginate() {
   done
   local all
   all="$(jq -s --argjson l "$limit" 'add // [] | if $l > 0 then .[:$l] else . end' "$acc_file")"
-  rm -f "$hdr_file" "$acc_file"
+  rm -f "$hdr_file" "$acc_file" "$err_file"
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" && -n "$url" ]] && echo 1 > "$BB_PAGINATE_NEXT_FILE"
   echo "$all"
 }
@@ -303,15 +318,18 @@ bb_api_raw() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code
+  local response http_code err_file
+  err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X GET \
     -u "${email}:${token}" \
     "$@" \
-    "${BB_API}${path}")"
+    "${BB_API}${path}" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
-  local body
+  local body rc=0
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" || return $?
+  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
+  rm -f "$err_file"
+  [[ "$rc" -eq 0 ]] || return "$rc"
   printf '%s' "$body"
 }
 
@@ -348,14 +366,17 @@ bb_download_upload() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code body
+  local response http_code body err_file rc=0
+  err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X POST \
     -u "${email}:${token}" \
     -F "files=@${file};filename=${name}" \
-    "${BB_API}/repositories/${ws}/${repo}/downloads")"
+    "${BB_API}/repositories/${ws}/${repo}/downloads" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" || return $?
+  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
+  rm -f "$err_file"
+  [[ "$rc" -eq 0 ]] || return "$rc"
 }
 
 # --- Output formatting -------------------------------------------------------
@@ -782,18 +803,21 @@ HELP
   [[ -z "$email" ]] && { echo >&2 "error: no email provided"; exit 1; }
 
   # Validate token (inline curl — can't use bb_api_call since credentials aren't stored yet)
-  local result http_code body
+  local result http_code body err_file
+  err_file="$(mktemp)"
   result="$(curl -sS -w '\n%{http_code}' \
     -u "${email}:${token}" \
     -H "Accept: application/json" \
-    "${BB_API}/user")" || true  # curl exits non-zero when no response arrives; http_code is then 000
+    "${BB_API}/user" 2>"$err_file")" || true  # curl exits non-zero when no response arrives; http_code is then 000
   http_code="$(echo "$result" | tail -1)"
   body="$(echo "$result" | sed '$d')"
 
   if [[ "$http_code" == "000" ]]; then
-    echo >&2 "error: no response from Bitbucket"
+    echo >&2 "$(bb_no_response_message "$err_file")"
+    rm -f "$err_file"
     exit 1
   fi
+  rm -f "$err_file"
   if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
     echo >&2 "error: authentication failed (HTTP ${http_code})"
     [[ "$http_code" == "401" ]] && echo >&2 "  Check that the email and token are correct"

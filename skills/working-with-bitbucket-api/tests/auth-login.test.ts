@@ -128,7 +128,7 @@ describe('bb auth login transport failure', () => {
 
     // Then bb exits 1 and never reaches the credential store
     assert.equal(result.exitCode, 1)
-    assert.match(result.stderr, /error: no response from Bitbucket/)
+    assert.match(result.stderr, /^error: no response from Bitbucket \(.+\)\n$/)
     assert.doesNotMatch(result.stdout + result.stderr, /Logged in|Stored|Saved/i)
   })
 })

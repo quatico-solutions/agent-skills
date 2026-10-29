@@ -801,6 +801,6 @@ describe('bb pr list transport failure', () => {
     // Then bb exits 1, prints no array, and says no response arrived
     assert.equal(result.exitCode, 1)
     assert.equal(result.stdout, '')
-    assert.match(result.stderr, /error: no response from Bitbucket/)
+    assert.match(result.stderr, /^error: no response from Bitbucket \(.+\)\n$/)
   })
 })
