@@ -168,6 +168,6 @@ describe('transport failure', () => {
     // Then bb exits 1 and prints nothing on stdout
     assert.equal(result.exitCode, 1)
     assert.equal(result.stdout, '')
-    assert.match(result.stderr, /error: no response from Bitbucket/)
+    assert.match(result.stderr, /^error: no response from Bitbucket \(.+\)\n$/)
   })
 })
