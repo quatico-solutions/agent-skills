@@ -4,7 +4,8 @@
 
 ## Status
 
-- **State:** Active
+- **State:** Closed
+- **Actual End:** 2026-10-29
 - **Start:** 2026-10-28
 - **End:** 2026-10-30
 - **Release:** 3.19.0
@@ -26,7 +27,7 @@
      left the sprint; the plan's own state then says whether it was withdrawn. -->
 
 - [x] [bb-scripted-calls] ([#111](https://github.com/quatico-solutions/agent-skills/issues/111)) no exit 0 without an HTTP 2xx; HTTP 429 exits 75 with `Retry-After` on stderr when sent; a failed `--all` walk prints no partial array; repeatable `pr list --head` combines with `--state`; `bb api` normalises a path without leading `/` <!-- pr: #0, branch: bug/bb-api-path-slash -->
-- [x] [bb-whoami] ([#112](https://github.com/quatico-solutions/agent-skills/issues/112)) `bb whoami` prints account and credential source without the token, exits non-zero when unauthenticated, supports `--json` <!-- reason: delivery panel D5 one-line stderr unmet, merged: #121, remaining: bug/bb-one-line-errors -->
+- [x] [bb-whoami] ([#112](https://github.com/quatico-solutions/agent-skills/issues/112)) `bb whoami` prints account and credential source without the token, exits non-zero when unauthenticated, supports `--json` <!-- rejected 2026-10-28 (D5 one-line stderr), redelivered 2026-10-29; merged: #121 #126 -->
 - [x] [bb-install-source] ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)) `bb --help` and `--version` name the install source; `working-with-bitbucket-api` names the supported tap and the two look-alikes
 
 ### Should Have
@@ -35,7 +36,7 @@
 
 ### Could Have
 
-- [ ] [bb-install-source] ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)) skills and scripts that call `bb` run a one-line self-check (`bb --version | grep -q quatico-bb`) and print a clear message instead of failing on an unknown flag — second slice of the plan, optional in the ticket
+- [x] [bb-install-source] ([#113](https://github.com/quatico-solutions/agent-skills/issues/113)) skills and scripts that call `bb` run a one-line self-check (`bb --version | grep -q quatico-bb`) and print a clear message instead of failing on an unknown flag — second slice of the plan, optional in the ticket <!-- reconciled: delivered -->
 
 ### Deferred
 
@@ -43,11 +44,27 @@
 
 ## Retrospective
 
-<!-- Filled during /plot-sprint close: What went well / What could improve / Action items -->
+### What went well
+
+### What could improve
+
+### Action items
+
+### Metrics
+
+- **Must-haves completed:** 3/3
+- **Should-haves completed:** 0/0
+- **Could-haves completed:** 1/1
+- **Deferred items:** 0
+- **Scope changes during sprint:** 1 (slice `bug/bb-one-line-errors` added to `bb-whoami` after its first delivery was rejected)
+- **Duration:** planned 3 days, actual 2 days
+- **PRs merged:** 8 slice PRs (#117, #119, #120, #121, #122, #123, #124, #126) plus #125 outside the sprint's plans
 
 ## Notes
 
 ### Scope Changes
+
+- 2026-10-28: Added slice `bug/bb-one-line-errors` to [bb-whoami] after delivery panel round 1 refuted D5 (one stderr line); delivery rejected and redone 2026-10-29
 
 <!-- Log scope changes here: added/removed items, tier changes, with date and reason -->
 <!-- Format: - YYYY-MM-DD: Added/Moved/Removed [slug] reason -->

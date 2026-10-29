@@ -1,1 +1,0 @@
-../2026-W44-bb-cli-hardening.md
