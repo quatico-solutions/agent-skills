@@ -193,7 +193,8 @@ Measured: focus and layout unchanged. If that does not take, `start` prints a no
 cmux also sets the last-used profile when it restores the agent's pane on reopening after a restart, while the pane
 stays open, so nothing new is opened. The backend therefore remembers the human's profile
 (`$DEDICATED_BROWSER_HOME/cmux/human-profile`), and `start` and `run` put it back whenever the agent's profile is the
-last-used one.
+last-used one. `cmux browser profiles add` makes the new profile the last-used one too, so `setup` reads the human's
+profile before it creates the agent's.
 `cmux workspace create` prints a ref (`OK workspace:<n>`), not a UUID, also with `--id-format uuids`; the backend
 uses the ref.
 
@@ -284,7 +285,7 @@ without the cookie; a pop-up in the agent's profile; cookie and localStorage aft
 profile, after `start` and after a simulated pane restore (a blank tab in the agent's profile, as cmux's restore does);
 focus unchanged; profiles as before at the end.
 
-Run on 2026-10-28 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 52 of 52 checks pass. `tests/dispatch.sh`:
+Run on 2026-10-31 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 53 of 53 checks pass. `tests/dispatch.sh`:
 11 of 11. `tests/smoke.sh` with the mock keychain, CfT 156 and 154, playwright-core 1.64.1: 61 of 61, so the Chrome
 path is unchanged by the backend choice.
 

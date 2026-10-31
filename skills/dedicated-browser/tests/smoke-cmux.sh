@@ -100,6 +100,8 @@ expect_status 2 "cmux forced outside cmux: status exits 2" db_outside status
 echo "2. setup, status, start"
 expect_status 0 "setup" db setup
 expect_output "${PROFILE}" "setup created the profile" profiles
+# `profiles add` makes the new profile the last-used one, before start reads it.
+if [[ "$(last_used)" == "${LAST_USED_BEFORE}" ]]; then ok "setup left the human's last-used profile as it was"; else bad "setup left the human's last-used profile as it was ($(last_used), was ${LAST_USED_BEFORE})"; fi
 expect_status 0 "status: running" db status
 expect_output "backend: cmux" "status names the backend" db status
 expect_output "pane: " "status names the pane" db status

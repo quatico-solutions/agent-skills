@@ -123,14 +123,23 @@ dbc_keep_human_last_used() {
 }
 
 backend_cmd_setup() {
+  local human
   dbc_require_cmux || return $?
   if cmux_profile_listed "${DB_CMUX_PROFILE}"; then
     echo "cmux browser profile '${DB_CMUX_PROFILE}' exists."
-  elif cmux browser profiles add "${DB_CMUX_PROFILE}" >/dev/null; then
-    echo "created cmux browser profile '${DB_CMUX_PROFILE}'"
   else
-    echo "cmux could not create the browser profile '${DB_CMUX_PROFILE}'." >&2
-    return 1
+    # `profiles add` makes the new profile the last-used one (cmux 0.65.2), so start would read the
+    # agent's profile as the human's. The human's is read and saved first; start puts it back.
+    human="$(dbc_last_used)"
+    if ! cmux browser profiles add "${DB_CMUX_PROFILE}" >/dev/null; then
+      echo "cmux could not create the browser profile '${DB_CMUX_PROFILE}'." >&2
+      return 1
+    fi
+    echo "created cmux browser profile '${DB_CMUX_PROFILE}'"
+    if [[ -n "${human}" && "${human}" != "${DB_CMUX_PROFILE}" ]]; then
+      mkdir -p "${DB_HOME}/cmux"
+      printf '%s\n' "${human}" > "${DBC_HUMAN_PROFILE}"
+    fi
   fi
   backend_cmd_start || return $?
   cat <<EOF
