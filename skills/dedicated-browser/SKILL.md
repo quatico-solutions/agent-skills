@@ -1,6 +1,6 @@
 ---
 name: dedicated-browser
-description: "Use when the agent needs a web browser that is signed in to systems the human chose: a separate browser with its own saved logins, so the agent never touches the human's everyday browser. Chrome for Testing through Playwright MCP, or, for an agent inside the cmux terminal, a cmux browser pane in a profile of its own. Installs, starts and checks it. Triggers: browser, log in to a site, page behind a login, sign in, scrape, web UI, dedicated browser, separate browser, Playwright MCP, cmux browser."
+description: "Use when the agent needs a web browser that is signed in to systems the human chose: a separate browser with its own saved logins, so the agent never touches the human's everyday browser. Chrome for Testing through Playwright MCP or, for an agent inside the cmux terminal, a pane of cmux's own browser, which belongs to the agents. Installs, starts and checks it. Triggers: browser, log in to a site, page behind a login, sign in, scrape, web UI, dedicated browser, separate browser, Playwright MCP, cmux browser."
 license: MIT
 compatibility: claude-code, cursor
 metadata:
@@ -9,22 +9,27 @@ metadata:
 
 # Dedicated Browser
 
-A separate browser for the agent, with its own saved logins. The human signs in only to the systems
-the agent should reach. The agent never gets the human's everyday browser, which is signed in to
+A dedicated browser is a browser, or a browser profile, separate from the one the human uses every
+day. It holds only the logins the human gives the agent: they sign in there only to the systems the
+agent should reach. The agent never gets the human's everyday browser, which is signed in to
 everything.
 
-It is Chrome for Testing: its own app in the Dock and in Cmd-Tab, with a different icon, so the
-human can tell at a glance which window is the agent's. A new profile gets an orange window theme
-for the same reason. Since version 136, Chrome also refuses
-remote control of its default profile, so the agent needs a profile of its own anyway.
+Two backends are such a browser, and `status` says which one this session uses:
 
-There are two backends, and `status` says which one this session uses:
+- **chrome**: Chrome for Testing, driven through Playwright MCP, for an agent outside cmux or in a cmux whose browser
+  is off. Its own app in the Dock and in Cmd-Tab, with a different icon and an orange window theme, so the human can tell at a glance which window is the
+  agent's. Since version 136, Chrome refuses remote control of its default profile, so it needs a profile of its own
+  anyway. Everything below is about this backend, unless a part says otherwise.
+- **cmux**: for an agent running inside the cmux terminal, whenever cmux's browser is on; nothing to set up. A pane of
+  cmux's own browser beside the agent's terminal, in cmux's Default profile: the human's everyday browser is another
+  app, so cmux's browser is the agents' browser. The agent drives it with `dedicated-browser run`. Read
+  [references/cmux.md](references/cmux.md) when `status` says `backend: cmux`.
 
-- **chrome** (the default): Chrome for Testing, driven through Playwright MCP. Everything below is about it, unless a
-  part says otherwise.
-- **cmux**: for an agent running inside the cmux terminal, once the human set it up. A browser pane beside the agent's
-  terminal, in a cmux browser profile that holds only the agent's logins. The agent drives it with
-  `dedicated-browser run`. Read [references/cmux.md](references/cmux.md) when `status` says `backend: cmux`.
+Safari Technology Preview with a Safari MCP could be a third one day; it is not built.
+
+The one exception: a human who uses cmux's browser as their everyday browser (assumed rare) has no dedicated browser
+in it. They set `DEDICATED_BROWSER_CMUX_PROFILE` to give the agent a cmux profile of its own, or
+`DEDICATED_BROWSER_BACKEND=chrome`.
 
 For a human at their own Mac. Servers, headless runs and start-at-login are out of scope.
 
@@ -58,7 +63,7 @@ The first line says the backend: `backend: chrome` or `backend: cmux`. With cmux
 | exit 0, `running: …` | Go on. If a `note:` says the browser is behind the current stable, tell the human once and offer the update (see Keeping it current). |
 | exit 1, `not installed` | First run, below. |
 | exit 1, `not running` | `dedicated-browser start`, then `status` again. |
-| exit 2 | Something else answers on the port, or the MCP server points at another host. **Do not use it**: it may be the human's own browser. Tell the human. With cmux: the agent is not inside cmux, or cmux's browser is off. |
+| exit 2 | Something else answers on the port, or the MCP server points at another host. **Do not use it**: it may be the human's own browser. Tell the human. With cmux, only when `DEDICATED_BROWSER_BACKEND=cmux` forces it: the agent is not inside cmux, or cmux's browser is off. |
 
 With `backend: chrome`, also check that `mcp__dedicated-browser__browser_*` tools exist in this session. If not, the MCP
 server is not registered yet, or the agent was not restarted after registering it. Do First run
