@@ -1,23 +1,40 @@
 #!/usr/bin/env bash
 # cmux backend for dedicated-browser. Sourced by ./dedicated-browser, never run directly.
 #
-# The browser built into the cmux terminal, in a cmux browser profile that holds only the agent's
-# logins. Each agent workspace gets one pane, a split beside the agent's terminal. cmux has no
-# debugging port, so this backend replaces whole commands (backend_cmd_<command>) instead of
-# answering backend-chrome.sh's seven questions, and the agent drives its pane with `run`.
+# The browser built into the cmux terminal. Each agent workspace gets one pane, a split beside the
+# agent's terminal. By default the pane is in cmux's Default profile: cmux's browser is the agents'
+# territory, and the human keeps their own logins in another browser. A human whose everyday
+# browser is cmux's sets DEDICATED_BROWSER_CMUX_PROFILE, and the agent gets a profile of its own
+# ("opt-in mode"). cmux has no debugging port, so this backend replaces whole commands
+# (backend_cmd_<command>) instead of answering backend-chrome.sh's seven questions, and the agent
+# drives its pane with `run`.
 #
-# The caller sets SELF (the CLI's path), DB_HOME and DB_CMUX_PROFILE and defines
-# cmux_profile_listed before sourcing. CMUX_WORKSPACE_ID comes from cmux.
+# The caller sets SELF (the CLI's path), DB_HOME and DB_CMUX_PROFILE before sourcing.
+# CMUX_WORKSPACE_ID comes from cmux.
 #
 # Two cmux facts shape everything here (README, "The cmux backend"):
 #   - a pane opened without --profile opens in the last-used profile, so every open names ours;
 #   - cmux does not say which profile a pane uses, so the panes this backend opened are recorded,
-#     one "<workspace id> <surface id>" line each, in $DB_HOME/cmux/panes.
+#     one "<workspace id> <surface id> <profile>" line each, in $DB_HOME/cmux/panes.
 
 # shellcheck disable=SC2154 # SELF, DB_HOME and DB_CMUX_PROFILE are set by the CLI that sources this.
 DBC_PANES="${DB_HOME}/cmux/panes"
 
 backend_app_label() { printf 'cmux browser'; }
+
+# Default mode: the agent works in cmux's Default profile, which always exists.
+dbc_default_mode() { [[ "${DB_CMUX_PROFILE}" == default ]]; }
+
+# True when cmux lists a browser profile of this name. The list is captured first: grep -q on a
+# pipe could end the writer early under pipefail.
+cmux_profile_listed() {
+  local names
+  names="$(cmux browser profiles list 2>/dev/null | cut -f1)" || return 1
+  case $'\n'"${names}"$'\n' in
+    *$'\n'"$1"$'\n'*) return 0 ;;
+  esac
+  return 1
+}
 
 dbc_version() { cmux --version 2>/dev/null | awk '{ print $2 }'; }
 
@@ -41,15 +58,20 @@ dbc_require_cmux() {
 
 dbc_pane_alive() { cmux browser --surface "$1" get url >/dev/null 2>&1; }
 
-# Prints this workspace's pane when it is still open. Drops the records of panes that are gone.
+# Prints this workspace's pane in our profile when it is still open. Drops the records of panes that
+# are gone. A pane recorded for another profile is never ours: the human switched
+# DEDICATED_BROWSER_CMUX_PROFILE, or an older version wrote the record without a profile. Its
+# record stays while the pane is open.
 dbc_current_pane() {
-  local workspace pane kept="" found=""
+  local workspace pane profile kept="" found=""
   [[ -f "${DBC_PANES}" ]] || return 0
-  while read -r workspace pane; do
+  while read -r workspace pane profile; do
     [[ -n "${pane:-}" ]] || continue
     dbc_pane_alive "${pane}" || continue
-    kept="${kept}${workspace} ${pane}"$'\n'
-    if [[ -z "${found}" && "${workspace}" == "${CMUX_WORKSPACE_ID}" ]]; then found="${pane}"; fi
+    kept="${kept}${workspace} ${pane}${profile:+ ${profile}}"$'\n'
+    if [[ -z "${found}" && "${workspace}" == "${CMUX_WORKSPACE_ID}" && "${profile}" == "${DB_CMUX_PROFILE}" ]]; then
+      found="${pane}"
+    fi
   done < "${DBC_PANES}"
   printf '%s' "${kept}" > "${DBC_PANES}"
   printf '%s' "${found}"
@@ -75,7 +97,7 @@ dbc_open_pane() {
     return 1
   fi
   mkdir -p "${DB_HOME}/cmux"
-  printf '%s %s\n' "${CMUX_WORKSPACE_ID}" "${pane}" >> "${DBC_PANES}"
+  printf '%s %s %s\n' "${CMUX_WORKSPACE_ID}" "${pane}" "${DB_CMUX_PROFILE}" >> "${DBC_PANES}"
   printf '%s' "${pane}"
 }
 
@@ -100,6 +122,8 @@ dbc_make_last_used() {
 }
 
 # The human's last-used profile from before our pane opened, so it can be put back later as well.
+# Only a profile other than ours is saved. In Default mode that happens only for a human who last
+# used another cmux profile; usually Default was the last-used one already, and nothing happens.
 DBC_HUMAN_PROFILE="${DB_HOME}/cmux/human-profile"
 
 dbc_after_open() {
@@ -125,6 +149,20 @@ dbc_keep_human_last_used() {
 backend_cmd_setup() {
   local human
   dbc_require_cmux || return $?
+  if dbc_default_mode; then
+    backend_cmd_start || return $?
+    cat <<EOF
+
+The agents' browser is the pane beside this terminal: cmux's own browser, in its Default profile.
+Agents drive it with '${SELF} run'; there is no MCP server to register.
+
+cmux's browser is the agents' browser. Everything signed in to in its Default profile is
+within any agent's reach. Keep your own logins in another browser, such as Safari or Chrome.
+
+In that pane, sign in only to the systems agents should reach.
+EOF
+    return 0
+  fi
   if cmux_profile_listed "${DB_CMUX_PROFILE}"; then
     echo "cmux browser profile '${DB_CMUX_PROFILE}' exists."
   else
@@ -158,7 +196,7 @@ backend_cmd_start() {
   local pane before
   dbc_require_cmux || return $?
   if ! cmux_profile_listed "${DB_CMUX_PROFILE}"; then
-    echo "The cmux browser profile '${DB_CMUX_PROFILE}' does not exist. Run: DEDICATED_BROWSER_BACKEND=cmux ${SELF} setup" >&2
+    echo "The cmux browser profile '${DB_CMUX_PROFILE}' does not exist. Run: ${SELF} setup" >&2
     return 1
   fi
   mkdir -p "${DB_HOME}/cmux"
@@ -179,7 +217,7 @@ backend_cmd_status() {
   local pane url title
   dbc_require_cmux || return $?
   if ! cmux_profile_listed "${DB_CMUX_PROFILE}"; then
-    echo "not set up. Run: DEDICATED_BROWSER_BACKEND=cmux ${SELF} setup" >&2
+    echo "not set up: the cmux browser profile '${DB_CMUX_PROFILE}' does not exist. Run: ${SELF} setup" >&2
     return 1
   fi
   pane="$(dbc_current_pane)"

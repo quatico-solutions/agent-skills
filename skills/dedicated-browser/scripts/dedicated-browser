@@ -19,14 +19,16 @@ set -euo pipefail
 #
 # Settings, all optional, all environment variables:
 #   DEDICATED_BROWSER_BACKEND       chrome or cmux. Unset: cmux when the agent runs inside cmux and
-#                                   the cmux profile exists, else chrome. `setup` without it: chrome.
+#                                   cmux's browser is enabled, else chrome. `setup` follows the same rule.
 #   DEDICATED_BROWSER_PORT          chrome: debugging port (default 9393)
 #   DEDICATED_BROWSER_HOME          install directory, holds the browser app and its profile
 #                                   (default ~/Library/Application Support/dedicated-browser)
 #   DEDICATED_BROWSER_COLOR         chrome: theme color of the browser window, by the name of a Chrome
 #                                   theme color, or "none" (default orange). Read once, when the
 #                                   profile is created: a profile that exists keeps its look.
-#   DEDICATED_BROWSER_CMUX_PROFILE  cmux: the cmux browser profile (default dedicated-browser)
+#   DEDICATED_BROWSER_CMUX_PROFILE  cmux: the cmux browser profile (default "default", cmux's Default
+#                                   profile, the agents' territory). Another name gives the agent a
+#                                   profile of its own, which `setup` creates.
 #
 # Everything browser-specific lives in backend-<name>.sh next to this file.
 
@@ -37,33 +39,31 @@ DB_PORT="${DEDICATED_BROWSER_PORT:-9393}"
 DB_HOME="${DEDICATED_BROWSER_HOME:-${HOME}/Library/Application Support/dedicated-browser}"
 DB_PROFILE="${DB_HOME}/profile"
 DB_COLOR="${DEDICATED_BROWSER_COLOR:-orange}"
-DB_CMUX_PROFILE="${DEDICATED_BROWSER_CMUX_PROFILE:-dedicated-browser}"
+# shellcheck disable=SC2034 # read by backend-cmux.sh
+DB_CMUX_PROFILE="${DEDICATED_BROWSER_CMUX_PROFILE:-default}"
 
-# True when cmux lists a browser profile of this name. A cmux that answers here also has a working
-# socket. The list is captured first: grep -q on a pipe could end the writer early under pipefail.
-cmux_profile_listed() {
-  local names
-  names="$(cmux browser profiles list 2>/dev/null | cut -f1)" || return 1
-  case $'\n'"${names}"$'\n' in
-    *$'\n'"$1"$'\n'*) return 0 ;;
-  esac
-  return 1
+# True when the agent runs inside cmux and cmux's browser is enabled. `cmux browser status` needs a
+# working socket. Its answer is captured, not piped into grep -q, which could end the writer early
+# under pipefail.
+cmux_browser_enabled() {
+  local state
+  if [[ -z "${CMUX_WORKSPACE_ID:-}" ]] || ! command -v cmux >/dev/null 2>&1; then return 1; fi
+  state="$(cmux browser status 2>/dev/null)" || return 1
+  [[ "${state}" == enabled ]]
 }
 
-# Which backend. DEDICATED_BROWSER_BACKEND when set. Otherwise cmux when the agent runs inside cmux
-# and the cmux profile exists, else chrome. `setup` never guesses: without the variable it sets up
-# chrome, as before there was a choice.
+# Which backend, for every command including `setup`. DEDICATED_BROWSER_BACKEND when set. Otherwise
+# cmux when the agent runs inside cmux, else chrome: a cmux whose browser is off falls back to chrome.
 choose_backend() {
   if [[ -n "${DEDICATED_BROWSER_BACKEND:-}" ]]; then
     printf '%s' "${DEDICATED_BROWSER_BACKEND}"
-  elif [[ "${1:-}" != setup && -n "${CMUX_WORKSPACE_ID:-}" ]] && command -v cmux >/dev/null 2>&1 \
-    && cmux_profile_listed "${DB_CMUX_PROFILE}"; then
+  elif cmux_browser_enabled; then
     printf 'cmux'
   else
     printf 'chrome'
   fi
 }
-DB_BACKEND="$(choose_backend "${1:-}")"
+DB_BACKEND="$(choose_backend)"
 CDP="http://127.0.0.1:${DB_PORT}"
 LATEST_CACHE="${DB_HOME}/.latest-stable"
 
