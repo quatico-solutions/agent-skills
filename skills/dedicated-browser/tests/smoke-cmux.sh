@@ -3,7 +3,9 @@ set -euo pipefail
 
 # End-to-end test of the cmux backend. Run it inside a cmux terminal: it opens panes beside that
 # terminal, never taking focus, in throwaway cmux browser profiles that it deletes at the end with
-# their website data. Needs Node for the local web app (cmux-app.mjs). Not part of `pnpm test`.
+# their website data. Step 6c opens a pane in cmux's Default profile, the human's real one, and only
+# on about:blank: no cookies, localStorage or logins go there. Needs Node for the local web app
+# (cmux-app.mjs). Not part of `pnpm test`.
 # A script inside cmux cannot quit cmux, so whether logins survive a cmux restart is checked by
 # hand (README, "Testing").
 
@@ -59,6 +61,12 @@ db_auto() { env -u DEDICATED_BROWSER_BACKEND "${env_common[@]}" /bin/bash "${CLI
 db_chrome() { env "${env_common[@]}" DEDICATED_BROWSER_BACKEND=chrome /bin/bash "${CLI}" "$@"; }
 db_outside() { env -u CMUX_WORKSPACE_ID "${env_common[@]}" DEDICATED_BROWSER_BACKEND=cmux /bin/bash "${CLI}" "$@"; }
 db_ws2() { env "${env_common[@]}" CMUX_WORKSPACE_ID="${WS2}" DEDICATED_BROWSER_BACKEND=cmux /bin/bash "${CLI}" "$@"; }
+# Default mode: nothing set, as for an agent inside cmux that never ran setup. The same home as the
+# opt-in runs above, so both modes' pane records share one file.
+db_default() {
+  env -u DEDICATED_BROWSER_BACKEND -u DEDICATED_BROWSER_CMUX_PROFILE DEDICATED_BROWSER_HOME="${TMP}/home" \
+    DEDICATED_BROWSER_PORT="${CHROME_PORT}" /bin/bash "${CLI}" "$@"
+}
 
 profiles() { cmux browser profiles list 2>/dev/null || true; }
 profile_names() { profiles | cut -f1 | sort; }
@@ -74,6 +82,7 @@ FOCUSED_BEFORE="$(focused)"
 cleanup() {
   local p uuid
   db stop >/dev/null 2>&1 || true
+  db_default stop >/dev/null 2>&1 || true
   if [[ -n "${OTHER_PANE}" ]]; then cmux close-surface --surface "${OTHER_PANE}" >/dev/null 2>&1 || true; fi
   for p in "${PROFILE}" "${OTHER}"; do
     uuid="$(profile_uuid "${p}")"
@@ -93,13 +102,15 @@ node "${HERE}/cmux-app.mjs" "${APP_PORT}" &
 APP_PID=$!
 
 echo "1. backend choice before setup"
-if [[ "$(first_line db_auto status)" == "backend: chrome" ]]; then ok "without the cmux profile, the backend is chrome"; else bad "without the cmux profile, the backend is chrome"; fi
+if [[ "$(first_line db_auto status)" == "backend: cmux" ]]; then ok "inside cmux, before the opt-in profile exists, the backend is cmux"; else bad "inside cmux, before the opt-in profile exists, the backend is cmux"; fi
 expect_status 1 "cmux forced, not set up: status exits 1" db status
 expect_status 2 "cmux forced outside cmux: status exits 2" db_outside status
 
 echo "2. setup, status, start"
 expect_status 0 "setup" db setup
 expect_output "${PROFILE}" "setup created the profile" profiles
+# `profiles add` makes the new profile the last-used one, before start reads it.
+if [[ "$(last_used)" == "${LAST_USED_BEFORE}" ]]; then ok "setup left the human's last-used profile as it was"; else bad "setup left the human's last-used profile as it was ($(last_used), was ${LAST_USED_BEFORE})"; fi
 expect_status 0 "status: running" db status
 expect_output "backend: cmux" "status names the backend" db status
 expect_output "pane: " "status names the pane" db status
@@ -182,6 +193,38 @@ simulate_pane_restore
 expect_output "already running" "start finds the pane" db start
 if [[ "$(last_used)" == "${OTHER}" ]]; then ok "start put the human's last-used profile back"; else bad "start put the human's last-used profile back ($(last_used))"; fi
 if [[ "$(focused)" == "${FOCUSED_BEFORE}" ]]; then ok "putting it back left the focus where it was"; else bad "putting it back moved the focus"; fi
+
+echo "6c. Default mode: nothing set, cmux's Default profile, about:blank only"
+# The opt-in pane stays open: Default mode must neither report it nor close it. The human's
+# stand-in profile ${OTHER} is the last-used one, so opening in default has to put it back.
+LAST_USED_6C="$(last_used)"
+PROFILES_6C="$(profile_names)"
+OPTIN_PANE="$(db status 2>/dev/null | sed -n 's/^pane: //p')"
+default_backend="$(first_line db_default status)"
+if [[ "${default_backend}" == "backend: cmux" ]]; then ok "Default mode: the backend is cmux"; else bad "Default mode: the backend is cmux (${default_backend})"; fi
+expect_output "not running in this workspace" "Default mode: the opt-in pane does not count" db_default status
+start_out="$(db_default start 2>&1 || true)"
+DEFAULT_PANE="$(printf '%s' "${start_out}" | sed -n 's/^started: pane \([^ ]*\) .*/\1/p')"
+if [[ -n "${DEFAULT_PANE}" && "${DEFAULT_PANE}" != "${OPTIN_PANE}" ]]; then ok "Default mode: start opens a pane of its own"; else bad "Default mode: start opens a pane of its own (${start_out})"; fi
+expect_output "profile 'default'" "Default mode: status says profile 'default'" db_default status
+expect_output "about:blank" "Default mode: run 'page.url()'" db_default run 'page.url()'
+expect_status 1 "Default mode: run: tabs.open fails" db_default run "await tabs.open('about:blank')"
+expect_output "blocked" "Default mode: run: tabs.open says why" db_default run "await tabs.open('about:blank')"
+expect_output "pane: ${OPTIN_PANE}" "the opt-in mode still reports its own pane" db status
+expect_output "stopped" "Default mode: stop" db_default stop
+if [[ -n "${DEFAULT_PANE}" ]] && ! cmux browser --surface "${DEFAULT_PANE}" get url >/dev/null 2>&1; then ok "Default mode: stop closed its pane"; else bad "Default mode: stop closed its pane"; fi
+expect_status 0 "Default mode's stop left the opt-in pane open" db status
+# Only with the cmux backend: chrome's setup would download Chrome for Testing and bring it to the front.
+if [[ "${default_backend}" == "backend: cmux" ]]; then
+  setup_out="$(db_default setup 2>&1 || true)"
+else
+  setup_out="(not run: the backend is not cmux)"
+fi
+case "${setup_out}" in *"within any agent's reach"*) ok "Default mode: setup tells the human what agents reach" ;; *) bad "Default mode: setup tells the human what agents reach (${setup_out})" ;; esac
+if [[ "$(profile_names)" == "${PROFILES_6C}" ]]; then ok "Default mode: setup creates no profile"; else bad "Default mode: setup creates no profile"; fi
+expect_output "stopped" "Default mode: stop after setup" db_default stop
+if [[ "$(last_used)" == "${LAST_USED_6C}" ]]; then ok "Default mode: the last-used profile is unchanged"; else bad "Default mode: the last-used profile is unchanged ($(last_used), was ${LAST_USED_6C})"; fi
+if [[ "$(focused)" == "${FOCUSED_BEFORE}" ]]; then ok "Default mode left the focus where it was"; else bad "Default mode moved the focus"; fi
 
 echo "7. run without a pane"
 db stop >/dev/null 2>&1 || true

@@ -18,12 +18,16 @@ backend_cmd_status() { echo "fake status"; }
 backend_cmd_run() { echo "fake run: $*"; }
 EOF
 
-# A cmux that lists two profiles and answers like an enabled browser; anything else fails.
+# A cmux that lists two profiles and answers `browser status` with STUB_CMUX_BROWSER_STATUS
+# (default enabled; "refuse" fails like a socket that refuses); anything else fails.
 cat > "${TMP}/bin/cmux" <<'EOF'
 #!/bin/bash
 case "$*" in
   "browser profiles list") printf 'default\tDefault\tAAAA (default)\ndb-dispatch\tdb-dispatch\tBBBB (last used)\n' ;;
-  "browser status") echo enabled ;;
+  "browser status")
+    if [[ "${STUB_CMUX_BROWSER_STATUS:-enabled}" == refuse ]]; then echo "stub cmux: socket refused" >&2; exit 1; fi
+    echo "${STUB_CMUX_BROWSER_STATUS:-enabled}"
+    ;;
   *) echo "stub cmux: $*" >&2; exit 1 ;;
 esac
 EOF
@@ -57,10 +61,20 @@ in_cmux() { cli PATH="${TMP}/bin:${PATH}" CMUX_WORKSPACE_ID=W1 "$@"; }
 echo "dispatch test"
 check "outside cmux, the backend is chrome" "backend: chrome" "$(first_line cli status)"
 check "chrome status, not installed, exits 1" 1 "$(exit_of cli status)"
-check "inside cmux with the profile set up, the backend is cmux" "backend: cmux" \
+check "inside cmux, nothing set, the backend is cmux" "backend: cmux" "$(first_line in_cmux status)"
+out="$(in_cmux status 2>&1 || true)"
+case "${out}" in *"not running in this workspace"*) ok "inside cmux, Default needs no setup: status says start" ;; *) bad "inside cmux, Default needs no setup: status says start (${out})" ;; esac
+check "inside cmux with an opt-in profile that exists, the backend is cmux" "backend: cmux" \
   "$(first_line in_cmux DEDICATED_BROWSER_CMUX_PROFILE=db-dispatch status)"
-check "inside cmux without the profile, the backend is chrome" "backend: chrome" \
+check "inside cmux with an opt-in profile not created yet, the backend is cmux" "backend: cmux" \
   "$(first_line in_cmux DEDICATED_BROWSER_CMUX_PROFILE=nope status)"
+# With a profile that cmux lists, so that only cmux's browser state can make it chrome.
+check "inside cmux with its browser disabled, the backend is chrome" "backend: chrome" \
+  "$(first_line in_cmux DEDICATED_BROWSER_CMUX_PROFILE=db-dispatch STUB_CMUX_BROWSER_STATUS=disabled status)"
+check "inside cmux when cmux's browser status fails, the backend is chrome" "backend: chrome" \
+  "$(first_line in_cmux DEDICATED_BROWSER_CMUX_PROFILE=db-dispatch STUB_CMUX_BROWSER_STATUS=refuse status)"
+check "CMUX_WORKSPACE_ID set but no cmux on PATH, the backend is chrome" "backend: chrome" \
+  "$(first_line cli PATH=/usr/bin:/bin CMUX_WORKSPACE_ID=W1 status)"
 check "DEDICATED_BROWSER_BACKEND wins over cmux" "backend: chrome" \
   "$(first_line in_cmux DEDICATED_BROWSER_CMUX_PROFILE=db-dispatch DEDICATED_BROWSER_BACKEND=chrome status)"
 check "a backend's backend_cmd_status replaces the command" "fake status" \
@@ -71,10 +85,14 @@ check "run with chrome exits 2" 2 "$(exit_of cli run '1')"
 out="$(cli run '1' 2>&1 || true)"
 case "${out}" in *mcp__dedicated-browser__*) ok "run with chrome names the MCP tools" ;; *) bad "run with chrome names the MCP tools (${out})" ;; esac
 check "an unknown backend exits 2" 2 "$(exit_of cli DEDICATED_BROWSER_BACKEND=nope status)"
-# setup never guesses: inside cmux with the profile set up, setup still takes chrome. Without npx on
-# PATH, chrome's setup stops at its first check, before any download.
-out="$(in_cmux DEDICATED_BROWSER_CMUX_PROFILE=db-dispatch PATH="${TMP}/bin:/usr/bin:/bin" setup 2>&1 || true)"
-case "${out}" in *"npx is missing"*) ok "setup without the variable sets up chrome" ;; *) bad "setup without the variable sets up chrome (${out})" ;; esac
+# setup follows the same rule. Inside cmux it takes the cmux path and stops where the stub refuses to
+# open the pane. Without npx on PATH, chrome's setup stops at its first check, before any download.
+out="$(in_cmux PATH="${TMP}/bin:/usr/bin:/bin" setup 2>&1 || true)"
+case "${out}" in *"cmux could not open the pane"*) ok "setup inside cmux sets up cmux" ;; *) bad "setup inside cmux sets up cmux (${out})" ;; esac
+out="$(in_cmux DEDICATED_BROWSER_BACKEND=chrome PATH="${TMP}/bin:/usr/bin:/bin" setup 2>&1 || true)"
+case "${out}" in *"npx is missing"*) ok "DEDICATED_BROWSER_BACKEND=chrome setup inside cmux sets up chrome" ;; *) bad "DEDICATED_BROWSER_BACKEND=chrome setup inside cmux sets up chrome (${out})" ;; esac
+out="$(cli PATH="${TMP}/bin:/usr/bin:/bin" setup 2>&1 || true)"
+case "${out}" in *"npx is missing"*) ok "setup outside cmux sets up chrome" ;; *) bad "setup outside cmux sets up chrome (${out})" ;; esac
 
 echo "passed ${PASS}, failed ${FAIL}"
 [[ "${FAIL}" == 0 ]]

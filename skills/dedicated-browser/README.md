@@ -6,14 +6,26 @@ Development notes. What the skill does and how to use it is in [SKILL.md](SKILL.
 
 ## What it is for
 
-A developer at their own Mac wants the agent to use a browser. The agent gets a **separate**
-browser with its own saved logins. The human signs in only to the systems the agent should reach.
-The agent never gets the human's everyday browser, which has access to everything.
+A developer at their own Mac wants the agent to use a browser. The agent gets a **dedicated
+browser**: a browser, or a browser profile, separate from the one the human uses every day, holding
+only the logins the human gives the agent. The human signs in there only to the systems the agent
+should reach. The agent never gets the human's everyday browser, which has access to everything.
 
-Chrome for Testing (CfT) is the browser because it is a different app: its own bundle, its own
-Dock icon, its own Cmd-Tab entry. That makes it easy to tell apart from the human's Chrome. A
-separate profile is also a platform rule, not only a preference: since Chrome 136 the debugging
-port is refused on the default profile (CfT is exempt, but we use our own profile regardless).
+Each backend is one such browser:
+
+- **chrome:** Chrome for Testing (CfT), because it is a different app: its own bundle, its own Dock icon, its own
+  Cmd-Tab entry. That makes it easy to tell apart from the human's Chrome. A separate profile is also a platform rule,
+  not only a preference: since Chrome 136 the debugging port is refused on the default profile (CfT is exempt, but we
+  use our own profile regardless).
+- **cmux:** the browser built into the cmux terminal, in cmux's Default profile, for an agent inside cmux. The human's
+  everyday browser is another app, Safari or Chrome, so cmux's browser is the agents'. See
+  [The cmux backend](#the-cmux-backend).
+- **Safari Technology Preview** with a Safari MCP could be a third some day. Not built; see
+  [Adding a backend](#adding-a-backend).
+
+The one exception: a human who uses cmux's browser as their everyday browser, which we assume is rare, has no dedicated
+browser in it. They set `DEDICATED_BROWSER_CMUX_PROFILE` to give the agent a cmux profile of its own, or
+`DEDICATED_BROWSER_BACKEND=chrome`.
 
 ## Layout
 
@@ -36,13 +48,13 @@ tests/cmux-app.mjs          local web app for smoke-cmux.sh
 Five settings, all environment variables: `DEDICATED_BROWSER_BACKEND`, `DEDICATED_BROWSER_PORT` (default **9393**),
 `DEDICATED_BROWSER_HOME` (default `~/Library/Application Support/dedicated-browser`, holding the
 browser app and `profile/`), `DEDICATED_BROWSER_COLOR` (default `orange`) and `DEDICATED_BROWSER_CMUX_PROFILE`
-(default `dedicated-browser`). For Chrome, removing the home directory uninstalls everything. 9393 is not 9222,
+(default `default`, cmux's Default profile). For Chrome, removing the home directory uninstalls everything. 9393 is not 9222,
 because 9222 is the port every tool reaches for first and is often already taken.
 
 `DEDICATED_BROWSER_BACKEND` is `chrome` or `cmux`. Unset, the CLI takes cmux when the agent runs inside cmux
-(`CMUX_WORKSPACE_ID` is set) and cmux lists the profile `DEDICATED_BROWSER_CMUX_PROFILE`, else chrome. `setup`
-never guesses: without the variable it sets up chrome. The cmux backend keeps only its pane records in the home
-directory; its logins are in the cmux browser profile (see [The cmux backend](#the-cmux-backend)).
+(`CMUX_WORKSPACE_ID` is set, `cmux` is on `PATH`, and `cmux browser status` says `enabled`), else chrome. `setup`
+follows the same rule. The cmux backend keeps only its pane records in the home directory; its logins are in the cmux
+browser profile (see [The cmux backend](#the-cmux-backend)).
 
 `DEDICATED_BROWSER_COLOR` is the theme color of the browser window, by the name of one of Chrome's
 own theme colors: `blue`, `cool-grey`, `grey`, `aqua`, `green`, `viridian`, `citron`, `orange`,
@@ -177,14 +189,31 @@ human already uses it. Whether Safari offers its own agent interface is not veri
 ## The cmux backend
 
 [cmux](https://cmux.com) is a terminal with a browser built in (WebKit). For an agent that runs inside it, the
-dedicated browser can be a pane beside the agent's terminal, in a cmux browser profile of its own. What that gives
-over Chrome for Testing: the human sees the agent's browser next to the agent and signs in there; nothing to download
-or start; no debugging port that any program on the Mac can use (cmux's control socket has its own access control);
-WebKit for sites that differ from Chromium; and cmux never moves the human's focus.
+dedicated browser is a pane beside the agent's terminal, in cmux's Default profile. What that gives over Chrome for
+Testing: the human sees the agent's browser next to the agent and signs in there; nothing to download, start or set
+up; no debugging port that any program on the Mac can use (cmux's control socket has its own access control); WebKit
+for sites that differ from Chromium; and cmux never moves the human's focus.
 
-**The promise is kept by a profile.** cmux's REPL can list and take any browser tab in any workspace and read cmux's
-history. The boundary is a cmux browser profile, `dedicated-browser`, that holds only the agent's logins. Measured on
-cmux 0.65.2: a cookie set in one profile is not sent from a pane in another.
+**The promise is kept by cmux being a separate app.** The human's everyday browser is Safari or Chrome. cmux's own
+browser, in its Default profile, is the agents' territory: the human keeps their own logins out of it and signs in
+there only to what agents should reach. Whatever is signed in to there is within reach of every agent in cmux, also
+through instructions that an untrusted page injects; the author accepts that. cmux's own browser skill works in the
+same profile.
+
+**Why the dedicated profile became opt-in.** Version 0.3.0 of this skill (`quatico-skills` 3.19.0) gave the agent a
+cmux browser profile of its own, `dedicated-browser`, by default. That profile was no real boundary: cmux's REPL can
+list and take any browser tab in any workspace and read cmux's whole history, so any agent in cmux reaches the
+human's cmux tabs with or without it. And keeping the human's next pane out of it needed three fixes in four days (the
+last-used profile after opening the pane, after a cmux restart, after `profiles add`), plus a second profile the human
+had to keep apart from Default. `DEDICATED_BROWSER_CMUX_PROFILE=<name>` still gives the agent a profile of its own,
+for the human who uses cmux's browser every day; `setup` creates it. Measured on cmux 0.65.2: a cookie set in one
+profile is not sent from a pane in another.
+
+**cmux inside cmux, no setup.** With `DEDICATED_BROWSER_BACKEND` unset, an agent inside cmux gets the cmux backend
+whenever `cmux browser status` says `enabled` (it needs a working socket; an MDM policy can turn the browser off), and
+Chrome otherwise. `setup` follows the same rule; in Default mode it only checks cmux, opens the pane and tells the
+human what agents reach. 0.3.0 took cmux only once its profile existed, a trigger with no meaning once Default is the
+profile. So upgrading moves agents inside cmux from Chrome to cmux, also where nobody ran `setup`.
 
 **Every open names the profile.** cmux opens a pane without `--profile` in the profile used last, not in Default.
 Opening a pane sets the last-used profile; navigating in one does not. After opening its pane, the backend makes the
@@ -193,19 +222,26 @@ Measured: focus and layout unchanged. If that does not take, `start` prints a no
 cmux also sets the last-used profile when it restores the agent's pane on reopening after a restart, while the pane
 stays open, so nothing new is opened. The backend therefore remembers the human's profile
 (`$DEDICATED_BROWSER_HOME/cmux/human-profile`), and `start` and `run` put it back whenever the agent's profile is the
-last-used one.
+last-used one. `cmux browser profiles add` makes the new profile the last-used one too, so `setup` reads the human's
+profile before it creates the agent's. In Default mode all of this fires only for a human who last used a profile of
+their own: a pane opened in Default while Default is the last-used profile changes nothing.
 `cmux workspace create` prints a ref (`OK workspace:<n>`), not a UUID, also with `--id-format uuids`; the backend
 uses the ref.
 
 **The backend records its panes.** cmux does not say which profile a pane uses. The panes the backend opened itself
-are in `$DEDICATED_BROWSER_HOME/cmux/panes`, one per agent workspace; a record whose pane is gone is dropped.
+are in `$DEDICATED_BROWSER_HOME/cmux/panes`, one per agent workspace and profile; a record whose pane is gone is
+dropped. A record for another profile is never taken for the current one: without that, a pane that 0.3.0 opened in
+`dedicated-browser` (its records name no profile) would pass for the Default pane after an upgrade, and switching
+`DEDICATED_BROWSER_CMUX_PROFILE` would reuse a pane in the old profile.
 
 **`run`, not MCP.** cmux serves its REPL as an MCP server (`cmux browser repl mcp`), but neither the REPL nor the MCP
-server can choose a profile: `tabs.open(url, { profile })` ignores the option, `session.configure` rejects it, and new
-tabs open in the last-used profile. So `run` pins a REPL session to the agent's pane: before each call it claims the
-pane as `page` and turns `tabs.open`, `tabs.content` and `tabs.history` into errors, and `tabs.use`, `tabs.get` and
-`tabs.list` see only the pane. That guards against the agent's mistakes; code written to get around it can, so the
-profile stays the boundary. If cmux adds a profile option to `repl` and `repl mcp`, the MCP route becomes possible.
+server can choose a profile or be held to one pane: `tabs.open(url, { profile })` ignores the option,
+`session.configure` rejects it, and new tabs open in the last-used profile. So `run` pins a REPL session to the
+agent's pane: before each call it claims the pane as `page` and turns `tabs.open`, `tabs.content` and `tabs.history`
+into errors, and `tabs.use`, `tabs.get` and `tabs.list` see only the pane. That guards against the agent's mistakes,
+not against code written to get around it. The guards stay in Default mode: they keep one agent off another agent's
+pane in another workspace and off the human's tabs, and `tabs.open` would still land in the last-used profile. If
+cmux lets `repl mcp` be pinned to one pane, the MCP route becomes possible.
 `page.context()` needs no guard on 0.65.2: it has no `newPage`, and its `pages()` lists only the claimed pane. Tab ids
 in the REPL are the surface UUIDs that `open-split` prints, and `tabs.use` compares them case-sensitively. cmux exits
 1 on a script error, a syntax error or a rejected promise, and `run` passes that on.
@@ -276,17 +312,21 @@ Checked by hand: shellcheck clean and a `/bin/bash` 3.2 syntax check (2026-10-02
 `tests/dispatch.sh` checks the backend choice and command dispatch with a fake backend and a stub `cmux`: no browser,
 about a second.
 
-`tests/smoke-cmux.sh` runs inside a cmux terminal. It uses throwaway profiles and a local web app, and checks: backend
-choice before and after setup, also from outside cmux; `setup`, `status`, `start`; a second agent workspace with its
-own pane; with `run`, a server-set cookie, `fetch()` with the pane's cookies, localStorage, state between calls, a
-script on stdin, a script error; the guards, against an unpinned REPL session as a control; a pane in another profile
-without the cookie; a pop-up in the agent's profile; cookie and localStorage after `stop` and `start`; the last-used
-profile, after `start` and after a simulated pane restore (a blank tab in the agent's profile, as cmux's restore does);
-focus unchanged; profiles as before at the end.
+`tests/smoke-cmux.sh` runs inside a cmux terminal. For the opt-in mode it uses throwaway profiles and a local web app,
+and checks: backend choice before and after setup, also from outside cmux; `setup`, `status`, `start`; a second agent
+workspace with its own pane; with `run`, a server-set cookie, `fetch()` with the pane's cookies, localStorage, state
+between calls, a script on stdin, a script error; the guards, against an unpinned REPL session as a control; a pane in
+another profile without the cookie; a pop-up in the agent's profile; cookie and localStorage after `stop` and `start`;
+the last-used profile, after `start` and after a simulated pane restore (a blank tab in the agent's profile, as cmux's
+restore does); focus unchanged; profiles as before at the end. Step 6c checks Default mode, with nothing set and the
+opt-in pane still open in the same home: a pane of its own, `status` saying profile `'default'`, `run`, the
+`tabs.open` guard, `stop` closing only its own pane, `setup` creating no profile, the last-used profile and the focus
+unchanged. It stays on `about:blank`: no cookies, localStorage or logins go into the human's Default profile.
 
-Run on 2026-10-28 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 52 of 52 checks pass. `tests/dispatch.sh`:
-11 of 11. `tests/smoke.sh` with the mock keychain, CfT 156 and 154, playwright-core 1.64.1: 61 of 61, so the Chrome
-path is unchanged by the backend choice.
+Run on 2026-10-31 on a Mac (macOS 27.0.1, Apple silicon, cmux 0.65.2): 69 of 69 checks pass. `tests/dispatch.sh`:
+18 of 18. `tests/smoke.sh` was not run again for this change: its helpers set `DEDICATED_BROWSER_BACKEND=chrome`, so
+the backend choice does not reach it. Its last run, on 2026-10-28 with the mock keychain, CfT 156 and 154 and
+playwright-core 1.64.1, passed 61 of 61.
 
 **By hand, cmux restart**, run on 2026-10-28 on the same Mac. In a throwaway profile: sign in on a local app (a
 server-set cookie), set a cookie from page script and a localStorage value, wait 20 seconds (both cookies were then in
@@ -311,7 +351,7 @@ the restore check in `start` and `run` now handles (simulated in step 6b of `smo
 - Point `working-with-jira-web` and `working-with-bitbucket-web` here for SSO pages, once the
   skill has been used for a while. Not part of this change.
 - Decide whether to mention Vercel's `agent-browser` to users, after more testing.
-- Ask cmux for a profile option on `cmux browser repl` and `repl mcp`, which would make the MCP route safe for the
-  cmux backend.
+- Ask cmux for a way to pin `cmux browser repl mcp` to one pane, and for a profile option on `repl` and `repl mcp`,
+  which would make the MCP route possible for the cmux backend.
 - Usage data from the author's machines was not available when this was written. Fold it in when
   it is.
