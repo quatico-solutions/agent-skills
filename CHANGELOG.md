@@ -1,5 +1,18 @@
 # @quatico-solutions/agent-skills
 
+## 3.21.0
+
+### Minor Changes
+
+- [#131](https://github.com/quatico-solutions/agent-skills/pull/131) [`48d480f`](https://github.com/quatico-solutions/agent-skills/commit/48d480f8723c086a1b58ee3ca66ead04aa22080f) Thanks [@eins78](https://github.com/eins78)! - bb: `source ls` and `source tags` read every page and take `--limit`; `source search` fails at once because Bitbucket deprecated code search
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+    tuned-against: claude-sonnet-5
+  -->
+
 ## 3.20.0
 
 ### Minor Changes
