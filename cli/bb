@@ -309,8 +309,35 @@ bb_paginate() {
   local all
   all="$(jq -s --argjson l "$limit" 'add // [] | if $l > 0 then .[:$l] else . end' "$acc_file")"
   rm -f "$hdr_file" "$acc_file" "$err_file"
-  [[ -n "${BB_PAGINATE_NEXT_FILE:-}" && -n "$url" ]] && echo 1 > "$BB_PAGINATE_NEXT_FILE"
+  # Rows were left behind: a `next` link remains, or the last page held more
+  # rows than the limit keeps.
+  [[ -n "${BB_PAGINATE_NEXT_FILE:-}" && ( -n "$url" || ( "$limit" -gt 0 && "$rows" -gt "$limit" ) ) ]] \
+    && echo 1 > "$BB_PAGINATE_NEXT_FILE"
   echo "$all"
+}
+
+# Read a whole listing at the endpoint's page size of 100. A limit of 0 reads
+# every page; a positive limit stops there and, when rows were left behind,
+# prints one line on stderr. $path must not carry a query string.
+bb_paginate_listing() {
+  local path="$1" limit="$2"
+  local next_file result rc=0
+  next_file="$(mktemp)"
+  result="$(BB_PAGINATE_NEXT_FILE="$next_file" bb_paginate "${path}?pagelen=100" "$limit")" || rc=$?
+  if [[ "$rc" -eq 0 && -s "$next_file" ]]; then
+    echo >&2 "warning: listing truncated at ${limit} rows; use a larger --limit"
+  fi
+  rm -f "$next_file"
+  [[ "$rc" -eq 0 ]] || return "$rc"
+  echo "$result"
+}
+
+# Validate a --limit value: a positive whole number.
+bb_check_limit() {
+  if [[ ! "$1" =~ ^[0-9]+$ || "$1" -eq 0 ]]; then
+    echo >&2 "error: --limit must be a positive number, got '$1'"
+    exit 1
+  fi
 }
 
 bb_api_raw() {
@@ -2130,7 +2157,7 @@ HELP
 # --- Subcommands: source -----------------------------------------------------
 
 cmd_source_ls() {
-  local ref="" path=""
+  local ref="" path="" limit=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
@@ -2138,21 +2165,26 @@ cmd_source_ls() {
 List files and directories at a given path.
 
 USAGE
-  bb source ls [path] [--ref <ref>] [--json]
+  bb source ls [path] [--ref <ref>] [--limit <n>] [--json]
 
 FLAGS
   --ref <ref>   Branch, tag, or commit SHA (default: current branch)
+  --limit <n>   Maximum number of entries (default: all). Follows Bitbucket's
+                next links across as many pages as needed. When the limit cuts
+                the list, a warning on stderr says so.
   --json        Output raw JSON array of file objects
 
 EXAMPLES
   bb source ls
   bb source ls src/
   bb source ls --ref develop
+  bb source ls docs/plans --limit 20
   bb source ls --ref v1.0.0 --json
 HELP
         exit 0
         ;;
       --ref)  ref="$2"; shift 2 ;;
+      --limit) limit="$2"; bb_check_limit "$limit"; shift 2 ;;
       --json) JSON_OUTPUT=1; shift ;;
       -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
       *)      path="$1"; shift ;;
@@ -2169,7 +2201,7 @@ HELP
 
   local api_path="/repositories/${ws}/${repo}/src/${resolved_ref}/${path}"
   local result
-  result="$(bb_paginate "$api_path")"
+  result="$(bb_paginate_listing "$api_path" "$limit")" || exit $?
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     echo "$result" | jq .
@@ -2305,24 +2337,30 @@ HELP
 }
 
 cmd_source_tags() {
+  local limit=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help|-h)
         cat <<'HELP'
-List tags in the repository.
+List tags in the repository, in the order Bitbucket returns them.
 
 USAGE
-  bb source tags [--json]
+  bb source tags [--limit <n>] [--json]
 
 FLAGS
-  --json   Output raw JSON array
+  --limit <n>   Maximum number of tags (default: all). Follows Bitbucket's
+                next links across as many pages as needed. When the limit cuts
+                the list, a warning on stderr says so.
+  --json        Output raw JSON array
 
 EXAMPLES
   bb source tags
+  bb source tags --limit 20
   bb source tags --json | jq '.[].name'
 HELP
         exit 0
         ;;
+      --limit) limit="$2"; bb_check_limit "$limit"; shift 2 ;;
       --json) JSON_OUTPUT=1; shift ;;
       -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
       *)      echo >&2 "unknown argument: $1"; exit 1 ;;
@@ -2334,7 +2372,7 @@ HELP
   repo="$(bb_repo)"
 
   local result
-  result="$(bb_paginate "/repositories/${ws}/${repo}/refs/tags")"
+  result="$(bb_paginate_listing "/repositories/${ws}/${repo}/refs/tags" "$limit")" || exit $?
 
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
     echo "$result" | jq .
@@ -2355,75 +2393,11 @@ HELP
   fi
 }
 
+# Bitbucket Cloud deprecated code search (CHANGE-3167) and answers HTTP 410.
+# The subcommand stays only to fail at once, without a request.
 cmd_source_search() {
-  local query="" search_all=0
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --help|-h)
-        cat <<'HELP'
-Search code in the repository (or entire workspace).
-
-USAGE
-  bb source search <query> [--all] [--json]
-
-FLAGS
-  --all    Search entire workspace (default: scoped to current repo)
-  --json   Output raw JSON array
-
-Supports Bitbucket search syntax (e.g., "class Foo", "lang:python TODO").
-
-EXAMPLES
-  bb source search "TODO"
-  bb source search "className" --all
-  bb source search "lang:typescript interface" --json
-HELP
-        exit 0
-        ;;
-      --all)  search_all=1; shift ;;
-      --json) JSON_OUTPUT=1; shift ;;
-      -*)     echo >&2 "unknown flag: $1"; exit 1 ;;
-      *)      query="$1"; shift ;;
-    esac
-  done
-
-  if [[ -z "$query" ]]; then
-    echo >&2 "usage: bb source search <query> [--all] [--json]"
-    exit 1
-  fi
-
-  local ws repo
-  ws="$(bb_workspace)"
-  repo="$(bb_repo)"
-
-  # Scope to current repo by default
-  local search_query="$query"
-  if [[ "$search_all" -eq 0 ]]; then
-    search_query="repo:${repo} ${query}"
-  fi
-
-  local encoded_query
-  encoded_query="$(printf '%s' "$search_query" | jq -sRr @uri)"
-
-  local result
-  result="$(bb_paginate "/workspaces/${ws}/search/code?search_query=${encoded_query}")"
-
-  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
-    echo "$result" | jq .
-  else
-    local count
-    count="$(echo "$result" | jq 'length')"
-    if [[ "$count" -eq 0 ]]; then
-      echo "No results found"
-    else
-      echo "REPO   FILE   MATCHES   LINES"
-      echo "$result" | jq -r '.[] | [
-        (.file.links.self.href | split("/")[6] // "?"),
-        .file.path,
-        (.content_match_count | tostring),
-        ([.content_matches[]?.lines[]?.line] | map(tostring) | join(",") | if . == "" then "-" else . end)
-      ] | @tsv' | column -t -s $'\t'
-    fi
-  fi
+  echo >&2 "error: bb source search is removed: Bitbucket Cloud deprecated code search (CHANGE-3167, HTTP 410); search a local clone with git grep, or read files with bb source ls and bb source cat"
+  exit 1
 }
 
 cmd_source_commits() {
@@ -2810,7 +2784,6 @@ Source:
   source cat <path>   Print file contents
   source branches     List branches
   source tags         List tags
-  source search <q>   Search code in the repository
   source commits [ref] List commits (or show one by SHA)
   source diff <spec>  Compare two refs (or --stat for summary)
 
@@ -2873,8 +2846,6 @@ Examples:
   bb pr diff 42 --stat
   bb pr status
   bb pr activity 42
-  bb source search "TODO"
-  bb source search "className" --all
   bb source commits
   bb source commits develop
   bb source commits abc123
