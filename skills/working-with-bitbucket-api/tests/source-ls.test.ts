@@ -116,3 +116,62 @@ No files found
 `)
   })
 })
+
+describe('paging: bb source ls', () => {
+  let server: MockServer
+  const hash = 'deadbeef1234567890abcdef1234567890abcdef'
+  const SRC = `/repositories/testws/testrepo/src/${hash}/docs/`
+  const entries = (from: number, n: number) => Array.from({ length: n }, (_, i) => ({
+    type: 'commit_file', path: `docs/f${String(from + i).padStart(3, '0')}.md`, size: 10,
+  }))
+
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => server.reset())
+
+  // Two pages: 100 entries with a next link, then 3 more
+  function servePages() {
+    server.stub('GET', SRC, { values: entries(1, 100), next: `${server.baseUrl}${SRC}?pagelen=100&page=2` })
+    server.stubWithQuery('GET', SRC, { page: '2' }, { values: entries(101, 3) })
+  }
+
+  it('Asks for pagelen=100 and follows next until the list is complete', async () => {
+    servePages()
+
+    const result = await bb(`source ls docs/ --ref ${hash} --json`, { port: server.port })
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(JSON.parse(result.stdout).length, 103)
+    const calls = server.getCallsTo('GET', '/src/')
+    assert.equal(calls.length, 2)
+    assert.equal(calls[0].query.pagelen, '100')
+    assert.doesNotMatch(result.stderr, /truncated/)
+  })
+
+  it('Cuts the list at --limit and says so on stderr', async () => {
+    servePages()
+
+    const result = await bb(`source ls docs/ --ref ${hash} --limit 10 --json`, { port: server.port })
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(JSON.parse(result.stdout).length, 10)
+    assert.match(result.stderr, /warning: listing truncated at 10 rows; use a larger --limit/)
+    assert.equal(server.getCalls().length, 1)
+  })
+
+  it('Stays silent when --limit equals the list length', async () => {
+    server.stub('GET', SRC, { values: entries(1, 5) })
+
+    const result = await bb(`source ls docs/ --ref ${hash} --limit 5 --json`, { port: server.port })
+
+    assert.equal(JSON.parse(result.stdout).length, 5)
+    assert.doesNotMatch(result.stderr, /truncated/)
+  })
+
+  it('Rejects a --limit that is not a positive number', async () => {
+    const result = await bb(`source ls --ref ${hash} --limit 0`, { port: server.port })
+
+    assert.equal(result.exitCode, 1)
+    assert.match(result.stderr, /--limit must be a positive number, got '0'/)
+  })
+})

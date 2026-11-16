@@ -1,6 +1,6 @@
 ---
 name: working-with-bitbucket-api
-description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branches, tags, search, commits, diff) including markdown descriptions. Browser only for SSO-gated pages. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, upload image to PR, attach screenshot, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
+description: "Bitbucket Cloud API via `bb` CLI. Handles all PR operations (list, view, create, edit, comment, approve, merge), image uploads (via the Downloads area), and source browsing (ls, cat, branches, tags, commits, diff) including markdown descriptions. Browser only for SSO-gated pages. Triggers: bitbucket, bitbucket API, bb, PR list, PR view, PR comments, create PR, make PR, open PR, new PR, draft PR, merge PR, approve PR, close PR, decline PR, PR review, PR feedback, push and PR, upload image to PR, attach screenshot, bitbucket repo, bitbucket remote, source browse, list branches, list tags, file contents, browse repo."
 compatibility: claude-code, cursor
 license: MIT
 metadata:
@@ -173,6 +173,12 @@ bb pr list --head feature/login --state merged  # the PR of one branch, in one r
 - `--head <branch>` filters on the source branch on the server. Repeat it to cover several branches. It forces the `q=` filter form, like `--author`, and keeps the open default for `--state`: a merged branch needs `--state merged`. A branch name containing `"` exits 1, because Bitbucket documents no escape rule for it.
 - Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
 - Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits 75 with `error: rate limited after <n> rows` (plus ` — Bitbucket asked to wait <s> s` when the final answer carries `Retry-After`, printed as sent) and prints no rows, so a short list never looks complete.
+
+### Listing and searching source (`source ls`, `source tags`)
+
+`bb source ls` and `bb source tags` read every page of the listing (100 entries per request) and keep the order Bitbucket returns. `--limit <n>` stops at `n` entries; when it cuts the list, `bb` prints `warning: listing truncated at <n> rows; use a larger --limit` on stderr. Tags come oldest first, so a `--limit` keeps the oldest tags.
+
+`bb source search` is removed: Bitbucket Cloud deprecated code search (CHANGE-3167) and answers HTTP 410, so the command exits 1 at once without a request. To find text, run `git grep` in a local clone, or read files with `bb source ls` and `bb source cat`.
 
 ### Targeting another repository (`-R`)
 
