@@ -137,6 +137,48 @@ describe('bb hourly request budget', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('Ignores request lines from the future', async () => {
+    // Given two lines far ahead of the clock, in the current hour's file
+    const writeLines = (dir: string, epochs: number[]) => {
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(requestFile(dir, EMAIL, NOW), `${epochs.join('\n')}\n`)
+    }
+    const far = stateDir()
+    writeLines(far, [NOW + 1_000_000_000, NOW + 1_000_000_000])
+
+    // When I make a call with a ceiling of 2
+    const sentFar = await bb('api /user', { port: server.port, env: budgetEnv(far, { BB_HOURLY_LIMIT: '2' }) })
+
+    // Then neither counts and the call goes out
+    assert.equal(sentFar.exitCode, 0)
+    assert.equal(sentFar.stderr, '')
+
+    // Given two lines 30 s ahead of the clock, as a clock that stepped back leaves them
+    const near = stateDir()
+    writeLines(near, [NOW + 30, NOW + 30])
+
+    // When I make a call with a ceiling of 2
+    const sentNear = await bb('api /user', { port: server.port, env: budgetEnv(near, { BB_HOURLY_LIMIT: '2' }) })
+
+    // Then neither counts and the call goes out
+    assert.equal(sentNear.exitCode, 0)
+    assert.equal(sentNear.stderr, '')
+    assert.equal(server.getCalls().length, 2)
+  })
+
+  it('Counts a request recorded in the current second', async () => {
+    // Given two requests recorded at the clock's own second, and a ceiling of 2
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW, NOW])
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir, { BB_HOURLY_LIMIT: '2' }) })
+
+    // Then both count, and the wait is the whole window and no more
+    assert.equal(result.exitCode, 75)
+    assert.ok(result.stderr.includes(`next request at ${utcHms(NOW + 3600)} (in 3600 s)`), result.stderr)
+  })
+
   it('Deletes request files older than the previous hour', async () => {
     // Given one request from 3 h ago, one from the previous UTC hour, and one from 2 h ago
     const dir = stateDir()

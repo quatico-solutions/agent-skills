@@ -315,14 +315,16 @@ bb_hourly_limit() {
 }
 
 # Prints "<n> <free>" for the account's request files. n counts the lines
-# newer than $1 - 3600 in $3 (the previous hour) and $4 (the current hour);
-# lines that are not all digits do not count. free is the second at which the
-# request ceiling $2 lets the next request through: the (n - c + 1)-th oldest
-# counted line plus 3600, or 0 while n is below the ceiling.
+# newer than $1 - 3600 and not newer than $1 in $3 (the previous hour) and $4
+# (the current hour); lines that are not all digits do not count, and neither
+# does a line from the future, so no line can make a wait longer than 3600 s.
+# free is the second at which the request ceiling $2 lets the next request
+# through: the (n - c + 1)-th oldest counted line plus 3600, or 0 while n is
+# below the ceiling.
 bb_budget_count() {
   local now="$1" limit="$2" prev_file="$3" cur_file="$4"
-  { cat "$prev_file" "$cur_file" 2>/dev/null || true; } | awk -v min="$((now - BB_BUDGET_WINDOW))" -v c="$limit" -v window="$BB_BUDGET_WINDOW" '
-    /^[0-9]+$/ && length($0) <= 12 && $0 + 0 > min { v[++n] = $0 + 0 }
+  { cat "$prev_file" "$cur_file" 2>/dev/null || true; } | awk -v now="$now" -v min="$((now - BB_BUDGET_WINDOW))" -v c="$limit" -v window="$BB_BUDGET_WINDOW" '
+    /^[0-9]+$/ && length($0) <= 12 && $0 + 0 > min && $0 + 0 <= now { v[++n] = $0 + 0 }
     END {
       for (i = 2; i <= n; i++) {
         x = v[i]; j = i - 1
