@@ -1612,13 +1612,28 @@ HELP
   # Default head to current branch
   [[ -z "$head" ]] && head="$(git branch --show-current 2>/dev/null || echo "")"
   [[ -z "$head" ]] && { echo >&2 "error: cannot detect current branch — use --head"; exit 1; }
-  # Default base to the repo's default branch (Bitbucket API → git fallback → "main")
+  # Default base to the repo's default branch (Bitbucket API → git fallback → "main").
+  # A rate limit stops the command with 75, the line of the refusal on stderr and
+  # no PR: the fallback would create the PR against a guessed branch. Any other
+  # failure of the lookup falls through silently, so its stderr goes to a file.
   if [[ -z "$base" ]]; then
-    local ws_tmp repo_tmp
+    local ws_tmp repo_tmp lookup lookup_err lookup_rc=0
     ws_tmp="$(bb_workspace)" 2>/dev/null
     repo_tmp="$(bb_repo)" 2>/dev/null
-    base="$(bb_api_call GET "/repositories/${ws_tmp}/${repo_tmp}" 2>/dev/null | jq -r '.mainbranch.name // empty')"
-    [[ -z "$base" ]] && base="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')"
+    lookup_err="$(mktemp)"
+    lookup="$(bb_api_call GET "/repositories/${ws_tmp}/${repo_tmp}" 2>"$lookup_err")" || lookup_rc=$?
+    if [[ "$lookup_rc" -eq 75 ]]; then
+      cat "$lookup_err" >&2
+      rm -f "$lookup_err"
+      exit 75
+    fi
+    rm -f "$lookup_err"
+    if [[ "$lookup_rc" -eq 0 ]]; then
+      base="$(echo "$lookup" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || base=""
+    fi
+    if [[ -z "$base" ]]; then
+      base="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')" || base=""
+    fi
     [[ -z "$base" ]] && base="main"
   fi
 

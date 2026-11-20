@@ -1,10 +1,12 @@
 import { describe, it, before, after, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
+import { makeStateDir, removeStateDir, seedPause, utcHms } from './state.ts'
 import prCreateResponse from './fixtures/pr-create-response.json' with { type: 'json' }
 import repoInfo from './fixtures/repo-info.json' with { type: 'json' }
 
@@ -53,6 +55,90 @@ describe('bb pr create', () => {
     const body = post.body as Record<string, unknown>
     assert.deepEqual((body.destination as any).branch.name, 'main')
     assert.equal(result.exitCode, 0)
+  })
+
+  it('Exits 75 with the pause line and creates nothing when the default branch lookup is refused', async () => {
+    // Given a pause that a 429 started, and no --base
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    const NOW = 1795000000
+    const dir = makeStateDir()
+    seedPause(dir, 'test@example.com', NOW + 100, 300)
+
+    try {
+      // When I create a PR
+      const result = await bb('pr create --title Test --head feature/x', {
+        port: server.port,
+        env: { BB_STATE_DIR: dir, BB_NOW: String(NOW) },
+      })
+
+      // Then bb exits 75 with the pause line on stderr, and sends no request
+      assert.equal(result.exitCode, 75)
+      assert.equal(result.stdout, '')
+      assert.equal(
+        result.stderr,
+        `error: rate limited — bb paused until ${utcHms(NOW + 100)} after Bitbucket refused a request (in 100 s)\n`,
+      )
+      assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
+      assert.equal(server.getCalls().length, 0)
+    } finally {
+      removeStateDir(dir)
+    }
+  })
+
+  it('Exits 75 with the rate-limit line and creates nothing when the default branch lookup answers 429', async () => {
+    // Given the repository lookup answers 429, and no --base
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'slow down' } }, 429)
+
+    // When I create a PR
+    const result = await bb('pr create --title Test --head feature/x', { port: server.port })
+
+    // Then bb exits 75 with the line of the 429, and the PR is not created
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, /^error: rate limited — bb paused until \d\d:\d\d:\d\dZ \(in 300 s\)\n$/)
+    assert.equal(server.getCallsTo('POST', '/pullrequests').length, 0)
+  })
+
+  it('Falls back to the git default branch when the default branch lookup fails', async () => {
+    // Given the repository lookup answers 404, and a clone whose origin/HEAD names develop
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'not found' } }, 404)
+    const clone = mkdtempSync(path.join(tmpdir(), 'bb-prc-git-'))
+    execFileSync('git', ['init', '-q'], { cwd: clone })
+    execFileSync('git', ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/develop'], { cwd: clone })
+
+    try {
+      // When I create a PR without --base
+      const result = await bb('pr create --title Test --head feature/x', { port: server.port, cwd: clone })
+
+      // Then the PR is created against the branch git names, and the failed lookup stays silent
+      assert.equal(result.exitCode, 0, result.stderr)
+      assert.equal(result.stderr, '')
+      const post = server.getCallsTo('POST', '/pullrequests')[0]
+      assert.deepEqual(((post.body as any).destination).branch.name, 'develop')
+    } finally {
+      rmSync(clone, { recursive: true, force: true })
+    }
+  })
+
+  it('Falls back to main when the default branch lookup fails and git names none', async () => {
+    // Given the repository lookup answers 404, and a directory without a git default branch
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests', prCreateResponse)
+    server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'not found' } }, 404)
+    const plain = mkdtempSync(path.join(tmpdir(), 'bb-prc-plain-'))
+
+    try {
+      // When I create a PR without --base
+      const result = await bb('pr create --title Test --head feature/x', { port: server.port, cwd: plain })
+
+      // Then the PR is created against main
+      assert.equal(result.exitCode, 0, result.stderr)
+      const post = server.getCallsTo('POST', '/pullrequests')[0]
+      assert.deepEqual(((post.body as any).destination).branch.name, 'main')
+    } finally {
+      rmSync(plain, { recursive: true, force: true })
+    }
   })
 
   it('Includes draft:true with --draft', async () => {
