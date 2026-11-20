@@ -187,6 +187,43 @@ describe('bb pr list --json checks', () => {
     assert.equal(checks[43], 'SUCCESSFUL')
   })
 
+  it('Exits 75 when a statuses call is rate limited', async () => {
+    // Given the first PR's statuses call is answered with a rate limit
+    server.stub('GET', PRS, prListWithCommits)
+    server.stub('GET', statusesPath(SHA_42), { error: { message: 'slow down' } }, 429)
+    server.stub('GET', statusesPath(SHA_43), statusesSuccessful)
+
+    // When I ask for checks
+    const result = await bb('pr list --json number,checks', { port: server.port })
+
+    // Then bb stops with 75 and prints nothing but that call's one rate-limit
+    // line: an UNKNOWN for each remaining PR would only spend requests the pause
+    // refuses, and a partial list must not look complete
+    assert.equal(result.exitCode, 75, result.stderr)
+    assert.equal(result.stdout, '')
+    const err = result.stderr.split('\n').filter((l) => l !== '')
+    assert.equal(err.length, 1, result.stderr)
+    assert.match(err[0], /^error: rate limited — bb paused until /)
+    assert.equal(server.getCallsTo('GET', '/statuses').length, 1)
+  })
+
+  it('Exits 75 when a later statuses call is rate limited', async () => {
+    // Given the first PR's builds are readable and the second PR's call is rate limited
+    server.stub('GET', PRS, prListWithCommits)
+    server.stub('GET', statusesPath(SHA_42), statusesSuccessful)
+    server.stub('GET', statusesPath(SHA_43), { error: { message: 'slow down' } }, 429)
+
+    // When I ask for checks
+    const result = await bb('pr list --json number,checks', { port: server.port })
+
+    // Then the checks read so far are not printed as if they were the whole list
+    assert.equal(result.exitCode, 75, result.stderr)
+    assert.equal(result.stdout, '')
+    const err = result.stderr.split('\n').filter((l) => l !== '')
+    assert.equal(err.length, 1, result.stderr)
+    assert.match(err[0], /^error: rate limited — bb paused until /)
+  })
+
   it('Combines checks with the existing fields', async () => {
     // Given PRs with builds
     server.stub('GET', PRS, prListWithCommits)

@@ -999,10 +999,13 @@ bb_pr_collapse_statuses() {
 # so no lookup is needed to find the commit.
 #
 # A PR whose statuses cannot be read gets UNKNOWN and the command carries on —
-# one unreadable PR must not fail a list of twenty.
+# one unreadable PR must not fail a list of twenty. A rate limit is the one
+# exception: it stops the whole command with 75 and the call's own rate-limit
+# line on stderr, because every later call would be refused too and a list of
+# guesses must not pass for a list of answers.
 bb_pr_attach_checks() {
   local ws="$1" repo="$2"
-  local prs sha checks_val i count out
+  local prs sha checks_val i count out err_file rc
   prs="$(cat)"
   count="$(echo "$prs" | jq 'length')"
 
@@ -1011,6 +1014,7 @@ bb_pr_attach_checks() {
   fi
 
   out="$prs"
+  err_file="$(mktemp)"
   i=0
   while [[ "$i" -lt "$count" ]]; do
     sha="$(echo "$prs" | jq -r ".[$i].source.commit.hash // empty")"
@@ -1020,7 +1024,15 @@ bb_pr_attach_checks() {
       checks_val="UNKNOWN"
     else
       local body
-      if body="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${sha}/statuses" 2>/dev/null)"; then
+      # The call's stderr goes to a file, so that only a rate limit reaches the
+      # terminal: any other failure stays silent and gives UNKNOWN.
+      rc=0
+      body="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${sha}/statuses" 2>"$err_file")" || rc=$?
+      if [[ "$rc" -eq 75 ]]; then
+        cat "$err_file" >&2
+        rm -f "$err_file"
+        return 75
+      elif [[ "$rc" -eq 0 ]]; then
         checks_val="$(echo "$body" | bb_pr_collapse_statuses)"
       else
         checks_val="UNKNOWN"
@@ -1029,6 +1041,7 @@ bb_pr_attach_checks() {
     out="$(echo "$out" | jq --argjson i "$i" --arg c "$checks_val" '.[$i] += {checks: $c}')"
     i=$((i + 1))
   done
+  rm -f "$err_file"
   echo "$out"
 }
 
@@ -1397,7 +1410,7 @@ HELP
       # Fields that are not paths into the PR object are fetched and merged
       # first, and only when asked for.
       if bb_pr_needs_checks "$JSON_FIELDS"; then
-        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")" || exit $?
       fi
       out="$(echo "$out" | jq "$proj")"
     fi
@@ -1503,7 +1516,7 @@ HELP
       # bb_pr_json_projection maps over an array: wrap the one PR, project, unwrap.
       out="$(echo "[$result]" | jq -c .)"
       if bb_pr_needs_checks "$JSON_FIELDS"; then
-        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")" || exit $?
       fi
       out="$(echo "$out" | jq "$proj | .[0]")"
     else
@@ -2653,9 +2666,15 @@ HELP
     if [[ "$count" -eq 0 ]]; then
       echo "No branches found"
     else
-      # Detect default branch
-      local default_branch
-      default_branch="$(bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || default_branch=""
+      # Detect the default branch. A rate limit stops the command: a table
+      # without the default marker would look complete. Any other failure lists
+      # the branches unmarked.
+      local default_branch="" repo_info repo_rc=0
+      repo_info="$(bb_api_call GET "/repositories/${ws}/${repo}")" || repo_rc=$?
+      [[ "$repo_rc" -eq 75 ]] && exit 75
+      if [[ "$repo_rc" -eq 0 ]]; then
+        default_branch="$(echo "$repo_info" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || default_branch=""
+      fi
 
       echo "NAME   TARGET   MESSAGE"
       echo "$result" | jq -r --arg def "$default_branch" '.[] | [

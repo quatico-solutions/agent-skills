@@ -151,6 +151,32 @@ describe('--json field list', () => {
   })
 })
 
+describe('--json checks', () => {
+  let server: MockServer
+  before(async () => { server = await createMockServer() })
+  after(() => server.stop())
+  beforeEach(() => server.reset())
+
+  const SHA = '57318be74a3e1c9f0b2d4e6a8c0f2e4a6b8d0c2e'
+  const prWithHead = { ...prSingle, id: 1, source: { ...prSingle.source, commit: { hash: SHA } } }
+
+  it('Exits 75 when the statuses call is rate limited', async () => {
+    // Given the PR has a head commit and its statuses call is answered with a rate limit
+    server.stub('GET', '/repositories/testws/testrepo/pullrequests/1', prWithHead)
+    server.stub('GET', `/repositories/testws/testrepo/commit/${SHA}/statuses`, { error: { message: 'slow down' } }, 429)
+
+    // When I ask for checks
+    const result = await bb('pr view 1 --json checks', { port: server.port })
+
+    // Then bb stops with 75 and prints one rate-limit line instead of an UNKNOWN
+    assert.equal(result.exitCode, 75, result.stderr)
+    assert.equal(result.stdout, '')
+    const err = result.stderr.split('\n').filter((l) => l !== '')
+    assert.equal(err.length, 1, result.stderr)
+    assert.match(err[0], /^error: rate limited — bb paused until /)
+  })
+})
+
 describe('output', () => {
   let server: MockServer
   before(async () => { server = await createMockServer() })

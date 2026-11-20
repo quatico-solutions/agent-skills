@@ -58,6 +58,38 @@ describe('bb source branches', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('Exits 75 when the default-branch lookup is rate limited', async () => {
+    // Given the branches answer and the repository lookup answers with a rate limit
+    server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'slow down' } }, 429)
+    server.stub('GET', '/repositories/testws/testrepo/refs/branches', branches)
+
+    // When I run bb source branches
+    const result = await bb('source branches', { port: server.port })
+
+    // Then bb stops with 75 and prints no table: a list without the default
+    // marker would look complete
+    assert.equal(result.exitCode, 75, result.stderr)
+    assert.equal(result.stdout, '')
+    const err = result.stderr.split('\n').filter((l) => l !== '')
+    assert.equal(err.length, 1, result.stderr)
+    assert.match(err[0], /^error: rate limited — bb paused until /)
+  })
+
+  it('Lists branches without a default when that lookup answers 500', async () => {
+    // Given the branches answer and the repository lookup fails
+    server.stub('GET', '/repositories/testws/testrepo', { error: { message: 'boom' } }, 500)
+    server.stub('GET', '/repositories/testws/testrepo/refs/branches', branches)
+
+    // When I run bb source branches
+    const result = await bb('source branches', { port: server.port })
+
+    // Then the list still prints, with no row marked as the default
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.match(result.stdout, /main/)
+    assert.match(result.stdout, /feature\/login/)
+    assert.doesNotMatch(result.stdout, /^\* /m)
+  })
+
   it('Shows "No branches found" for empty result', async () => {
     // Given the repo has no branches (repo-info first so branches stub wins via LIFO)
     server.stub('GET', '/repositories/testws/testrepo', repoInfo)
