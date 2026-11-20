@@ -245,6 +245,19 @@ describe('bb rate-limit', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('Names a pause that ends a second later than its length, like the guard', async () => {
+    // Given a pause that a parallel process wrote a moment later: it ends 301 s from now and names a length of 300 s
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 301, 300)
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir) })
+
+    // Then it names the pause and exits 75
+    assert.equal(result.stdout, `requests in the last hour: 0 of 800 (this machine)\npaused until ${utcHms(NOW + 301)} (in 301 s)\n`)
+    assert.equal(result.exitCode, 75)
+  })
+
   it('Shows a wait of 429 s as 430 s, like every other message', async () => {
     // Given a pause that ends in 429 s
     const dir = stateDir()

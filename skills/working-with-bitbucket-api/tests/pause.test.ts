@@ -332,6 +332,56 @@ describe('bb pause after HTTP 429', () => {
     assert.equal(server.getCalls().length, 1)
   })
 
+  for (const ahead of [301, 305]) {
+    it(`Refuses a call while a pause ends ${ahead - 300} s later than its length, clocks differ by a few seconds`, async () => {
+      // Given a pause that a parallel process wrote a moment later: it ends ${ahead} s from now and names a length of 300 s
+      server.stub('GET', '/user', user)
+      const dir = stateDir()
+      seedPause(dir, EMAIL, NOW + ahead, 300)
+
+      // When I make a call
+      const result = await run('api /user', { port: server.port, env: env(dir) })
+
+      // Then the pause still applies and nothing is sent
+      assert.equal(result.exitCode, 75)
+      assert.equal(
+        result.stderr,
+        `error: rate limited — bb paused until ${utcHms(NOW + ahead)} after Bitbucket refused a request (in ${ahead} s)\n`,
+      )
+      assert.equal(server.getCalls().length, 0)
+    })
+  }
+
+  it('Treats a pause that ends 6 s later than its length as no pause', async () => {
+    // Given a pause that ends 306 s from now and names a length of 300 s: more than the few seconds that clocks differ
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 306, 300)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then it goes out
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stderr, '')
+    assert.equal(server.getCalls().length, 1)
+  })
+
+  it('Keeps a longer pause that a parallel process stored one second later than this one reads the clock', async () => {
+    // Given a 429 that arrives while a pause of 7200 s that was written one second later is on disk: it ends 7201 s from now
+    const dir = stateDir()
+    server.stubSequence('GET', '/user', {}, [
+      { status: 429, body: SLOW, beforeRespond: () => seedPause(dir, EMAIL, NOW + 7201, 7200) },
+    ])
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then bb extends that pause instead of starting a fresh one of 300 s
+    assert.equal(result.stderr, paused(7201))
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 7201, length: 7201 })
+  })
+
   it('Refuses a call while a pause ends exactly its length from now', async () => {
     // Given a pause that was written this second: it ends 300 s from now and names a length of 300 s
     server.stub('GET', '/user', user)

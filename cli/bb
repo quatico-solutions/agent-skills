@@ -224,6 +224,8 @@ bb_check_status() {
 
 BB_BUDGET_DEFAULT=800
 BB_BUDGET_WINDOW=3600
+# Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
+BB_PAUSE_SKEW=5
 # Per process, never from the environment: the account key once it is read and
 # the email it was made from, whether the state warning was printed, and whether
 # bb_budget_init found the state directory unusable.
@@ -441,13 +443,14 @@ bb_pause_read() {
 }
 
 # Succeeds when the pause "<until> <length>" ($1, $2) is stale at the second $3:
-# it has more time left than its length. bb writes every pause with the invariant
-# "end - now <= length" (see bb_pause_after_429), and time only shortens the
-# rest, so such a pause was written by a clock that ran ahead of this one, or was
-# edited by hand. A stale pause counts as no pause, for the guard, for bb
-# rate-limit and for the next 429, so that no call waits for a day.
+# it has more than BB_PAUSE_SKEW s more time left than its length. bb writes every
+# pause with the invariant "end - now <= length" (see bb_pause_after_429), and
+# time only shortens the rest, so such a pause was written by a clock that ran
+# ahead of this one by more than the skew, or was edited by hand. A stale pause
+# counts as no pause, for the guard, for bb rate-limit and for the next 429, so
+# that no call waits for a day.
 bb_pause_is_stale() {
-  [[ "$1" -gt "$3" && $(($1 - $3)) -gt "$2" ]]
+  [[ "$1" -gt "$3" && $(($1 - $3)) -gt $(($2 + BB_PAUSE_SKEW)) ]]
 }
 
 # Prints the seconds left of the pause of the account $1, or nothing when there
@@ -475,7 +478,8 @@ bb_pause_left() {
 # There is no lock, so the write merges with the pause on disk instead. Just
 # before the move it reads the stored pause again; when that pause is not stale
 # and ends later than the one to write, the record keeps the later end and the
-# larger length ("end - now <= length" still holds), so a process that computed
+# larger length ("end - now <= length" still holds, within BB_PAUSE_SKEW, at the
+# clock of the process that stored the longer pause), so a process that computed
 # its pause from an older read cannot shorten a longer pause that another one
 # stored meanwhile. The remaining window is the time between that read and the
 # move, the fork of mv: a process that moves its record into place in that
