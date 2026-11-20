@@ -26,6 +26,8 @@ export interface SequenceStep {
   status: number
   body: unknown
   headers?: Record<string, string>
+  /** Runs when the call arrives, before the answer is sent. */
+  beforeRespond?: () => void
 }
 
 export interface MockServer {
@@ -81,6 +83,7 @@ export async function createMockServer(): Promise<MockServer> {
     if (stub?.sequence) {
       const step = stub.sequence[Math.min(stub.served ?? 0, stub.sequence.length - 1)]
       stub.served = (stub.served ?? 0) + 1
+      step.beforeRespond?.()
       res.status(step.status)
       for (const [k, v] of Object.entries(step.headers ?? {})) res.set(k, v)
       res.json(step.body)

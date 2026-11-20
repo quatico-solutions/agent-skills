@@ -117,7 +117,7 @@ describe('bb download list', () => {
   it('exits 75 when the Downloads area answers 429', async () => {
     server.stub('GET', '/repositories/testws/testrepo/downloads', { error: { message: 'slow down' } }, 429)
 
-    const result = await bb(['download', 'list'], { port: server.port, env: { BB_RETRY_BASE_MS: '0' } })
+    const result = await bb(['download', 'list'], { port: server.port })
 
     assert.equal(result.exitCode, 75)
     assert.equal(result.stdout, '')

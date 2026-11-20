@@ -190,7 +190,7 @@ describe('bb pr create', () => {
     // When I add a reviewer by display name
     const result = await bb(
       ['pr', 'create', '--title', 'Test', '--head', 'feature/x', '--reviewer', 'Ghost Person'],
-      { port: server.port, env: { BB_RETRY_BASE_MS: '0' } }
+      { port: server.port }
     )
 
     // Then it exits 75 and does not create the PR
