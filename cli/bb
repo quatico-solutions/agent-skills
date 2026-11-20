@@ -3092,6 +3092,111 @@ HELP
   fi
 }
 
+# --- Subcommands: rate-limit -------------------------------------------------
+
+# Shows what the request guard sees: the requests of the last hour, the ceiling
+# and any pause. It sends no request, records none and deletes no file. It
+# counts and reads the pause with the helpers of the guard. Exit 75 means that
+# the guard would refuse a request now. When the state directory is unusable it
+# warns once, as everywhere, and reports the count as unknown.
+cmd_rate_limit() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show the requests bb sent in the last hour from this machine, the hourly ceiling
+and any pause after a rate limit. Sends no request.
+
+USAGE
+  bb rate-limit [--json]
+
+FLAGS
+  --json   Output {requests, ceiling, paused_until, wait_seconds}
+
+OUTPUT
+  requests in the last hour: <n> of <ceiling> (this machine)
+  paused until HH:MM:SSZ (in <n> s)        (only during a pause)
+
+  With BB_HOURLY_LIMIT=0 the first line reads
+  "requests in the last hour: <n> (no ceiling)". Times are UTC.
+  JSON: ceiling and paused_until are null without a ceiling or a pause;
+  paused_until is epoch seconds; wait_seconds is the time until the next
+  request can go out, 0 when it can now; requests is null when bb cannot
+  keep its request count.
+
+EXIT STATUS
+  0    a request can go out now
+  75   bb is paused, or the last hour holds as many requests as the ceiling
+
+EXAMPLES
+  bb rate-limit
+  bb rate-limit --json | jq .wait_seconds
+HELP
+        exit 0
+        ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local email limit now dir key stamp prev_stamp counted
+  local n="" free=0 left=""
+  email="$(bb_email)" || exit 1
+  limit="$(bb_hourly_limit)" || exit 1
+  now="$(bb_now)"
+
+  # The files of bb_request_guard: the previous and the current UTC hour.
+  if [[ -z "${BB_STATE_OFF:-}" ]]; then
+    if dir="$(bb_state_dir)" \
+      && key="$(bb_account_key "$email")" \
+      && stamp="$(bb_date_utc "$now" %Y%m%d%H)" \
+      && prev_stamp="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)"; then
+      counted="$(bb_budget_count "$now" "$limit" "${dir}/requests-${key}-${prev_stamp}.log" "${dir}/requests-${key}-${stamp}.log")" || counted=""
+      n="${counted%% *}"
+      free="${counted##* }"
+      [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { n=""; free=0; }
+      left="$(bb_pause_left "$key" "$now")"
+    else
+      bb_state_warn
+    fi
+  fi
+
+  # The wait is the longer of the pause and the ceiling. A shown wait of 429 s
+  # reads 430 s here too (bb_shown_wait), in the text and in the JSON.
+  local wait_s=0 pause_wait=0 rc=0
+  if [[ "$limit" -gt 0 && -n "$n" && "$n" -ge "$limit" ]]; then
+    wait_s=$((free - now))
+    [[ "$wait_s" -lt 1 ]] && wait_s=1
+    rc=75
+  fi
+  if [[ -n "$left" ]]; then
+    pause_wait="$(bb_shown_wait "$left")"
+    [[ "$left" -gt "$wait_s" ]] && wait_s="$left"
+    rc=75
+  fi
+  wait_s="$(bb_shown_wait "$wait_s")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    local ceiling_json=null pause_json=null
+    [[ "$limit" -gt 0 ]] && ceiling_json="$limit"
+    [[ -n "$left" ]] && pause_json=$((now + pause_wait))
+    jq -n --argjson requests "${n:-null}" --argjson ceiling "$ceiling_json" \
+      --argjson paused_until "$pause_json" --argjson wait_seconds "$wait_s" \
+      '{requests: $requests, ceiling: $ceiling, paused_until: $paused_until, wait_seconds: $wait_seconds}'
+  else
+    if [[ -z "$n" ]]; then
+      echo "requests in the last hour: unknown (no request count on this machine)"
+    elif [[ "$limit" -gt 0 ]]; then
+      echo "requests in the last hour: ${n} of ${limit} (this machine)"
+    else
+      echo "requests in the last hour: ${n} (no ceiling)"
+    fi
+    [[ -n "$left" ]] && echo "paused until $(bb_utc_hms "$((now + pause_wait))") (in ${pause_wait} s)"
+  fi
+  exit "$rc"
+}
+
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
@@ -3137,6 +3242,9 @@ Source:
   source commits [ref] List commits (or show one by SHA)
   source diff <spec>  Compare two refs (or --stat for summary)
 
+Rate limit:
+  rate-limit          Show the requests of the last hour and any pause (sends no request)
+
 Global flags:
   -R workspace/repo   Specify repository (default: auto-detect from git remote)
   --json              Output raw JSON
@@ -3162,12 +3270,14 @@ Untrusted content:
 Exit status:
   0    success
   1    error: usage error, failed request, or no answer from Bitbucket
-  75   rate limited (HTTP 429): wait, then retry; the same call can succeed later
+  75   rate limited: Bitbucket answered 429, bb is paused after one, or this machine reached its hourly ceiling; stderr names when to retry
   With --jq, a jq failure exits with jq's own code (2, 3 or 5).
 
 Environment:
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
+  BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)
+  BB_STATE_DIR        Where bb keeps its request count (default ~/.local/state/bb)
 
 Examples:
   bb pr list
@@ -3201,6 +3311,7 @@ Examples:
   bb source commits abc123
   bb source diff main..feature/x
   bb source diff main..feature/x --stat
+  bb rate-limit
   bb api /repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
 EOF
@@ -3285,6 +3396,9 @@ case "${1:-help}" in
     ;;
   api)
     shift; cmd_api "$@"
+    ;;
+  rate-limit)
+    shift; cmd_rate_limit "$@"
     ;;
   help|--help|-h)
     usage
