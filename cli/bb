@@ -214,10 +214,12 @@ bb_check_status() {
 
 BB_BUDGET_DEFAULT=800
 BB_BUDGET_WINDOW=3600
-# Per process, never from the environment: the account key once it is read, and
-# whether the state warning was printed.
+# Per process, never from the environment: the account key once it is read,
+# whether the state warning was printed, and whether bb_budget_init found the
+# state directory unusable.
 BB_ACCOUNT_KEY=""
 BB_STATE_WARNED=""
+BB_STATE_OFF=""
 
 # Epoch seconds. BB_NOW replaces the clock for the test suite, and only while
 # BB_API_URL is set: that variable already limits bb to a loopback host.
@@ -348,11 +350,34 @@ bb_budget_prune() {
   return 0
 }
 
+# Runs once in the main shell, with the command line as $@, before the command
+# is dispatched. It validates BB_HOURLY_LIMIT, which exits 1 on an invalid value
+# before any temporary file or request, and it makes the state directory. A
+# state directory that cannot be made gives the warning here, once, and sets
+# BB_STATE_OFF, which the request subshells inherit and bb_request_guard reads.
+# Help and a bare `bb` skip it: they send no request, and they must work
+# whatever the settings are.
+bb_budget_init() {
+  [[ "${1:-help}" == "help" ]] && return 0
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == "--help" || "$arg" == "-h" ]] && return 0
+  done
+  bb_hourly_limit > /dev/null
+  if ! bb_state_dir > /dev/null; then
+    BB_STATE_OFF=1
+    bb_state_warn
+  fi
+  return 0
+}
+
 # Runs before every request bb sends; $1 is the account's email. Returns 0 to
 # send, after it has recorded the request, or prints the refusal and returns
 # 75. An invalid BB_HOURLY_LIMIT exits 1. State that cannot be kept gives one
-# warning and returns 0.
+# warning and returns 0; when bb_budget_init has found the state unusable, it
+# returns 0 at once and says nothing.
 bb_request_guard() {
+  [[ -n "${BB_STATE_OFF:-}" ]] && return 0
   local email="${1:-}"
   local limit dir now stamp prev_stamp cur_file prev_file
   limit="$(bb_hourly_limit)" || exit 1
@@ -3072,6 +3097,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+bb_budget_init "$@"
 
 case "${1:-help}" in
   whoami)    shift; cmd_auth_status "$@" ;;

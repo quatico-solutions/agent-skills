@@ -250,10 +250,10 @@ describe('bb hourly request budget', () => {
     }
   })
 
-  it('Takes neither the account key nor the warning flag from the environment', async () => {
-    // Given an environment that carries a key and a set warning flag
+  it('Takes none of its per-process state from the environment', async () => {
+    // Given an environment that carries a key, a set warning flag and a set off flag
     const dir = stateDir()
-    const env = budgetEnv(dir, { BB_ACCOUNT_KEY: 'deadbeef0000', BB_STATE_WARNED: '1' })
+    const env = budgetEnv(dir, { BB_ACCOUNT_KEY: 'deadbeef0000', BB_STATE_WARNED: '1', BB_STATE_OFF: '1' })
 
     // When I make a call
     await bb('api /user', { port: server.port, env })
@@ -422,6 +422,91 @@ describe('bb hourly request budget', () => {
     assert.equal(server.getCalls().length, 1)
     const warnings = result.stderr.split('\n').filter((line) => line.startsWith('warning:'))
     assert.equal(warnings.length, 1, result.stderr)
+  })
+
+  it('Warns once for a command that sends several requests', async () => {
+    // Given a state directory that cannot be used, and a command with two requests
+    const dir = stateDir()
+    mkdirSync(path.dirname(dir), { recursive: true })
+    const blocker = path.join(path.dirname(dir), 'not a directory')
+    writeFileSync(blocker, 'x')
+    const blocked = path.join(blocker, 'bb state')
+    const hash = 'abc123def4567890abcdef1234567890abcdef12'
+    const SRC = `/repositories/testws/testrepo/src/${hash}/README.md`
+    server.stubRaw('GET', SRC, '# Test Repository')
+    server.stubWithQuery('GET', SRC, { format: 'meta' }, sourceFileMeta)
+
+    // When I run it
+    const result = await bb(`source cat README.md --ref ${hash}`, { port: server.port, env: budgetEnv(blocked) })
+
+    // Then both requests go out and the warning appears once
+    assert.equal(result.exitCode, 0)
+    assert.equal(server.getCalls().length, 2)
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${blocked}; the hourly budget is off for this call\n`,
+    )
+  })
+
+  it('Refuses a malformed BB_HOURLY_LIMIT in a listing before it creates a file', async () => {
+    // Given a listing of two pages, a malformed ceiling
+    const PRS = '/repositories/testws/testrepo/pullrequests'
+    const page = (n: number) => ({
+      values: [{
+        id: n, title: `PR ${n}`, state: 'OPEN', author: { display_name: 'A', nickname: 'a' },
+        source: { branch: { name: 'src' } }, destination: { branch: { name: 'main' } },
+      }],
+      ...(n < 2 ? { next: `${server.baseUrl}${PRS}?state=OPEN&pagelen=50&page=${n + 1}` } : {}),
+    })
+    server.stub('GET', PRS, page(1))
+    server.stubWithQuery('GET', PRS, { page: '2' }, page(2))
+    // The directory that holds every file a `mktemp` stub hands out. macOS mktemp
+    // ignores TMPDIR, so a stub on PATH is what makes the files countable.
+    const root = mkdtempSync(path.join(tmpdir(), 'bb-budget-mktemp-'))
+    const bin = path.join(root, 'bin')
+    const files = path.join(root, 'files')
+    mkdirSync(bin)
+    mkdirSync(files)
+    writeFileSync(
+      path.join(bin, 'mktemp'),
+      `#!/bin/sh\nn=0\nwhile [ -e '${files}'/tmp.$n ]; do n=$((n + 1)); done\n: > '${files}'/tmp.$n\necho '${files}'/tmp.$n\n`,
+      { mode: 0o755 },
+    )
+    try {
+      // When I list every page
+      const result = await bb('pr list --all', {
+        port: server.port,
+        env: budgetEnv(stateDir(), { BB_HOURLY_LIMIT: 'abc', PATH: `${bin}:${process.env.PATH ?? ''}` }),
+      })
+
+      // Then bb exits 1 with the usage error, sends nothing and creates no temporary file
+      assert.equal(result.exitCode, 1)
+      assert.equal(result.stderr, "error: BB_HOURLY_LIMIT must be a whole number, got 'abc'\n")
+      assert.equal(result.stdout, '')
+      assert.equal(server.getCalls().length, 0)
+      assert.deepEqual(readdirSync(files), [])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('Prints help and the version whatever the budget settings are', async () => {
+    // Given a malformed ceiling and a state directory that cannot be used
+    const dir = stateDir()
+    mkdirSync(path.dirname(dir), { recursive: true })
+    const blocker = path.join(path.dirname(dir), 'not a directory')
+    writeFileSync(blocker, 'x')
+    const env = budgetEnv(path.join(blocker, 'bb state'), { BB_HOURLY_LIMIT: 'abc' })
+
+    // When I ask for help or the version
+    for (const args of [['--help'], ['help'], ['pr', '--help'], ['pr', 'list', '--help'], ['--version']]) {
+      const result = await bb(args, { port: server.port, repo: null, env })
+
+      // Then bb answers without a budget message
+      assert.equal(result.exitCode, 0, args.join(' '))
+      assert.doesNotMatch(result.stderr, /BB_HOURLY_LIMIT|warning:/, args.join(' '))
+    }
+    assert.equal(server.getCalls().length, 0)
   })
 
   it('Keeps the ceiling under parallel calls', async () => {
