@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.22.0
+
+### Minor Changes
+
+- [#133](https://github.com/quatico-solutions/agent-skills/pull/133) [`ab1ef6c`](https://github.com/quatico-solutions/agent-skills/commit/ab1ef6cd8a8d66a291d875ae323fcc6d4635f37d) Thanks [@eins78](https://github.com/eins78)! - bb: an hourly request budget per account and machine (800 by default, `BB_HOURLY_LIMIT`), a pause for every bb process after a rate limit, and `bb rate-limit`; a listing no longer retries a rate-limited page; `pr list` and `pr view` with `--json checks`, `source branches` and `pr create` without `--base` exit 75 on a rate limit instead of printing `UNKNOWN`, an unmarked list or creating a PR against a guessed base branch; `pr create` without `--base` falls back to the git default branch, then `main`, when the lookup fails for another reason
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: minor
+  -->
+
 ## 3.21.0
 
 ### Minor Changes
