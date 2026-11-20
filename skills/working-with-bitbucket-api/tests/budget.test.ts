@@ -128,8 +128,11 @@ describe('bb hourly request budget', () => {
     // When I make a call
     const result = await bb('api /user', { port: server.port, env: budgetEnv(dir, { BB_HOURLY_LIMIT: '3' }) })
 
-    // Then the wait ends when only two requests are left in the window
+    // Then the refusal names the five requests it counted, not the ceiling of 3,
+    // and the wait ends when only two requests are left in the window
     assert.equal(result.exitCode, 75)
+    assert.match(result.stderr, REFUSAL)
+    assert.match(result.stderr, /^error: rate limited — 5 requests in the last hour from this machine; /)
     assert.ok(result.stderr.includes(`next request at ${utcHms(NOW + 1600)} (in 1600 s)`), result.stderr)
   })
 

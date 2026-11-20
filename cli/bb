@@ -637,7 +637,7 @@ bb_request_guard() {
       wait_s=$((free - now))
       [[ "$wait_s" -lt 1 ]] && wait_s=1
       wait_s="$(bb_shown_wait "$wait_s")"
-      echo >&2 "error: rate limited — ${limit} requests in the last hour from this machine; next request at $(bb_utc_hms "$((now + wait_s))") (in ${wait_s} s)"
+      echo >&2 "error: rate limited — ${n} requests in the last hour from this machine; next request at $(bb_utc_hms "$((now + wait_s))") (in ${wait_s} s)"
       return 75
     fi
   fi
