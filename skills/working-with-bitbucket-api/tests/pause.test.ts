@@ -422,6 +422,56 @@ describe('bb pause after HTTP 429', () => {
     assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 900, length: 900 })
   })
 
+  it('Reads a Retry-After that is padded with zeros to more than 9 digits as its value', async () => {
+    // Given a Retry-After of 300 s written with 10 digits
+    server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': '0000000300' } }])
+    const dir = stateDir()
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the pause is 300 s, not the clamp, and the message prints the value as sent
+    assert.equal(
+      result.stderr,
+      `error: rate limited — Bitbucket asked to wait 0000000300 s; bb paused until ${utcHms(NOW + 300)} (in 300 s)\n`,
+    )
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
+  })
+
+  it('Lengthens the pause to a padded Retry-After that is longer than 300 s', async () => {
+    // Given a Retry-After of 900 s written with 25 digits
+    const padded = `${'0'.repeat(22)}900`
+    server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': padded } }])
+    const dir = stateDir()
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the pause is 900 s
+    assert.equal(
+      result.stderr,
+      `error: rate limited — Bitbucket asked to wait ${padded} s; bb paused until ${utcHms(NOW + 900)} (in 900 s)\n`,
+    )
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 900, length: 900 })
+  })
+
+  it('Reads a Retry-After of only zeros as no wait, however many there are', async () => {
+    // Given a Retry-After of 12 zeros
+    const zeros = '0'.repeat(12)
+    server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': zeros } }])
+    const dir = stateDir()
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the pause is the first one, 300 s
+    assert.equal(
+      result.stderr,
+      `error: rate limited — Bitbucket asked to wait ${zeros} s; bb paused until ${utcHms(NOW + 300)} (in 300 s)\n`,
+    )
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
+  })
+
   it('Pauses for 999999999 s at most for a Retry-After of more than 9 digits', async () => {
     const huge = '99999999999999999999999'
     server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': huge } }])
@@ -476,6 +526,22 @@ describe('bb pause after HTTP 429', () => {
     assert.equal(result.exitCode, 0)
     assert.equal(server.getCalls().length, 1)
     assert.equal(result.stderr, '')
+  })
+
+  it('Reads the fields of a pause file that are padded with zeros beyond 12 digits', async () => {
+    // Given a pause file with both numbers written with 13 digits, ending in 100 s
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(path.join(dir, `pause-${accountKey(EMAIL)}`), `${String(NOW + 100).padStart(13, '0')} ${'300'.padStart(13, '0')}\n`)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then the pause holds, and the call is refused without a request
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stderr, `error: rate limited — bb paused until ${utcHms(NOW + 100)} after Bitbucket refused a request (in 100 s)\n`)
+    assert.equal(server.getCalls().length, 0)
   })
 
   it('Treats a pause of length 0 as no pause', async () => {
