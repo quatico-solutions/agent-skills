@@ -392,14 +392,20 @@ bb_pause_read() {
 }
 
 # Prints the seconds left of the pause of the account $1, or nothing when there
-# is none or it has ended. $2 is the second to measure from; the default is now.
+# is none, it has ended or it is stale. $2 is the second to measure from; the
+# default is now. bb writes every pause with the invariant "end - now <= length"
+# (see bb_pause_after_429), and time only shortens the rest. A pause with more
+# time left than its length was written by a clock that ran ahead of this one, or
+# was edited by hand: it counts as no pause, so that no call waits for a day.
 bb_pause_left() {
-  local now="${2:-}" stored
+  local now="${2:-}" stored pause_end pause_len
   [[ -n "$now" ]] || now="$(bb_now)"
   stored="$(bb_pause_read "$1")"
   [[ -n "$stored" ]] || return 0
-  if [[ "${stored% *}" -gt "$now" ]]; then
-    echo "$((${stored% *} - now))"
+  pause_end="${stored% *}"
+  pause_len="${stored#* }"
+  if [[ "$pause_end" -gt "$now" && $((pause_end - now)) -le "$pause_len" ]]; then
+    echo "$((pause_end - now))"
   fi
   return 0
 }
@@ -425,17 +431,22 @@ bb_pause_write() {
 # before this 429:
 #   none, or ended 3600 s ago or longer:  length 300 s
 #   ended less than 3600 s ago:  length twice the stored one, at most 3600 s
-#   in both cases the length is at least Retry-After, which is not capped, and
-#   the end is now + length
+#   in both cases the length is at least Retry-After, and the end is now + length;
+#   the only cap on a Retry-After is the clamp of one with more than 9 digits to
+#   999999999 s
 #   still active:  the end is the later of the stored end and now + Retry-After
-#                  (300 s without one), and the stored length stays
+#                  (300 s without one); the stored length stays, unless that wait
+#                  is longer than it, and then the wait is the length
 # Several processes that get a 429 together leave one pause, not a doubled one.
+# Every pause written keeps the invariant "end - now <= length" at write time:
+# the length of an active pause only grows with the end, and bb_pause_left
+# treats a pause that breaks it as stale.
 # A pause that cannot be stored (no key, no state directory, a write that fails)
 # gives the warning of bb_state_warn; the tail still names the pause bb would
 # have stored, and the caller exits 75 all the same.
 bb_pause_after_429() {
   local key="${1:-}" raw="${2:-}"
-  local ra="" now stored="" stored_end=0 stored_len=0 new_end new_len shown message
+  local ra="" now stored="" stored_end=0 stored_len=0 own_len new_end new_len shown message
   if [[ "$raw" =~ ^[0-9]+$ ]]; then
     if [[ "${#raw}" -gt 9 ]]; then ra=999999999; else ra=$((10#$raw)); fi
   fi
@@ -447,8 +458,10 @@ bb_pause_after_429() {
   fi
 
   if [[ -n "$stored" && "$now" -lt "$stored_end" ]]; then
+    own_len="${ra:-300}"
     new_len="$stored_len"
-    new_end=$((now + ${ra:-300}))
+    [[ "$own_len" -gt "$new_len" ]] && new_len="$own_len"
+    new_end=$((now + own_len))
     [[ "$stored_end" -gt "$new_end" ]] && new_end="$stored_end"
   else
     if [[ -n "$stored" && $((now - stored_end)) -lt 3600 ]]; then

@@ -266,6 +266,62 @@ describe('bb pause after HTTP 429', () => {
     assert.deepEqual(readPause(longer, EMAIL), { until: NOW + 1000, length: 600 })
   })
 
+  it('Stores a length that covers a Retry-After longer than the stored one, and keeps blocking', async () => {
+    // Given a 429 with Retry-After 7200 that arrives while another process has just stored a pause of 300 s ending in 100 s
+    const dir = stateDir()
+    server.stubSequence('GET', '/user', {}, [
+      { status: 429, body: SLOW, headers: { 'Retry-After': '7200' }, beforeRespond: () => seedPause(dir, EMAIL, NOW + 100, 300) },
+    ])
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the end moves out, and the stored length is as long as the wait from now
+    assert.equal(
+      result.stderr,
+      `error: rate limited — Bitbucket asked to wait 7200 s; bb paused until ${utcHms(NOW + 7200)} (in 7200 s)\n`,
+    )
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 7200, length: 7200 })
+
+    // And the next call is refused by that pause without reaching the server
+    const next = await run('api /user', { port: server.port, env: env(dir) })
+    assert.equal(next.exitCode, 75)
+    assert.equal(
+      next.stderr,
+      `error: rate limited — bb paused until ${utcHms(NOW + 7200)} after Bitbucket refused a request (in 7200 s)\n`,
+    )
+    assert.equal(server.getCalls().length, 1)
+  })
+
+  it('Treats a pause that ends later than its length as no pause', async () => {
+    // Given a pause that was written while the clock ran a day ahead: it ends 86700 s from now and names a length of 300 s
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 86700, 300)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then it goes out
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stderr, '')
+    assert.equal(server.getCalls().length, 1)
+  })
+
+  it('Refuses a call while a pause ends exactly its length from now', async () => {
+    // Given a pause that was written this second: it ends 300 s from now and names a length of 300 s
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 300, 300)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then the pause still applies
+    assert.equal(result.exitCode, 75)
+    assert.equal(server.getCalls().length, 0)
+  })
+
   it('Leaves one pause of 300 s after several 429s at once', async () => {
     // Given the API answers 429 every time
     server.stub('GET', '/user', SLOW, 429)

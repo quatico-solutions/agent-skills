@@ -232,6 +232,19 @@ describe('bb rate-limit', () => {
     assert.equal(result.exitCode, 0)
   })
 
+  it('Ignores a pause that ends later than its length', async () => {
+    // Given a pause written while the clock ran a day ahead: it ends 86700 s from now and names a length of 300 s
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 86700, 300)
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir) })
+
+    // Then it names no pause and exits 0, like the call that the guard lets through
+    assert.equal(result.stdout, 'requests in the last hour: 0 of 800 (this machine)\n')
+    assert.equal(result.exitCode, 0)
+  })
+
   it('Shows a wait of 429 s as 430 s, like every other message', async () => {
     // Given a pause that ends in 429 s
     const dir = stateDir()
