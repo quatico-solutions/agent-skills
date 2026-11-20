@@ -479,6 +479,53 @@ describe('bb rate-limit', () => {
     assert.match(result.stderr, /^warning: bb cannot keep its request count in /)
   })
 
+  it('Reports the unknown count and warns once when the request file cannot be read', { skip: process.getuid?.() === 0 }, async () => {
+    // Given three requests in a file that takes writes but no reads
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, recent(3))
+    const file = requestFile(dir, EMAIL, NOW - 1)
+    chmodSync(file, 0o200)
+
+    try {
+      // When I run bb rate-limit
+      const result = await bb('rate-limit', { port: server.port, env: env(dir) })
+
+      // Then it says that the count is unknown instead of 0, warns once, exits 0 and sends nothing
+      assert.equal(result.stdout, 'requests in the last hour: unknown (no request count on this machine)\n')
+      assert.equal(
+        result.stderr,
+        `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
+      )
+      assert.equal(result.exitCode, 0)
+      assert.equal(server.getCalls().length, 0)
+    } finally {
+      chmodSync(file, 0o600)
+    }
+  })
+
+  it('Gives null for the count in JSON when the request file cannot be read', { skip: process.getuid?.() === 0 }, async () => {
+    // Given three requests in a file that takes writes but no reads, and a pause that bb can read
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, recent(3))
+    seedPause(dir, EMAIL, NOW + 100, 300)
+    const file = requestFile(dir, EMAIL, NOW - 1)
+    chmodSync(file, 0o200)
+
+    try {
+      // When I run bb rate-limit --json
+      const result = await bb('rate-limit --json', { port: server.port, env: env(dir) })
+
+      // Then the count is null, the pause still shows, and stdout stays pure JSON
+      assert.deepEqual(JSON.parse(result.stdout), {
+        requests: null, ceiling: 800, paused_until: NOW + 100, wait_seconds: 100,
+      })
+      assert.equal(result.exitCode, 75)
+      assert.match(result.stderr, /^warning: bb cannot keep its request count in /)
+    } finally {
+      chmodSync(file, 0o600)
+    }
+  })
+
   it('Refuses a malformed BB_HOURLY_LIMIT like every other command', async () => {
     // Given a ceiling that is no whole number
     const dir = stateDir()

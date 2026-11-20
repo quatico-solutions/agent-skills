@@ -643,6 +643,46 @@ describe('bb hourly request budget', () => {
     }
   })
 
+  for (const [label, offset] of [['the current hour', 10], ['the previous hour', 3000]] as const) {
+    it(`Warns once and sends when the request file of ${label} cannot be read`, { skip: process.getuid?.() === 0 }, async () => {
+      // Given one request in a file that takes writes but no reads, and a ceiling of 1 that the request would reach
+      const dir = stateDir()
+      seedRequests(dir, EMAIL, [NOW - offset])
+      const file = requestFile(dir, EMAIL, NOW - offset)
+      chmodSync(file, 0o200)
+
+      try {
+        // When I make a call
+        const result = await bb('api /user', { port: server.port, env: budgetEnv(dir, { BB_HOURLY_LIMIT: '1' }) })
+
+        // Then bb cannot count, so it warns once and sends, and it did not change the file
+        assert.equal(result.exitCode, 0, result.stderr)
+        assert.equal(server.getCalls().length, 1)
+        assert.equal(
+          result.stderr,
+          `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
+        )
+        assert.equal(statSync(file).mode & 0o777, 0o200)
+      } finally {
+        chmodSync(file, 0o600)
+      }
+    })
+  }
+
+  it('Counts a missing request file as no request, without a warning', async () => {
+    // Given a state directory that exists and holds no request file, and a ceiling of 1
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir, { BB_HOURLY_LIMIT: '1' }) })
+
+    // Then it goes out without a warning and is recorded
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(readRequests(dir, EMAIL), [NOW])
+  })
+
   it('Reads the epoch with date -d on a system whose date -r names a file', async () => {
     // Given a GNU system, simulated by OSTYPE and a date that fails on -r like GNU date does
     // for a file that does not exist, and that reads the epoch with -d @<epoch>

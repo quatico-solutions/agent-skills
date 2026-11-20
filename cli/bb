@@ -368,9 +368,16 @@ bb_hourly_limit() {
 # does a line from the future, so no line can make a wait longer than 3600 s.
 # free is the second at which the request ceiling $2 lets the next request
 # through: the (n - c + 1)-th oldest counted line plus 3600, or 0 while n is
-# below the ceiling.
+# below the ceiling. A file that is missing holds no request. A file that exists
+# and cannot be read (no read permission, not a regular file) makes the count
+# unknown: the function prints nothing and returns 1, and the caller warns.
 bb_budget_count() {
-  local now="$1" limit="$2" prev_file="$3" cur_file="$4"
+  local now="$1" limit="$2" prev_file="$3" cur_file="$4" file
+  for file in "$prev_file" "$cur_file"; do
+    if [[ -e "$file" ]] && { [[ ! -f "$file" ]] || [[ ! -r "$file" ]]; }; then
+      return 1
+    fi
+  done
   { cat "$prev_file" "$cur_file" 2>/dev/null || true; } | awk -v now="$now" -v min="$((now - BB_BUDGET_WINDOW))" -v c="$limit" -v window="$BB_BUDGET_WINDOW" '
     /^[0-9]+$/ && length($0) <= 12 && $0 + 0 > min && $0 + 0 <= now { v[++n] = $0 + 0 }
     END {
@@ -614,10 +621,11 @@ bb_request_guard() {
 
   if [[ "$limit" -gt 0 ]]; then
     local counted n free wait_s
-    counted="$(bb_budget_count "$now" "$limit" "$prev_file" "$cur_file")" || counted=""
+    # A count that cannot be made is no count: warn and send.
+    counted="$(bb_budget_count "$now" "$limit" "$prev_file" "$cur_file")" || { bb_state_warn; return 0; }
     n="${counted%% *}"
     free="${counted##* }"
-    [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { n=0; free=0; }
+    [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { bb_state_warn; return 0; }
     if [[ "$n" -ge "$limit" ]]; then
       wait_s=$((free - now))
       [[ "$wait_s" -lt 1 ]] && wait_s=1
@@ -3204,7 +3212,8 @@ HELP
 # and any pause. It sends no request, records none and deletes no file. It
 # counts and reads the pause with the helpers of the guard. Exit 75 means that
 # the guard would refuse a request now. When the state directory is unusable it
-# warns once, as everywhere, and reports the count as unknown.
+# warns once, as everywhere, and reports the count as unknown; so does a request
+# file that exists and cannot be read.
 cmd_rate_limit() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -3261,10 +3270,14 @@ HELP
       && stamps="$(bb_hour_stamps "$now")"; then
       stamp="${stamps% *}"
       prev_stamp="${stamps#* }"
-      counted="$(bb_budget_count "$now" "$limit" "${dir}/requests-${key}-${prev_stamp}.log" "${dir}/requests-${key}-${stamp}.log")" || counted=""
-      n="${counted%% *}"
-      free="${counted##* }"
+      if counted="$(bb_budget_count "$now" "$limit" "${dir}/requests-${key}-${prev_stamp}.log" "${dir}/requests-${key}-${stamp}.log")"; then
+        n="${counted%% *}"
+        free="${counted##* }"
+      fi
       [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { n=""; free=0; }
+      # A request file that cannot be read gives an unknown count, like an
+      # unusable state directory; the pause still shows.
+      [[ -n "$n" ]] || bb_state_warn
       left="$(bb_pause_left "$key" "$now")"
     else
       bb_state_warn

@@ -224,7 +224,7 @@ On exit 75, wait. Do not retry earlier and do not retry in a loop: `bb` refuses 
 
 The person sets `BB_HOURLY_LIMIT` and `BB_STATE_DIR`. An agent never sets them, and never deletes or edits a file in the state directory, to get past a refusal.
 
-The count covers this machine only. It guards against a runaway loop and is not an exact meter: calls that start in the same second can pass the ceiling together. When `bb` cannot keep the count in its state directory, it warns once on stderr and sends the request with no budget, and `bb rate-limit` reports the count as unknown (`null` in JSON).
+The count covers this machine only. It guards against a runaway loop and is not an exact meter: calls that start in the same second can pass the ceiling together. When `bb` cannot keep or read the count in its state directory (no usable directory, or a request file that exists and cannot be read), it warns once on stderr and sends the request with no budget, and `bb rate-limit` reports the count as unknown (`null` in JSON).
 
 ---
 
