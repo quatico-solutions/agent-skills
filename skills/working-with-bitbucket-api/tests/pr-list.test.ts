@@ -446,8 +446,6 @@ describe('bb pr list --limit', () => {
       }
     }
 
-    const noSleep = { BB_RETRY_BASE_MS: '0' }
-
     it('Follows next links until --limit rows are held', async () => {
       // Given 4 pages of 50 PRs
       servePages(4, 50)
@@ -674,114 +672,42 @@ describe('bb pr list --limit', () => {
       assert.equal(server.getCalls()[0].query.q, '(state = "MERGED") AND (source.branch.name = "src")')
     })
 
-    it('Retries a page that answers 429 once, then succeeds', async () => {
-      // Given page 1 answers 429 with Retry-After, then 200
-      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
-      server.stubSequence('GET', PR_PATH, {}, [
-        { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '0' } },
-        { status: 200, body: ok },
-      ])
-
-      // When I list
-      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
-
-      // Then the list succeeds after 2 requests and names the 0 s wait
-      assert.equal(result.exitCode, 0)
-      assert.equal(result.stdout.trim(), '1')
-      assert.equal(server.getCalls().length, 2)
-      assert.match(result.stderr, /retrying in 0 s \(1\/5\)/)
-    })
-
-    it('Retries a 429 without Retry-After', async () => {
-      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
-      server.stubSequence('GET', PR_PATH, {}, [
-        { status: 429, body: { error: { message: 'slow down' } } },
-        { status: 200, body: ok },
-      ])
-
-      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
-
-      assert.equal(result.exitCode, 0)
-      assert.equal(server.getCalls().length, 2)
-    })
-
-    it('Logs the backoff schedule 2, 4, 8, 16, 32 s without Retry-After', async () => {
-      // Given page 1 answers 429 five times, then 200
-      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
-      const slow = { status: 429, body: { error: { message: 'slow down' } } }
-      server.stubSequence('GET', PR_PATH, {}, [slow, slow, slow, slow, slow, { status: 200, body: ok }])
-
-      // When I list
-      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
-
-      // Then the fifth retry succeeds and each wait is named on stderr, in order
-      assert.equal(result.exitCode, 0)
-      assert.equal(result.stdout.trim(), '1')
-      assert.equal(server.getCalls().length, 6)
-      const waits = [...result.stderr.matchAll(/retrying in (\d+) s \((\d)\/5\)/g)].map(m => `${m[1]}:${m[2]}`)
-      assert.deepEqual(waits, ['2:1', '4:2', '8:3', '16:4', '32:5'])
-    })
-
-    it('Caps a Retry-After above 60 s at 60 s', async () => {
-      const ok = { values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }] }
-      server.stubSequence('GET', PR_PATH, {}, [
-        { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '120' } },
-        { status: 200, body: ok },
-      ])
-
-      const result = await bb('pr list --state merged --json number --jq length', { port: server.port, env: noSleep })
-
-      assert.equal(result.exitCode, 0)
-      assert.match(result.stderr, /retrying in 60 s \(1\/5\)/)
-    })
-
-    it('Fails after 5 retries and prints no rows', async () => {
-      // Given page 1 reads fine and page 2 answers 429 every time
-      const first = {
-        values: [{ id: 1, title: 't', state: 'MERGED', author: { display_name: 'A' }, source: { branch: { name: 's' } }, destination: { branch: { name: 'main' } } }],
-        next: `${server.baseUrl}${PR_PATH}?state=MERGED&pagelen=1&page=2`,
-      }
-      server.stub('GET', PR_PATH, first)
+    it('Names the raw Retry-After of the 429 and the rows read before it', async () => {
+      // Given page 1 holds 50 rows and page 2 answers 429 with Retry-After: 3600
+      server.stub('GET', PR_PATH, {
+        values: Array.from({ length: 50 }, (_, i) => ({ id: i + 1 })),
+        next: `${server.baseUrl}${PR_PATH}?state=MERGED&pagelen=50&page=2`,
+      })
       server.stubSequence('GET', PR_PATH, { page: '2' }, [
-        { status: 429, body: { error: { message: 'slow down' } } },
+        { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '3600' } },
       ])
 
       // When I read all pages
-      const result = await bb('pr list --state merged --all --json', { port: server.port, env: noSleep })
+      const result = await bb('pr list --state merged --all --json', { port: server.port })
 
-      // Then it exits 75 after 1 + 6 requests, names the rows read, and prints nothing
+      // Then bb names the 50 rows, the header as sent and the pause, and prints no rows
       assert.equal(result.exitCode, 75)
       assert.equal(result.stdout, '')
-      assert.match(result.stderr, /error: rate limited after 1 rows/)
-      assert.equal(server.getCalls().length, 7)
-    })
-
-    it('Names the raw Retry-After of the final 429, not the 60 s cap', async () => {
-      const limited = { status: 429, body: { error: { message: 'slow down' } }, headers: { 'Retry-After': '3600' } }
-      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
-
-      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
-
-      assert.equal(result.exitCode, 75)
-      assert.equal(result.stdout, '')
-      assert.match(result.stderr, /error: rate limited after 0 rows — Bitbucket asked to wait 3600 s/)
+      assert.match(result.stderr, /^error: rate limited after 50 rows — Bitbucket asked to wait 3600 s; bb paused until \d\d:\d\d:\d\dZ \(in 3600 s\)\n$/)
       assert.doesNotMatch(result.stderr, /429/)
+      assert.equal(server.getCalls().length, 2)
     })
 
-    it('Prints no wait suffix when the final 429 has no Retry-After', async () => {
+    it('Prints no wait suffix when the 429 has no Retry-After', async () => {
       const limited = { status: 429, body: { error: { message: 'slow down' } } }
-      server.stubSequence('GET', PR_PATH, {}, [limited, limited, limited, limited, limited, limited])
+      server.stubSequence('GET', PR_PATH, {}, [limited])
 
-      const result = await bb('pr list --state merged --json', { port: server.port, env: noSleep })
+      const result = await bb('pr list --state merged --json', { port: server.port })
 
       assert.equal(result.exitCode, 75)
-      assert.match(result.stderr, /error: rate limited after 0 rows\s*$/)
+      assert.match(result.stderr, /^error: rate limited after 0 rows — bb paused until \d\d:\d\d:\d\dZ \(in 300 s\)\n$/)
+      assert.doesNotMatch(result.stderr, /asked to wait/)
     })
 
     it('Fails other non-2xx answers on the first attempt', async () => {
       server.stub('GET', PR_PATH, { error: { message: 'boom' } }, 500)
 
-      const result = await bb('pr list --state merged', { port: server.port, env: noSleep })
+      const result = await bb('pr list --state merged', { port: server.port })
 
       assert.equal(result.exitCode, 1)
       assert.match(result.stderr, /HTTP 500/)

@@ -181,17 +181,22 @@ bb_no_response_message() {
 # 1xx/3xx never carry the data the caller asked for. Prints the error and
 # returns 1 on anything else; $2 is the response body for the message. HTTP 429
 # returns 75 (EX_TEMPFAIL) so a caller can tell "wait and retry" from "fix the
-# call"; the message says "rate limited" and never the number, because Plot
-# reads a 429 in stderr as a short burst, not a spent quota.
+# call": it starts the pause (bb_pause_after_429), which stops every bb process
+# of the account, and says when bb sends again. $4 is the file that holds the
+# response headers, for Retry-After; it is optional. The message says "rate
+# limited" and never the number, because Plot reads a 429 in stderr as a short
+# burst, not a spent quota.
 bb_check_status() {
-  local http_code="$1" body="${2:-}" err_file="${3:-}"
+  local http_code="$1" body="${2:-}" err_file="${3:-}" hdr_file="${4:-}"
   [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && return 0
   if [[ "$http_code" == "000" ]]; then
     echo >&2 "$(bb_no_response_message "$err_file")"
     return 1
   fi
   if [[ "$http_code" == "429" ]]; then
-    echo >&2 "error: rate limited"
+    local message
+    message="$(bb_pause_after_429 "${BB_ACCOUNT_KEY:-}" "$(bb_retry_after "$hdr_file")")"
+    echo >&2 "error: rate limited — ${message}"
     return 75
   fi
   local msg
@@ -200,14 +205,462 @@ bb_check_status() {
   return 1
 }
 
+# --- Request budget ----------------------------------------------------------
+
+# bb keeps an hourly request budget per account and per machine. It records the
+# time of every request it sends, a request that Bitbucket answers with 429
+# included, and refuses the next one while the last 3600 s hold BB_HOURLY_LIMIT
+# requests. The default is 800; 0 turns the ceiling off and still records.
+#
+# After an HTTP 429, bb also pauses: every bb process of the account on this
+# machine refuses to send until the pause has ended, so a second process cannot
+# keep a rate limit alive. The pause is the first check of the guard, and the
+# ceiling may be off while it applies.
+#
+# The state is plain files in one directory and has no lock. Calls that start
+# in the same second can pass a ceiling together, and the ceiling is a guard
+# against a runaway loop, not an exact meter. A state directory that cannot be
+# used never blocks a call: bb warns once and sends.
+
+BB_BUDGET_DEFAULT=800
+BB_BUDGET_WINDOW=3600
+# Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
+BB_PAUSE_SKEW=5
+# Per process, never from the environment: the account key once it is read and
+# the email it was made from, whether the state warning was printed, and whether
+# bb_budget_init found the state directory unusable.
+BB_ACCOUNT_KEY=""
+BB_ACCOUNT_EMAIL=""
+BB_STATE_WARNED=""
+BB_STATE_OFF=""
+# How this system's date reads an epoch, found once per process from $OSTYPE
+# without running a command: BSD date (macOS, the BSDs) takes -r <epoch>, GNU
+# date takes -d @<epoch>. On GNU date, -r names a file.
+case "${OSTYPE:-}" in
+  darwin*|*bsd*) BB_DATE_FLAVOUR=bsd ;;
+  *)             BB_DATE_FLAVOUR=gnu ;;
+esac
+
+# Epoch seconds. BB_NOW replaces the clock for the test suite, and only while
+# BB_API_URL is set: that variable already limits bb to a loopback host.
+bb_now() {
+  if [[ -n "${BB_API_URL:-}" && "${BB_NOW:-}" =~ ^[0-9]+$ ]]; then
+    echo "$BB_NOW"
+  else
+    date +%s
+  fi
+}
+
+# $1 is an epoch second, $2 a date format. A BSD system also falls back to -d @,
+# for GNU date ahead of the system one in PATH; a GNU system never tries -r, which
+# would read the file of that name.
+bb_date_utc() {
+  if [[ "$BB_DATE_FLAVOUR" == bsd ]]; then
+    date -u -r "$1" "+$2" 2>/dev/null || date -u -d "@$1" "+$2"
+  else
+    date -u -d "@$1" "+$2"
+  fi
+}
+
+# Prints "<stamp> <previous>": the UTC hour stamps (YYYYMMDDHH) of the second $1
+# and of the second 3600 s before it, which name the request files that the guard
+# reads. One date call; the previous hour is stamp - 1 except in the first hour of
+# a day, where it takes a second call.
+bb_hour_stamps() {
+  local now="$1" stamp prev
+  stamp="$(bb_date_utc "$now" %Y%m%d%H)" || return 1
+  [[ "$stamp" =~ ^[0-9]{10}$ ]] || return 1
+  if [[ "${stamp:8:2}" == 00 ]]; then
+    prev="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)" || return 1
+    [[ "$prev" =~ ^[0-9]{10}$ ]] || return 1
+  else
+    prev=$((10#$stamp - 1))
+  fi
+  printf '%s %s\n' "$stamp" "$prev"
+}
+
+# HH:MM:SSZ in UTC.
+bb_utc_hms() {
+  bb_date_utc "$1" '%H:%M:%SZ'
+}
+
+# A wait of exactly 429 s is shown as 430 s: Plot reads "429" in stderr as an
+# HTTP 429, and a wait is not a status code.
+bb_shown_wait() {
+  if [[ "$1" -eq 429 ]]; then echo 430; else echo "$1"; fi
+}
+
+# The state directory, without touching the file system. An empty variable
+# counts as unset. Returns 1 when no variable gives a path.
+bb_state_path() {
+  if [[ -n "${BB_STATE_DIR:-}" ]]; then
+    printf '%s\n' "$BB_STATE_DIR"
+  elif [[ -n "${XDG_STATE_HOME:-}" ]]; then
+    printf '%s\n' "${XDG_STATE_HOME}/bb"
+  elif [[ -n "${HOME:-}" ]]; then
+    printf '%s\n' "${HOME}/.local/state/bb"
+  else
+    return 1
+  fi
+}
+
+# The state directory. A missing one is created with mode 700. One that exists is
+# used as it is: bb only checks that it can write there and never changes its
+# mode, because the person may name any directory. Returns 1 when there is no path
+# or the directory cannot be used. Calls that start together may all create it:
+# mkdir -p succeeds on a directory that exists.
+bb_state_dir() {
+  local dir
+  dir="$(bb_state_path)" || return 1
+  if [[ -d "$dir" ]]; then
+    [[ -w "$dir" && -x "$dir" ]] || return 1
+  else
+    mkdir -p -m 700 "$dir" 2>/dev/null || return 1
+  fi
+  printf '%s\n' "$dir"
+}
+
+# One warning per process (BB_STATE_WARNED) when the budget cannot be kept.
+# Callers return 0 afterwards, so the request goes out.
+bb_state_warn() {
+  [[ -n "${BB_STATE_WARNED:-}" ]] && return 0
+  BB_STATE_WARNED=1
+  local where
+  where="$(bb_state_path)" || where='~/.local/state/bb'
+  echo >&2 "warning: bb cannot keep its request count in ${where}; the hourly budget is off for this call"
+}
+
+# The first 12 hex characters of the SHA-256 of the lowercased email; the
+# default email is the account bb uses. It names the account in file names.
+bb_account_key() {
+  local email sum
+  if [[ $# -gt 0 ]]; then
+    email="$1"
+  else
+    email="$(bb_email)" || return 1
+  fi
+  # sha256sum first: shasum is a perl script on macOS and starts slowly.
+  if command -v sha256sum >/dev/null 2>&1; then
+    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
+  elif command -v shasum >/dev/null 2>&1; then
+    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
+  else
+    return 1
+  fi
+  printf '%s\n' "${sum:0:12}"
+}
+
+# The ceiling: BB_HOURLY_LIMIT, else 800. A whole number; 0 turns it off. A
+# value with more than 9 digits counts as 999999999, which no hour reaches.
+bb_hourly_limit() {
+  local value="${BB_HOURLY_LIMIT:-$BB_BUDGET_DEFAULT}"
+  if [[ ! "$value" =~ ^[0-9]+$ ]]; then
+    echo >&2 "error: BB_HOURLY_LIMIT must be a whole number, got '${value}'"
+    exit 1
+  fi
+  value="${value#"${value%%[!0]*}"}"
+  [[ -z "$value" ]] && value=0
+  [[ "${#value}" -gt 9 ]] && value=999999999
+  echo "$value"
+}
+
+# Prints "<n> <free>" for the account's request files. n counts the lines
+# newer than $1 - 3600 and not newer than $1 in $3 (the previous hour) and $4
+# (the current hour); lines that are not all digits do not count, and neither
+# does a line from the future, so no line can make a wait longer than 3600 s.
+# free is the second at which the request ceiling $2 lets the next request
+# through: the (n - c + 1)-th oldest counted line plus 3600, or 0 while n is
+# below the ceiling. A file that is missing holds no request. A file that exists
+# and cannot be read (no read permission, not a regular file) makes the count
+# unknown: the function prints nothing and returns 1, and the caller warns.
+bb_budget_count() {
+  local now="$1" limit="$2" prev_file="$3" cur_file="$4" file
+  for file in "$prev_file" "$cur_file"; do
+    if [[ -e "$file" ]] && { [[ ! -f "$file" ]] || [[ ! -r "$file" ]]; }; then
+      return 1
+    fi
+  done
+  { cat "$prev_file" "$cur_file" 2>/dev/null || true; } | awk -v now="$now" -v min="$((now - BB_BUDGET_WINDOW))" -v c="$limit" -v window="$BB_BUDGET_WINDOW" '
+    /^[0-9]+$/ && length($0) <= 12 && $0 + 0 > min && $0 + 0 <= now { v[++n] = $0 + 0 }
+    END {
+      for (i = 2; i <= n; i++) {
+        x = v[i]; j = i - 1
+        while (j >= 1 && v[j] > x) { v[j + 1] = v[j]; j-- }
+        v[j + 1] = x
+      }
+      free = 0
+      if (n >= c) free = v[n - c + 1] + window
+      print n + 0, free
+    }'
+}
+
+# Deletes the request files of every account that are older than the previous
+# UTC hour ($2, YYYYMMDDHH). Best effort: a file that stays does no harm.
+bb_budget_prune() {
+  local dir="$1" keep_from="$2" file stamp
+  for file in "$dir"/requests-*-*.log; do
+    [[ -f "$file" ]] || continue
+    stamp="${file%.log}"
+    stamp="${stamp##*-}"
+    if [[ "$stamp" =~ ^[0-9]{10}$ && "$stamp" < "$keep_from" ]]; then
+      rm -f "$file" 2>/dev/null || true
+    fi
+  done
+  return 0
+}
+
+# The Retry-After value of the last response in the header file $1, as sent, or
+# nothing. curl -D writes the headers of every response of a redirect chain; a
+# status line starts a new response, so only the last one counts.
+bb_retry_after() {
+  [[ -n "${1:-}" && -f "$1" ]] || return 0
+  tr -d '\r' < "$1" | awk '
+    /^HTTP\// { v = "" }
+    tolower(substr($0, 1, 12)) == "retry-after:" { v = substr($0, 13); gsub(/^[ \t]+|[ \t]+$/, "", v) }
+    END { print v }'
+}
+
+# Prints "<until> <length>" from the pause file of the account $1: the second at
+# which the pause ends and its length in seconds. Prints nothing when the file is
+# missing or does not hold exactly two whole numbers of at most 12 digits, leading
+# zeros not counted, the length above 0 (bb never writes a pause of 0 s); an
+# unreadable pause file is no pause.
+bb_pause_read() {
+  [[ -n "${1:-}" ]] || return 0
+  local dir pause_end="" pause_len="" rest=""
+  dir="$(bb_state_path)" || return 0
+  { read -r pause_end pause_len rest < "${dir}/pause-${1}"; } 2>/dev/null || true
+  if [[ "$pause_end" =~ ^[0-9]+$ && "$pause_len" =~ ^[0-9]+$ && -z "$rest" ]]; then
+    pause_end="${pause_end#"${pause_end%%[!0]*}"}"
+    pause_len="${pause_len#"${pause_len%%[!0]*}"}"
+    if [[ "${#pause_end}" -le 12 && "${#pause_len}" -le 12 ]]; then
+      pause_end="${pause_end:-0}"
+      pause_len="${pause_len:-0}"
+      [[ "$pause_len" -gt 0 ]] && printf '%s %s\n' "$pause_end" "$pause_len"
+    fi
+  fi
+  return 0
+}
+
+# Succeeds when the pause "<until> <length>" ($1, $2) is stale at the second $3:
+# it has more than BB_PAUSE_SKEW s more time left than its length. bb writes every
+# pause with the invariant "end - now <= length" (see bb_pause_after_429), and
+# time only shortens the rest, so such a pause was written by a clock that ran
+# ahead of this one by more than the skew, or was edited by hand. A stale pause
+# counts as no pause, for the guard, for bb rate-limit and for the next 429, so
+# that no call waits for a day.
+bb_pause_is_stale() {
+  [[ "$1" -gt "$3" && $(($1 - $3)) -gt $(($2 + BB_PAUSE_SKEW)) ]]
+}
+
+# Prints the seconds left of the pause of the account $1, or nothing when there
+# is none, it has ended or it is stale. $2 is the second to measure from; the
+# default is now.
+bb_pause_left() {
+  local now="${2:-}" stored pause_end pause_len
+  [[ -n "$now" ]] || now="$(bb_now)"
+  stored="$(bb_pause_read "$1")"
+  [[ -n "$stored" ]] || return 0
+  pause_end="${stored% *}"
+  pause_len="${stored#* }"
+  if [[ "$pause_end" -gt "$now" ]] && ! bb_pause_is_stale "$pause_end" "$pause_len" "$now"; then
+    echo "$((pause_end - now))"
+  fi
+  return 0
+}
+
+# Stores "<until> <length>" ($2, $3) as the pause of the account $1 and prints
+# what it stored, "<until> <length>". $4 is the second to measure from; the
+# default is now. The line goes to a temporary file in the same directory and is
+# moved into place, so a reader never sees half a line. Returns 1, and prints
+# nothing, when that fails.
+#
+# There is no lock, so the write merges with the pause on disk instead. Just
+# before the move it reads the stored pause again; when that pause is not stale
+# and ends later than the one to write, the record keeps the later end and the
+# larger length ("end - now <= length" still holds, within BB_PAUSE_SKEW, at the
+# clock of the process that stored the longer pause), so a process that computed
+# its pause from an older read cannot shorten a longer pause that another one
+# stored meanwhile. The remaining window is the time between that read and the
+# move, the fork of mv: a process that moves its record into place in that
+# window is overwritten, and its pause is lost. The next 429 starts the pause
+# again, so the loss costs one more refused request, not a block.
+bb_pause_write() {
+  local dir tmp now="${4:-}" end="$2" len="$3" stored stored_end stored_len
+  [[ -n "$now" ]] || now="$(bb_now)"
+  dir="$(bb_state_path)" || return 1
+  tmp="$(mktemp "${dir}/pause-${1}.XXXXXX" 2>/dev/null)" || return 1
+  stored="$(bb_pause_read "$1")"
+  if [[ -n "$stored" ]]; then
+    stored_end="${stored% *}"
+    stored_len="${stored#* }"
+    if [[ "$stored_end" -gt "$end" ]] && ! bb_pause_is_stale "$stored_end" "$stored_len" "$now"; then
+      end="$stored_end"
+      [[ "$stored_len" -gt "$len" ]] && len="$stored_len"
+    fi
+  fi
+  if { printf '%s %s\n' "$end" "$len" > "$tmp"; } 2>/dev/null && mv -f "$tmp" "${dir}/pause-${1}" 2>/dev/null; then
+    printf '%s %s\n' "$end" "$len"
+    return 0
+  fi
+  rm -f "$tmp" 2>/dev/null || true
+  return 1
+}
+
+# Starts or extends the pause of the account $1 after an HTTP 429 and prints the
+# tail of the message: "bb paused until HH:MM:SSZ (in N s)", with "Bitbucket
+# asked to wait <ra> s; " in front when $2 is a Retry-After of digits, which is
+# printed as sent. Any other $2 is no Retry-After. The rule, for the pause stored
+# before this 429, where a stale pause (bb_pause_is_stale) counts as none:
+#   none, or ended 3600 s ago or longer:  length 300 s
+#   ended less than 3600 s ago:  length twice the stored one, at most 3600 s
+#   in both cases the length is at least Retry-After, and the end is now + length;
+#   the only cap on a Retry-After is the clamp of one with more than 9 digits,
+#   leading zeros not counted, to 999999999 s
+#   still active:  the end is the later of the stored end and now + Retry-After
+#                  (300 s without one); the length is the larger of the stored
+#                  length and the new end - now
+# Several processes that get a 429 together leave one pause, not a doubled one.
+# Every pause written keeps the invariant "end - now <= length" at write time.
+# bb_pause_write keeps a longer pause that another process stored after the read
+# above, and the tail names the end that stayed.
+# A pause that cannot be stored (no key, no state directory, a write that fails)
+# gives the warning of bb_state_warn; the tail still names the pause bb would
+# have stored, and the caller exits 75 all the same.
+bb_pause_after_429() {
+  local key="${1:-}" raw="${2:-}"
+  local ra="" now stored="" stored_end=0 stored_len=0 new_end new_len shown message
+  if [[ "$raw" =~ ^[0-9]+$ ]]; then
+    # Leading zeros do not count towards the 9 digits; raw stays as sent.
+    ra="${raw#"${raw%%[!0]*}"}"
+    [[ -z "$ra" ]] && ra=0
+    [[ "${#ra}" -gt 9 ]] && ra=999999999
+  fi
+  now="$(bb_now)"
+  stored="$(bb_pause_read "$key")"
+  if [[ -n "$stored" ]]; then
+    stored_end="${stored% *}"
+    stored_len="${stored#* }"
+    if bb_pause_is_stale "$stored_end" "$stored_len" "$now"; then
+      stored=""
+    fi
+  fi
+
+  if [[ -n "$stored" && "$now" -lt "$stored_end" ]]; then
+    new_end=$((now + ${ra:-300}))
+    [[ "$stored_end" -gt "$new_end" ]] && new_end="$stored_end"
+    new_len="$stored_len"
+    [[ $((new_end - now)) -gt "$new_len" ]] && new_len=$((new_end - now))
+  else
+    if [[ -n "$stored" && $((now - stored_end)) -lt 3600 ]]; then
+      new_len=$((stored_len * 2))
+      [[ "$new_len" -gt 3600 ]] && new_len=3600
+    else
+      new_len=300
+    fi
+    [[ -n "$ra" && "$ra" -gt "$new_len" ]] && new_len="$ra"
+    new_end=$((now + new_len))
+  fi
+
+  # The write may find a longer pause on disk and keep it; the tail names the
+  # end that was stored.
+  local written=""
+  if [[ -n "$key" ]] && written="$(bb_pause_write "$key" "$new_end" "$new_len" "$now")"; then
+    new_end="${written% *}"
+  else
+    bb_state_warn
+  fi
+
+  shown="$(bb_shown_wait "$((new_end - now))")"
+  message="bb paused until $(bb_utc_hms "$((now + shown))") (in ${shown} s)"
+  [[ -n "$ra" ]] && message="Bitbucket asked to wait ${raw} s; ${message}"
+  printf '%s\n' "$message"
+}
+
+# Runs once in the main shell, with the command line as $@, before the command
+# is dispatched. It validates BB_HOURLY_LIMIT, which exits 1 on an invalid value
+# before any temporary file or request, and it makes the state directory. A
+# state directory that cannot be made gives the warning here, once, and sets
+# BB_STATE_OFF, which the request subshells inherit and bb_request_guard reads.
+# Help and a bare `bb` skip it: they send no request, and they must work
+# whatever the settings are.
+bb_budget_init() {
+  [[ "${1:-help}" == "help" ]] && return 0
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == "--help" || "$arg" == "-h" ]] && return 0
+  done
+  bb_hourly_limit > /dev/null
+  if ! bb_state_dir > /dev/null; then
+    BB_STATE_OFF=1
+    bb_state_warn
+  fi
+  return 0
+}
+
+# Runs before every request bb sends; $1 is the account's email. Returns 0 to
+# send, after it has recorded the request, or prints the refusal and returns
+# 75: first the pause that a 429 started, then the ceiling. A refused request is
+# not recorded. An invalid BB_HOURLY_LIMIT exits 1. State that cannot be kept
+# gives one warning and returns 0; when bb_budget_init has found the state
+# unusable, it returns 0 at once and says nothing.
+bb_request_guard() {
+  [[ -n "${BB_STATE_OFF:-}" ]] && return 0
+  local email="${1:-}"
+  local limit dir now stamps stamp prev_stamp cur_file prev_file left
+  limit="$(bb_hourly_limit)" || exit 1
+  dir="$(bb_state_dir)" || { bb_state_warn; return 0; }
+  # The key is made once per email: a call for another email makes its own.
+  if [[ -z "${BB_ACCOUNT_KEY:-}" || "${BB_ACCOUNT_EMAIL:-}" != "$email" ]]; then
+    BB_ACCOUNT_KEY="$(bb_account_key "$email")" || { bb_state_warn; return 0; }
+    BB_ACCOUNT_EMAIL="$email"
+  fi
+  now="$(bb_now)"
+
+  left="$(bb_pause_left "$BB_ACCOUNT_KEY" "$now")"
+  if [[ -n "$left" ]]; then
+    left="$(bb_shown_wait "$left")"
+    echo >&2 "error: rate limited — bb paused until $(bb_utc_hms "$((now + left))") after Bitbucket refused a request (in ${left} s)"
+    return 75
+  fi
+
+  stamps="$(bb_hour_stamps "$now")" || { bb_state_warn; return 0; }
+  stamp="${stamps% *}"
+  prev_stamp="${stamps#* }"
+  cur_file="${dir}/requests-${BB_ACCOUNT_KEY}-${stamp}.log"
+  prev_file="${dir}/requests-${BB_ACCOUNT_KEY}-${prev_stamp}.log"
+
+  if [[ "$limit" -gt 0 ]]; then
+    local counted n free wait_s
+    # A count that cannot be made is no count: warn and send.
+    counted="$(bb_budget_count "$now" "$limit" "$prev_file" "$cur_file")" || { bb_state_warn; return 0; }
+    n="${counted%% *}"
+    free="${counted##* }"
+    [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { bb_state_warn; return 0; }
+    if [[ "$n" -ge "$limit" ]]; then
+      wait_s=$((free - now))
+      [[ "$wait_s" -lt 1 ]] && wait_s=1
+      wait_s="$(bb_shown_wait "$wait_s")"
+      echo >&2 "error: rate limited — ${n} requests in the last hour from this machine; next request at $(bb_utc_hms "$((now + wait_s))") (in ${wait_s} s)"
+      return 75
+    fi
+  fi
+
+  { printf '%s\n' "$now" >> "$cur_file"; } 2>/dev/null || { bb_state_warn; return 0; }
+  bb_budget_prune "$dir" "$prev_stamp"
+  return 0
+}
+
 bb_api_call() {
   local method="$1" path="$2"; shift 2
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code err_file
+  bb_request_guard "$email" || return $?
+  local response http_code err_file hdr_file
   err_file="$(mktemp)"
-  response="$(curl -sSL -w "\n%{http_code}" -X "$method" \
+  hdr_file="$(mktemp)"
+  response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X "$method" \
     -u "${email}:${token}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
@@ -217,8 +670,8 @@ bb_api_call() {
   local body rc=0
   body="$(echo "$response" | sed '$d')"
 
-  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
-  rm -f "$err_file"
+  bb_check_status "$http_code" "$body" "$err_file" "$hdr_file" || rc=$?
+  rm -f "$err_file" "$hdr_file"
   [[ "$rc" -eq 0 ]] || return "$rc"
   echo "$body"
 }
@@ -227,14 +680,11 @@ bb_api_call() {
 # empty. A limit of 0 means no row limit. The page size is the caller's
 # business: it belongs in $path, because the maximum differs per endpoint.
 #
-# HTTP 429 on a page is retried up to 5 times: Retry-After seconds when
-# Bitbucket sends the header (at most 60), otherwise 2, 4, 8, 16, 32 s. Bitbucket
-# throttles bursts and sends no Retry-After (measured 2026-10-24: three requests
-# in a row answered 429 200 429), so a wait of a few seconds lets a long listing
-# continue. Each wait is named on stderr before it starts; the actual sleep is
-# that wait times BB_RETRY_BASE_MS/1000, so tests set 0 and still see the
-# schedule. After the last retry the call fails and prints NO rows — a short
-# list must never look complete. Every other non-2xx fails on the first attempt.
+# HTTP 429 on a page stops the listing at once: bb starts the pause
+# (bb_pause_after_429), prints `error: rate limited after <n> rows — ` and the
+# tail of the pause, returns 75, and prints NO rows — a short list must never
+# look complete. A retry would only spend requests that the pause refuses.
+# Every other non-2xx fails on the first attempt too.
 #
 # This runs inside $(…), so it cannot hand its caller a second value on stdout.
 # When BB_PAGINATE_NEXT_FILE names a file, it holds "1" afterwards if a `next`
@@ -249,7 +699,6 @@ bb_paginate() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local base_ms="${BB_RETRY_BASE_MS:-1000}"
   local hdr_file err_file
   hdr_file="$(mktemp)"
   acc_file="$(mktemp)"
@@ -257,41 +706,21 @@ bb_paginate() {
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" ]] && : > "$BB_PAGINATE_NEXT_FILE"
 
   while [[ -n "$url" ]]; do
-    local response http_code body attempt=0
-    while :; do
-      response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
-        -u "${email}:${token}" \
-        -H "Accept: application/json" \
-        "$url" 2>"$err_file")" || true
-      http_code="$(echo "$response" | tail -1)"
-      body="$(echo "$response" | sed '$d')"
-      [[ "$http_code" == "429" && "$attempt" -lt 5 ]] || break
-
-      local wait_s sleep_s
-      wait_s="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
-      if [[ "$wait_s" =~ ^[0-9]+$ ]]; then
-        [[ "$wait_s" -gt 60 ]] && wait_s=60
-      else
-        wait_s=$(( 2 << attempt ))
-      fi
-      attempt=$((attempt + 1))
-      echo >&2 "bb: rate limited, retrying in ${wait_s} s (${attempt}/5)"
-      sleep_s=$(( (wait_s * base_ms + 999) / 1000 ))
-      [[ "$sleep_s" -gt 0 ]] && sleep "$sleep_s"
-    done
+    local response http_code body guard_rc
+    bb_request_guard "$email" || { guard_rc=$?; rm -f "$hdr_file" "$acc_file" "$err_file"; return "$guard_rc"; }
+    response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
+      -u "${email}:${token}" \
+      -H "Accept: application/json" \
+      "$url" 2>"$err_file")" || true
+    http_code="$(echo "$response" | tail -1)"
+    body="$(echo "$response" | sed '$d')"
 
     if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
       if [[ "$http_code" == "429" ]]; then
-        # The raw header, not the 60 s cap the retry loop applies: an hourly
-        # quota reported as "60 s" is the wrong advice.
-        local final_wait
-        final_wait="$(tr -d '\r' < "$hdr_file" | awk -F': *' 'tolower($1)=="retry-after" {v=$2} END {print v}')"
+        local message
+        message="$(bb_pause_after_429 "${BB_ACCOUNT_KEY:-}" "$(bb_retry_after "$hdr_file")")"
         rm -f "$hdr_file" "$acc_file" "$err_file"
-        if [[ "$final_wait" =~ ^[0-9]+$ ]]; then
-          echo >&2 "error: rate limited after ${rows} rows — Bitbucket asked to wait ${final_wait} s"
-        else
-          echo >&2 "error: rate limited after ${rows} rows"
-        fi
+        echo >&2 "error: rate limited after ${rows} rows — ${message}"
         return 75
       fi
       bb_check_status "$http_code" "$body" "$err_file" || true
@@ -345,17 +774,19 @@ bb_api_raw() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code err_file
+  bb_request_guard "$email" || return $?
+  local response http_code err_file hdr_file
   err_file="$(mktemp)"
-  response="$(curl -sSL -w "\n%{http_code}" -X GET \
+  hdr_file="$(mktemp)"
+  response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
     -u "${email}:${token}" \
     "$@" \
     "${BB_API}${path}" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
   local body rc=0
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
-  rm -f "$err_file"
+  bb_check_status "$http_code" "$body" "$err_file" "$hdr_file" || rc=$?
+  rm -f "$err_file" "$hdr_file"
   [[ "$rc" -eq 0 ]] || return "$rc"
   printf '%s' "$body"
 }
@@ -393,16 +824,18 @@ bb_download_upload() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
-  local response http_code body err_file rc=0
+  bb_request_guard "$email" || return $?
+  local response http_code body err_file hdr_file rc=0
   err_file="$(mktemp)"
-  response="$(curl -sSL -w "\n%{http_code}" -X POST \
+  hdr_file="$(mktemp)"
+  response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X POST \
     -u "${email}:${token}" \
     -F "files=@${file};filename=${name}" \
     "${BB_API}/repositories/${ws}/${repo}/downloads" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
   body="$(echo "$response" | sed '$d')"
-  bb_check_status "$http_code" "$body" "$err_file" || rc=$?
-  rm -f "$err_file"
+  bb_check_status "$http_code" "$body" "$err_file" "$hdr_file" || rc=$?
+  rm -f "$err_file" "$hdr_file"
   [[ "$rc" -eq 0 ]] || return "$rc"
 }
 
@@ -676,10 +1109,13 @@ bb_pr_collapse_statuses() {
 # so no lookup is needed to find the commit.
 #
 # A PR whose statuses cannot be read gets UNKNOWN and the command carries on —
-# one unreadable PR must not fail a list of twenty.
+# one unreadable PR must not fail a list of twenty. A rate limit is the one
+# exception: it stops the whole command with 75 and the call's own rate-limit
+# line on stderr, because every later call would be refused too. A partial list
+# of checks must not be printed as complete.
 bb_pr_attach_checks() {
   local ws="$1" repo="$2"
-  local prs sha checks_val i count out
+  local prs sha checks_val i count out err_file rc
   prs="$(cat)"
   count="$(echo "$prs" | jq 'length')"
 
@@ -688,6 +1124,7 @@ bb_pr_attach_checks() {
   fi
 
   out="$prs"
+  err_file="$(mktemp)"
   i=0
   while [[ "$i" -lt "$count" ]]; do
     sha="$(echo "$prs" | jq -r ".[$i].source.commit.hash // empty")"
@@ -697,7 +1134,15 @@ bb_pr_attach_checks() {
       checks_val="UNKNOWN"
     else
       local body
-      if body="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${sha}/statuses" 2>/dev/null)"; then
+      # The call's stderr goes to a file, so that only a rate limit reaches the
+      # terminal: any other failure stays silent and gives UNKNOWN.
+      rc=0
+      body="$(bb_api_call GET "/repositories/${ws}/${repo}/commit/${sha}/statuses" 2>"$err_file")" || rc=$?
+      if [[ "$rc" -eq 75 ]]; then
+        cat "$err_file" >&2
+        rm -f "$err_file"
+        return 75
+      elif [[ "$rc" -eq 0 ]]; then
         checks_val="$(echo "$body" | bb_pr_collapse_statuses)"
       else
         checks_val="UNKNOWN"
@@ -706,6 +1151,7 @@ bb_pr_attach_checks() {
     out="$(echo "$out" | jq --argjson i "$i" --arg c "$checks_val" '.[$i] += {checks: $c}')"
     i=$((i + 1))
   done
+  rm -f "$err_file"
   echo "$out"
 }
 
@@ -830,9 +1276,11 @@ HELP
   [[ -z "$email" ]] && { echo >&2 "error: no email provided"; exit 1; }
 
   # Validate token (inline curl — can't use bb_api_call since credentials aren't stored yet)
-  local result http_code body err_file
+  bb_request_guard "$email" || exit $?
+  local result http_code body err_file hdr_file
   err_file="$(mktemp)"
-  result="$(curl -sS -w '\n%{http_code}' \
+  hdr_file="$(mktemp)"
+  result="$(curl -sS -D "$hdr_file" -w '\n%{http_code}' \
     -u "${email}:${token}" \
     -H "Accept: application/json" \
     "${BB_API}/user" 2>"$err_file")" || true  # curl exits non-zero when no response arrives; http_code is then 000
@@ -841,10 +1289,16 @@ HELP
 
   if [[ "$http_code" == "000" ]]; then
     echo >&2 "$(bb_no_response_message "$err_file")"
-    rm -f "$err_file"
+    rm -f "$err_file" "$hdr_file"
     exit 1
   fi
-  rm -f "$err_file"
+  if [[ "$http_code" == "429" ]]; then
+    # A rate limit says nothing about the token: pause the account that logs in.
+    bb_check_status "$http_code" "$body" "$err_file" "$hdr_file" || true
+    rm -f "$err_file" "$hdr_file"
+    exit 75
+  fi
+  rm -f "$err_file" "$hdr_file"
   if ! [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
     echo >&2 "error: authentication failed (HTTP ${http_code})"
     [[ "$http_code" == "401" ]] && echo >&2 "  Check that the email and token are correct"
@@ -1066,7 +1520,7 @@ HELP
       # Fields that are not paths into the PR object are fetched and merged
       # first, and only when asked for.
       if bb_pr_needs_checks "$JSON_FIELDS"; then
-        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")" || exit $?
       fi
       out="$(echo "$out" | jq "$proj")"
     fi
@@ -1172,7 +1626,7 @@ HELP
       # bb_pr_json_projection maps over an array: wrap the one PR, project, unwrap.
       out="$(echo "[$result]" | jq -c .)"
       if bb_pr_needs_checks "$JSON_FIELDS"; then
-        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")"
+        out="$(echo "$out" | bb_pr_attach_checks "$ws" "$repo")" || exit $?
       fi
       out="$(echo "$out" | jq "$proj | .[0]")"
     else
@@ -1268,13 +1722,28 @@ HELP
   # Default head to current branch
   [[ -z "$head" ]] && head="$(git branch --show-current 2>/dev/null || echo "")"
   [[ -z "$head" ]] && { echo >&2 "error: cannot detect current branch — use --head"; exit 1; }
-  # Default base to the repo's default branch (Bitbucket API → git fallback → "main")
+  # Default base to the repo's default branch (Bitbucket API → git fallback → "main").
+  # A rate limit stops the command with 75, the line of the refusal on stderr and
+  # no PR: the fallback would create the PR against a guessed branch. Any other
+  # failure of the lookup falls through silently, so its stderr goes to a file.
   if [[ -z "$base" ]]; then
-    local ws_tmp repo_tmp
+    local ws_tmp repo_tmp lookup lookup_err lookup_rc=0
     ws_tmp="$(bb_workspace)" 2>/dev/null
     repo_tmp="$(bb_repo)" 2>/dev/null
-    base="$(bb_api_call GET "/repositories/${ws_tmp}/${repo_tmp}" 2>/dev/null | jq -r '.mainbranch.name // empty')"
-    [[ -z "$base" ]] && base="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')"
+    lookup_err="$(mktemp)"
+    lookup="$(bb_api_call GET "/repositories/${ws_tmp}/${repo_tmp}" 2>"$lookup_err")" || lookup_rc=$?
+    if [[ "$lookup_rc" -eq 75 ]]; then
+      cat "$lookup_err" >&2
+      rm -f "$lookup_err"
+      exit 75
+    fi
+    rm -f "$lookup_err"
+    if [[ "$lookup_rc" -eq 0 ]]; then
+      base="$(echo "$lookup" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || base=""
+    fi
+    if [[ -z "$base" ]]; then
+      base="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')" || base=""
+    fi
     [[ -z "$base" ]] && base="main"
   fi
 
@@ -2322,9 +2791,15 @@ HELP
     if [[ "$count" -eq 0 ]]; then
       echo "No branches found"
     else
-      # Detect default branch
-      local default_branch
-      default_branch="$(bb_api_call GET "/repositories/${ws}/${repo}" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || default_branch=""
+      # Detect the default branch. A rate limit stops the command: a table
+      # without the default marker would look complete. Any other failure lists
+      # the branches unmarked.
+      local default_branch="" repo_info repo_rc=0
+      repo_info="$(bb_api_call GET "/repositories/${ws}/${repo}")" || repo_rc=$?
+      [[ "$repo_rc" -eq 75 ]] && exit 75
+      if [[ "$repo_rc" -eq 0 ]]; then
+        default_branch="$(echo "$repo_info" | jq -r '.mainbranch.name // empty' 2>/dev/null)" || default_branch=""
+      fi
 
       echo "NAME   TARGET   MESSAGE"
       echo "$result" | jq -r --arg def "$default_branch" '.[] | [
@@ -2742,6 +3217,121 @@ HELP
   fi
 }
 
+# --- Subcommands: rate-limit -------------------------------------------------
+
+# Shows what the request guard sees: the requests of the last hour, the ceiling
+# and any pause. It sends no request, records none and deletes no file. It
+# counts and reads the pause with the helpers of the guard. Exit 75 means that
+# the guard would refuse a request now. When the state directory is unusable it
+# warns once, as everywhere, and reports the count as unknown; so does a request
+# file that exists and cannot be read.
+cmd_rate_limit() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)
+        cat <<'HELP'
+Show the requests bb sent in the last hour from this machine, the hourly ceiling
+and any pause after a rate limit. Sends no request.
+
+USAGE
+  bb rate-limit [--json]
+
+FLAGS
+  --json   Output {requests, ceiling, paused_until, wait_seconds}
+
+OUTPUT
+  requests in the last hour: <n> of <ceiling> (this machine)
+  paused until HH:MM:SSZ (in <n> s)        (only during a pause)
+  next request at HH:MM:SSZ (in <n> s)     (only at the ceiling)
+
+  With BB_HOURLY_LIMIT=0 the first line reads
+  "requests in the last hour: <n> (no ceiling)", and there is no next-request
+  line. Times are UTC.
+  JSON: ceiling and paused_until are null without a ceiling or a pause;
+  paused_until is epoch seconds; wait_seconds is the time until the next
+  request can go out, 0 when it can now; requests is null when bb cannot
+  keep its request count.
+
+EXIT STATUS
+  0    a request can go out now
+  75   bb is paused, or the last hour holds as many requests as the ceiling
+
+EXAMPLES
+  bb rate-limit
+  bb rate-limit --json | jq .wait_seconds
+HELP
+        exit 0
+        ;;
+      --json)    JSON_OUTPUT=1; shift ;;
+      -*)        echo >&2 "unknown flag: $1"; exit 1 ;;
+      *)         echo >&2 "unknown argument: $1"; exit 1 ;;
+    esac
+  done
+
+  local email limit now dir key stamps stamp prev_stamp counted
+  local n="" free=0 left=""
+  email="$(bb_email)" || exit 1
+  limit="$(bb_hourly_limit)" || exit 1
+  now="$(bb_now)"
+
+  # The files of bb_request_guard: the previous and the current UTC hour.
+  if [[ -z "${BB_STATE_OFF:-}" ]]; then
+    if dir="$(bb_state_dir)" \
+      && key="$(bb_account_key "$email")" \
+      && stamps="$(bb_hour_stamps "$now")"; then
+      stamp="${stamps% *}"
+      prev_stamp="${stamps#* }"
+      if counted="$(bb_budget_count "$now" "$limit" "${dir}/requests-${key}-${prev_stamp}.log" "${dir}/requests-${key}-${stamp}.log")"; then
+        n="${counted%% *}"
+        free="${counted##* }"
+      fi
+      [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { n=""; free=0; }
+      # A request file that cannot be read gives an unknown count, like an
+      # unusable state directory; the pause still shows.
+      [[ -n "$n" ]] || bb_state_warn
+      left="$(bb_pause_left "$key" "$now")"
+    else
+      bb_state_warn
+    fi
+  fi
+
+  # The wait is the longer of the pause and the ceiling. A shown wait of 429 s
+  # reads 430 s here too (bb_shown_wait), in the text and in the JSON.
+  local wait_s=0 pause_wait=0 ceiling_wait=0 rc=0
+  if [[ "$limit" -gt 0 && -n "$n" && "$n" -ge "$limit" ]]; then
+    wait_s=$((free - now))
+    [[ "$wait_s" -lt 1 ]] && wait_s=1
+    ceiling_wait="$(bb_shown_wait "$wait_s")"
+    rc=75
+  fi
+  if [[ -n "$left" ]]; then
+    pause_wait="$(bb_shown_wait "$left")"
+    [[ "$left" -gt "$wait_s" ]] && wait_s="$left"
+    rc=75
+  fi
+  wait_s="$(bb_shown_wait "$wait_s")"
+
+  if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
+    local ceiling_json=null pause_json=null
+    [[ "$limit" -gt 0 ]] && ceiling_json="$limit"
+    [[ -n "$left" ]] && pause_json=$((now + pause_wait))
+    jq -n --argjson requests "${n:-null}" --argjson ceiling "$ceiling_json" \
+      --argjson paused_until "$pause_json" --argjson wait_seconds "$wait_s" \
+      '{requests: $requests, ceiling: $ceiling, paused_until: $paused_until, wait_seconds: $wait_seconds}'
+  else
+    if [[ -z "$n" ]]; then
+      echo "requests in the last hour: unknown (no request count on this machine)"
+    elif [[ "$limit" -gt 0 ]]; then
+      echo "requests in the last hour: ${n} of ${limit} (this machine)"
+    else
+      echo "requests in the last hour: ${n} (no ceiling)"
+    fi
+    [[ -n "$left" ]] && echo "paused until $(bb_utc_hms "$((now + pause_wait))") (in ${pause_wait} s)"
+    [[ "$ceiling_wait" -gt 0 ]] && echo "next request at $(bb_utc_hms "$((now + ceiling_wait))") (in ${ceiling_wait} s)"
+  fi
+  exit "$rc"
+}
+
 # --- Main dispatch -----------------------------------------------------------
 
 usage() {
@@ -2787,6 +3377,9 @@ Source:
   source commits [ref] List commits (or show one by SHA)
   source diff <spec>  Compare two refs (or --stat for summary)
 
+Rate limit:
+  rate-limit          Show the requests of the last hour and any pause (sends no request)
+
 Global flags:
   -R workspace/repo   Specify repository (default: auto-detect from git remote)
   --json              Output raw JSON
@@ -2812,12 +3405,14 @@ Untrusted content:
 Exit status:
   0    success
   1    error: usage error, failed request, or no answer from Bitbucket
-  75   rate limited (HTTP 429): wait, then retry; the same call can succeed later
+  75   rate limited: Bitbucket answered 429, bb is paused after one, or this machine reached its hourly ceiling; stderr names when to retry
   With --jq, a jq failure exits with jq's own code (2, 3 or 5).
 
 Environment:
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
+  BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)
+  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb)
 
 Examples:
   bb pr list
@@ -2851,6 +3446,7 @@ Examples:
   bb source commits abc123
   bb source diff main..feature/x
   bb source diff main..feature/x --stat
+  bb rate-limit
   bb api /repositories/{ws}/{repo}
   bb api /repositories/{ws}/{repo}/pullrequests/42/decline --method POST
 EOF
@@ -2881,6 +3477,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+bb_budget_init "$@"
 
 case "${1:-help}" in
   whoami)    shift; cmd_auth_status "$@" ;;
@@ -2933,6 +3531,9 @@ case "${1:-help}" in
     ;;
   api)
     shift; cmd_api "$@"
+    ;;
+  rate-limit)
+    shift; cmd_rate_limit "$@"
     ;;
   help|--help|-h)
     usage

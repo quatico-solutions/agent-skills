@@ -100,6 +100,7 @@ Need to interact with Bitbucket?
 ├── List/resolve tasks? → bb pr tasks
 ├── Attach an image to a PR comment? → bb pr comment <id> --image <file>
 ├── Upload a file to the repo? → bb download upload <file>
+├── Rate limited, or how many requests did bb send in the last hour? → bb rate-limit
 ├── Raw API call? → bb api <path>
 └── SSO-gated page? → Browser (last resort)
 ```
@@ -168,11 +169,11 @@ bb pr list --head feature/login --state merged  # the PR of one branch, in one r
 ```
 
 - Without `--limit` or `--all`, `pr list` prints at most 50 rows. When more exist, it writes `warning: listing truncated at 50 rows; use --limit or --all` to stderr. Stdout stays pure JSON with `--json`.
-- `--all` has no ceiling: about 75 requests per state on a repository with 3700 PRs. Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
+- `--all` has no row limit: about 75 requests per state on a repository with 3700 PRs, and every request counts against the hourly ceiling (see [Request budget and pause](#request-budget-and-pause-bb-rate-limit)). Use `--limit` or `--updated-since` to read less. `--all` and `--limit` cannot be combined.
 - `--updated-since <ISO>` filters on the server and is inclusive (`>=`), so a caller that reads again from its last watermark gets the boundary PR twice, never zero times. It forces the `q=` filter form, like `--author`.
 - `--head <branch>` filters on the source branch on the server. Repeat it to cover several branches. It forces the `q=` filter form, like `--author`, and keeps the open default for `--state`: a merged branch needs `--state merged`. A branch name containing `"` exits 1, because Bitbucket documents no escape rule for it.
 - Bitbucket returns PRs newest-updated first. `pr list` has no `--sort`.
-- Every paged listing retries a page that answers HTTP 429 up to 5 times (`Retry-After` seconds up to 60, otherwise 2, 4, 8, 16 and 32 s), and prints `bb: rate limited, retrying in <n> s (<k>/5)` on stderr before each wait. A long `--all` can therefore pause for up to a minute per page. After the last retry it exits 75 with `error: rate limited after <n> rows` (plus ` — Bitbucket asked to wait <s> s` when the final answer carries `Retry-After`, printed as sent) and prints no rows, so a short list never looks complete.
+- A listing stops at its first HTTP 429 and does not retry. It prints no rows, so a short list never looks complete, and exits 75 with `error: rate limited after <n> rows — ` and the time at which `bb` sends again (see [Request budget and pause](#request-budget-and-pause-bb-rate-limit)).
 
 ### Listing and searching source (`source ls`, `source tags`)
 
@@ -204,6 +205,27 @@ bb pr merge 42 --squash --match-head-commit "$(git rev-parse HEAD)"
 
 **Race:** the merge endpoint takes no expected head, so a push between the read and the merge is merged anyway. `bb` runs no check after the merge. The flag narrows the window; it does not close it.
 
+### Request budget and pause (`bb rate-limit`)
+
+`bb` counts the requests it sends, per account and per machine, in a state directory (`$BB_STATE_DIR`, default `$XDG_STATE_HOME/bb`, else `~/.local/state/bb`). Every request counts, a rate-limited one included. The last hour is the last 3,600 s, not a clock hour. When it holds 800 requests, `bb` refuses the next one: it sends nothing, prints `error: rate limited — <n> requests in the last hour from this machine; next request at HH:MM:SSZ (in N s)` on stderr and exits 75. `<n>` is the count of the last hour: the ceiling, or more when `BB_HOURLY_LIMIT` was lowered below it. `BB_HOURLY_LIMIT=<n>` changes the ceiling. `BB_HOURLY_LIMIT=0` turns it off, and `bb` still counts. A value that is not a whole number exits 1.
+
+When Bitbucket answers HTTP 429, `bb` pauses: every `bb` process of that account on the machine refuses to send until the pause ends, so a second process cannot keep the rate limit alive. The first pause lasts 300 s. A 429 less than an hour after a pause ended doubles the length, up to 3,600 s; a 429 after a longer quiet time starts at 300 s again. A numeric `Retry-After` makes the pause at least that long. A call during the pause sends nothing and exits 75 with `error: rate limited — bb paused until HH:MM:SSZ after Bitbucket refused a request (in N s)`. The pause applies when the ceiling is off. The person who runs `bb` can clear a pause by deleting the `pause-*` file in the state directory.
+
+`bb rate-limit` shows the count and the pause and sends no request:
+
+```bash
+bb rate-limit          # requests in the last hour: 12 of 800 (this machine)
+bb rate-limit --json   # {"requests": 12, "ceiling": 800, "paused_until": null, "wait_seconds": 0}
+```
+
+During a pause, a line reads `paused until HH:MM:SSZ (in N s)`. When the last hour holds at least as many requests as the ceiling, a line reads `next request at HH:MM:SSZ (in N s)`; with both, the pause line comes first. With `BB_HOURLY_LIMIT=0`, the first line reads `requests in the last hour: 12 (no ceiling)` and `ceiling` is `null`. `paused_until` is epoch seconds or `null`. `wait_seconds` is the time until the next request can go out, `0` when it can now. The exit status is 75 while `bb` would refuse a request and 0 otherwise. `bb rate-limit` prints on stdout; a command that `bb` refuses prints its message on stderr.
+
+On exit 75, wait. Do not retry earlier and do not retry in a loop: `bb` refuses every call until then without sending it. After a pause, wait until the time that stderr names. At the ceiling, that time frees one request, and a command can send more than one: one request per page of a listing, one per pull request with `--json checks`, and two for `source cat`. Wait until the ceiling minus the count that `bb rate-limit` shows is at least the number of requests the command sends. A listing that is refused on any page prints no rows, and the requests of the pages it read stay spent.
+
+The person sets `BB_HOURLY_LIMIT` and `BB_STATE_DIR`. An agent never sets them, and never deletes or edits a file in the state directory, to get past a refusal.
+
+The count covers this machine only. It guards against a runaway loop and is not an exact meter: calls that start in the same second can pass the ceiling together. When `bb` cannot keep or read the count in its state directory (no usable directory, or a request file that exists and cannot be read), it warns once on stderr and sends the request with no budget, and `bb rate-limit` reports the count as unknown (`null` in JSON).
+
 ---
 
 ## Raw API Access
@@ -229,7 +251,7 @@ The leading `/` is optional. A full URL on the API base (`https://api.bitbucket.
 |---|---|
 | 0 | Success. |
 | 1 | Error: usage error, failed request, or no answer from Bitbucket. |
-| 75 | Rate limited (HTTP 429), with `error: rate limited` on stderr. Wait, then retry: the same call can succeed later. Listings retry 5 times first; every other command fails on the first 429. |
+| 75 | Rate limited by Bitbucket (HTTP 429), by the pause that follows a 429, or by this machine's hourly ceiling, with `error: rate limited` on stderr. Stderr names the time: wait as described in [Request budget and pause](#request-budget-and-pause-bb-rate-limit), and do not retry earlier or in a loop. |
 | jq's own codes (2, 3, 5) | With `--jq`, a jq failure keeps jq's exit status. |
 
 ---
