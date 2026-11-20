@@ -1055,8 +1055,8 @@ bb_pr_collapse_statuses() {
 # A PR whose statuses cannot be read gets UNKNOWN and the command carries on —
 # one unreadable PR must not fail a list of twenty. A rate limit is the one
 # exception: it stops the whole command with 75 and the call's own rate-limit
-# line on stderr, because every later call would be refused too and a list of
-# guesses must not pass for a list of answers.
+# line on stderr, because every later call would be refused too. A partial list
+# of checks must not be printed as complete.
 bb_pr_attach_checks() {
   local ws="$1" repo="$2"
   local prs sha checks_val i count out err_file rc
@@ -3351,7 +3351,7 @@ Environment:
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
   BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)
-  BB_STATE_DIR        Where bb keeps its request count (default ~/.local/state/bb)
+  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb)
 
 Examples:
   bb pr list
