@@ -3116,9 +3116,11 @@ FLAGS
 OUTPUT
   requests in the last hour: <n> of <ceiling> (this machine)
   paused until HH:MM:SSZ (in <n> s)        (only during a pause)
+  next request at HH:MM:SSZ (in <n> s)     (only at the ceiling)
 
   With BB_HOURLY_LIMIT=0 the first line reads
-  "requests in the last hour: <n> (no ceiling)". Times are UTC.
+  "requests in the last hour: <n> (no ceiling)", and there is no next-request
+  line. Times are UTC.
   JSON: ceiling and paused_until are null without a ceiling or a pause;
   paused_until is epoch seconds; wait_seconds is the time until the next
   request can go out, 0 when it can now; requests is null when bb cannot
@@ -3164,10 +3166,11 @@ HELP
 
   # The wait is the longer of the pause and the ceiling. A shown wait of 429 s
   # reads 430 s here too (bb_shown_wait), in the text and in the JSON.
-  local wait_s=0 pause_wait=0 rc=0
+  local wait_s=0 pause_wait=0 ceiling_wait=0 rc=0
   if [[ "$limit" -gt 0 && -n "$n" && "$n" -ge "$limit" ]]; then
     wait_s=$((free - now))
     [[ "$wait_s" -lt 1 ]] && wait_s=1
+    ceiling_wait="$(bb_shown_wait "$wait_s")"
     rc=75
   fi
   if [[ -n "$left" ]]; then
@@ -3193,6 +3196,7 @@ HELP
       echo "requests in the last hour: ${n} (no ceiling)"
     fi
     [[ -n "$left" ]] && echo "paused until $(bb_utc_hms "$((now + pause_wait))") (in ${pause_wait} s)"
+    [[ "$ceiling_wait" -gt 0 ]] && echo "next request at $(bb_utc_hms "$((now + ceiling_wait))") (in ${ceiling_wait} s)"
   fi
   exit "$rc"
 }

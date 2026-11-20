@@ -218,7 +218,7 @@ bb rate-limit          # requests in the last hour: 12 of 800 (this machine)
 bb rate-limit --json   # {"requests": 12, "ceiling": 800, "paused_until": null, "wait_seconds": 0}
 ```
 
-During a pause, a second line reads `paused until HH:MM:SSZ (in N s)`. With `BB_HOURLY_LIMIT=0`, the first line reads `requests in the last hour: 12 (no ceiling)` and `ceiling` is `null`. `paused_until` is epoch seconds or `null`. `wait_seconds` is the time until the next request can go out, `0` when it can now. The exit status is 75 while `bb` would refuse a request and 0 otherwise.
+During a pause, a line reads `paused until HH:MM:SSZ (in N s)`. When the last hour holds as many requests as the ceiling, a line reads `next request at HH:MM:SSZ (in N s)`; with both, the pause line comes first. With `BB_HOURLY_LIMIT=0`, the first line reads `requests in the last hour: 12 (no ceiling)` and `ceiling` is `null`. `paused_until` is epoch seconds or `null`. `wait_seconds` is the time until the next request can go out, `0` when it can now. The exit status is 75 while `bb` would refuse a request and 0 otherwise.
 
 On exit 75, wait until the time that stderr names, or check `bb rate-limit`. Do not retry earlier and do not retry in a loop: `bb` refuses every call until then without sending it.
 

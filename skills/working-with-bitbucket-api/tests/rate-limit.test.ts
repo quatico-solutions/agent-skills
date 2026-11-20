@@ -85,18 +85,107 @@ describe('bb rate-limit', () => {
     assert.equal(server.getCalls().length, 0)
   })
 
-  it('Exits 75 at the ceiling', async () => {
-    // Given a ceiling of 3 and 3 requests in the last hour
+  it('Exits 75 at the ceiling and names when the next request can go out', async () => {
+    // Given a ceiling of 3 reached by requests 300 s, 200 s and 100 s old
     const dir = stateDir()
-    seedRequests(dir, EMAIL, recent(3))
+    seedRequests(dir, EMAIL, [NOW - 300, NOW - 200, NOW - 100])
 
     // When I run bb rate-limit
     const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '3' }) })
 
-    // Then it names the count and exits 75
-    assert.equal(result.stdout, 'requests in the last hour: 3 of 3 (this machine)\n')
+    // Then a second line names the second at which the oldest request leaves the hour, and the exit status is 75
+    assert.equal(
+      result.stdout,
+      `requests in the last hour: 3 of 3 (this machine)\nnext request at ${utcHms(NOW + 3300)} (in 3300 s)\n`,
+    )
     assert.equal(result.exitCode, 75)
     assert.equal(server.getCalls().length, 0)
+  })
+
+  it('Names the next request one request above the ceiling too', async () => {
+    // Given a ceiling of 3 and 5 requests, so the third newest decides
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW - 500, NOW - 400, NOW - 300, NOW - 200, NOW - 100])
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '3' }) })
+
+    // Then the next request is possible when the third oldest request leaves the hour: 3 must go for the count to drop to 2
+    assert.equal(
+      result.stdout,
+      `requests in the last hour: 5 of 3 (this machine)\nnext request at ${utcHms(NOW + 3300)} (in 3300 s)\n`,
+    )
+    assert.equal(result.exitCode, 75)
+  })
+
+  it('Shows a ceiling wait of 429 s as 430 s', async () => {
+    // Given a ceiling of 1 reached by a request that leaves the hour in 429 s
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW - 3600 + 429])
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '1' }) })
+
+    // Then the wait reads 430 s, with the end time 1 s later
+    assert.equal(
+      result.stdout,
+      `requests in the last hour: 1 of 1 (this machine)\nnext request at ${utcHms(NOW + 430)} (in 430 s)\n`,
+    )
+    assert.doesNotMatch(result.stdout, /\b429\b/)
+    assert.equal(result.exitCode, 75)
+  })
+
+  it('Names the pause first and the next request second when both apply', async () => {
+    // Given a ceiling of 3 reached by requests 300 s, 200 s and 100 s old, and a pause of 120 s left
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW - 300, NOW - 200, NOW - 100])
+    seedPause(dir, EMAIL, NOW + 120, 300)
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '3' }) })
+
+    // Then the count line is followed by the pause line and the next-request line, in that order
+    assert.equal(
+      result.stdout,
+      [
+        'requests in the last hour: 3 of 3 (this machine)',
+        `paused until ${utcHms(NOW + 120)} (in 120 s)`,
+        `next request at ${utcHms(NOW + 3300)} (in 3300 s)`,
+        '',
+      ].join('\n'),
+    )
+    assert.equal(result.exitCode, 75)
+  })
+
+  it('Names no next request below the ceiling, with a pause or without', async () => {
+    // Given a ceiling of 3 and 2 requests, and a pause
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW - 300, NOW - 200])
+    seedPause(dir, EMAIL, NOW + 120, 300)
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '3' }) })
+
+    // Then only the pause line follows the count
+    assert.equal(
+      result.stdout,
+      `requests in the last hour: 2 of 3 (this machine)\npaused until ${utcHms(NOW + 120)} (in 120 s)\n`,
+    )
+    assert.doesNotMatch(result.stdout, /next request/)
+    assert.equal(result.exitCode, 75)
+  })
+
+  it('Names no next request with the ceiling off, however many requests it holds', async () => {
+    // Given 5 requests and BB_HOURLY_LIMIT=0
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, recent(5))
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir, { BB_HOURLY_LIMIT: '0' }) })
+
+    // Then the output is the count line alone
+    assert.equal(result.stdout, 'requests in the last hour: 5 (no ceiling)\n')
+    assert.equal(result.exitCode, 0)
   })
 
   it('Exits 0 one request below the ceiling', async () => {
