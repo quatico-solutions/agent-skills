@@ -455,14 +455,37 @@ bb_pause_left() {
   return 0
 }
 
-# Stores "<until> <length>" as the pause of the account $1. The line goes to a
-# temporary file in the same directory and is moved into place, so a reader never
-# sees half a line. Returns 1 when that fails.
+# Stores "<until> <length>" ($2, $3) as the pause of the account $1 and prints
+# what it stored, "<until> <length>". $4 is the second to measure from; the
+# default is now. The line goes to a temporary file in the same directory and is
+# moved into place, so a reader never sees half a line. Returns 1, and prints
+# nothing, when that fails.
+#
+# There is no lock, so the write merges with the pause on disk instead. Just
+# before the move it reads the stored pause again; when that pause is not stale
+# and ends later than the one to write, the record keeps the later end and the
+# larger length ("end - now <= length" still holds), so a process that computed
+# its pause from an older read cannot shorten a longer pause that another one
+# stored meanwhile. The remaining window is the time between that read and the
+# move, the fork of mv: a process that moves its record into place in that
+# window is overwritten, and its pause is lost. The next 429 starts the pause
+# again, so the loss costs one more refused request, not a block.
 bb_pause_write() {
-  local dir tmp
+  local dir tmp now="${4:-}" end="$2" len="$3" stored stored_end stored_len
+  [[ -n "$now" ]] || now="$(bb_now)"
   dir="$(bb_state_path)" || return 1
   tmp="$(mktemp "${dir}/pause-${1}.XXXXXX" 2>/dev/null)" || return 1
-  if { printf '%s %s\n' "$2" "$3" > "$tmp"; } 2>/dev/null && mv -f "$tmp" "${dir}/pause-${1}" 2>/dev/null; then
+  stored="$(bb_pause_read "$1")"
+  if [[ -n "$stored" ]]; then
+    stored_end="${stored% *}"
+    stored_len="${stored#* }"
+    if [[ "$stored_end" -gt "$end" ]] && ! bb_pause_is_stale "$stored_end" "$stored_len" "$now"; then
+      end="$stored_end"
+      [[ "$stored_len" -gt "$len" ]] && len="$stored_len"
+    fi
+  fi
+  if { printf '%s %s\n' "$end" "$len" > "$tmp"; } 2>/dev/null && mv -f "$tmp" "${dir}/pause-${1}" 2>/dev/null; then
+    printf '%s %s\n' "$end" "$len"
     return 0
   fi
   rm -f "$tmp" 2>/dev/null || true
@@ -484,6 +507,8 @@ bb_pause_write() {
 #                  length and the new end - now
 # Several processes that get a 429 together leave one pause, not a doubled one.
 # Every pause written keeps the invariant "end - now <= length" at write time.
+# bb_pause_write keeps a longer pause that another process stored after the read
+# above, and the tail names the end that stayed.
 # A pause that cannot be stored (no key, no state directory, a write that fails)
 # gives the warning of bb_state_warn; the tail still names the pause bb would
 # have stored, and the caller exits 75 all the same.
@@ -519,7 +544,12 @@ bb_pause_after_429() {
     new_end=$((now + new_len))
   fi
 
-  if [[ -z "$key" ]] || ! bb_pause_write "$key" "$new_end" "$new_len"; then
+  # The write may find a longer pause on disk and keep it; the tail names the
+  # end that was stored.
+  local written=""
+  if [[ -n "$key" ]] && written="$(bb_pause_write "$key" "$new_end" "$new_len" "$now")"; then
+    new_end="${written% *}"
+  else
     bb_state_warn
   fi
 
