@@ -251,19 +251,43 @@ describe('bb pause after HTTP 429', () => {
     assert.equal(result.stderr, paused(300))
     assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
 
-    // Given a stored pause that ends later than a new one would
+    // Given a valid stored pause that ends later than a new one would
     server.reset()
     const longer = stateDir()
     server.stubSequence('GET', '/user', {}, [
-      { status: 429, body: SLOW, beforeRespond: () => seedPause(longer, EMAIL, NOW + 1000, 600) },
+      { status: 429, body: SLOW, beforeRespond: () => seedPause(longer, EMAIL, NOW + 500, 600) },
     ])
 
     // When the call gets its 429
     const kept = await hit429(longer)
 
     // Then the stored pause stays as it is, and the message names its end
-    assert.equal(kept.stderr, paused(1000))
-    assert.deepEqual(readPause(longer, EMAIL), { until: NOW + 1000, length: 600 })
+    assert.equal(kept.stderr, paused(500))
+    assert.deepEqual(readPause(longer, EMAIL), { until: NOW + 500, length: 600 })
+  })
+
+  it('Starts a fresh pause on a 429 when the stored pause is stale', async () => {
+    // Given a 429 that arrives while the stored pause ends 86700 s from now and names a length of 300 s
+    const dir = stateDir()
+    server.stubSequence('GET', '/user', {}, [
+      { status: 429, body: SLOW, beforeRespond: () => seedPause(dir, EMAIL, NOW + 86700, 300) },
+    ])
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the stale pause counts as none: a fresh pause of 300 s, and the message says so
+    assert.equal(result.stderr, paused(300))
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
+
+    // And the next call is refused with the time that the message named
+    const next = await run('api /user', { port: server.port, env: env(dir) })
+    assert.equal(next.exitCode, 75)
+    assert.equal(
+      next.stderr,
+      `error: rate limited — bb paused until ${utcHms(NOW + 300)} after Bitbucket refused a request (in 300 s)\n`,
+    )
+    assert.equal(server.getCalls().length, 1)
   })
 
   it('Stores a length that covers a Retry-After longer than the stored one, and keeps blocking', async () => {
