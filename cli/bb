@@ -200,11 +200,198 @@ bb_check_status() {
   return 1
 }
 
+# --- Request budget ----------------------------------------------------------
+
+# bb keeps an hourly request budget per account and per machine. It records the
+# time of every request it sends, a request that Bitbucket answers with 429
+# included, and refuses the next one while the last 3600 s hold BB_HOURLY_LIMIT
+# requests. The default is 800; 0 turns the ceiling off and still records.
+#
+# The state is plain files in one directory and has no lock. Calls that start
+# in the same second can pass a ceiling together, and the ceiling is a guard
+# against a runaway loop, not an exact meter. A state directory that cannot be
+# used never blocks a call: bb warns once and sends.
+
+BB_BUDGET_DEFAULT=800
+BB_BUDGET_WINDOW=3600
+# Per process, never from the environment: the account key once it is read, and
+# whether the state warning was printed.
+BB_ACCOUNT_KEY=""
+BB_STATE_WARNED=""
+
+# Epoch seconds. BB_NOW replaces the clock for the test suite, and only while
+# BB_API_URL is set: that variable already limits bb to a loopback host.
+bb_now() {
+  if [[ -n "${BB_API_URL:-}" && "${BB_NOW:-}" =~ ^[0-9]+$ ]]; then
+    echo "$BB_NOW"
+  else
+    date +%s
+  fi
+}
+
+# $1 is an epoch second, $2 a date format. BSD date reads the epoch with -r,
+# GNU date with -d @.
+bb_date_utc() {
+  date -u -r "$1" "+$2" 2>/dev/null || date -u -d "@$1" "+$2"
+}
+
+# HH:MM:SSZ in UTC.
+bb_utc_hms() {
+  bb_date_utc "$1" '%H:%M:%SZ'
+}
+
+# A wait of exactly 429 s is shown as 430 s: Plot reads "429" in stderr as an
+# HTTP 429, and a wait is not a status code.
+bb_shown_wait() {
+  if [[ "$1" -eq 429 ]]; then echo 430; else echo "$1"; fi
+}
+
+# The state directory, without touching the file system. An empty variable
+# counts as unset. Returns 1 when no variable gives a path.
+bb_state_path() {
+  if [[ -n "${BB_STATE_DIR:-}" ]]; then
+    printf '%s\n' "$BB_STATE_DIR"
+  elif [[ -n "${XDG_STATE_HOME:-}" ]]; then
+    printf '%s\n' "${XDG_STATE_HOME}/bb"
+  elif [[ -n "${HOME:-}" ]]; then
+    printf '%s\n' "${HOME}/.local/state/bb"
+  else
+    return 1
+  fi
+}
+
+# The state directory, created with mode 700. Returns 1 when there is no path
+# or the directory cannot be made. Calls that start together may all create it.
+bb_state_dir() {
+  local dir
+  dir="$(bb_state_path)" || return 1
+  mkdir -p "$dir" 2>/dev/null && chmod 700 "$dir" 2>/dev/null || return 1
+  printf '%s\n' "$dir"
+}
+
+# One warning per process (BB_STATE_WARNED) when the budget cannot be kept.
+# Callers return 0 afterwards, so the request goes out.
+bb_state_warn() {
+  [[ -n "${BB_STATE_WARNED:-}" ]] && return 0
+  BB_STATE_WARNED=1
+  local where
+  where="$(bb_state_path)" || where='~/.local/state/bb'
+  echo >&2 "warning: bb cannot keep its request count in ${where}; the hourly budget is off for this call"
+}
+
+# The first 12 hex characters of the SHA-256 of the lowercased email; the
+# default email is the account bb uses. It names the account in file names.
+bb_account_key() {
+  local email sum
+  if [[ $# -gt 0 ]]; then
+    email="$1"
+  else
+    email="$(bb_email)" || return 1
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
+  else
+    return 1
+  fi
+  printf '%s\n' "${sum:0:12}"
+}
+
+# The ceiling: BB_HOURLY_LIMIT, else 800. A whole number; 0 turns it off. A
+# value with more than 9 digits counts as 999999999, which no hour reaches.
+bb_hourly_limit() {
+  local value="${BB_HOURLY_LIMIT:-$BB_BUDGET_DEFAULT}"
+  if [[ ! "$value" =~ ^[0-9]+$ ]]; then
+    echo >&2 "error: BB_HOURLY_LIMIT must be a whole number, got '${value}'"
+    exit 1
+  fi
+  value="${value#"${value%%[!0]*}"}"
+  [[ -z "$value" ]] && value=0
+  [[ "${#value}" -gt 9 ]] && value=999999999
+  echo "$value"
+}
+
+# Prints "<n> <free>" for the account's request files. n counts the lines
+# newer than $1 - 3600 in $3 (the previous hour) and $4 (the current hour);
+# lines that are not all digits do not count. free is the second at which the
+# request ceiling $2 lets the next request through: the (n - c + 1)-th oldest
+# counted line plus 3600, or 0 while n is below the ceiling.
+bb_budget_count() {
+  local now="$1" limit="$2" prev_file="$3" cur_file="$4"
+  { cat "$prev_file" "$cur_file" 2>/dev/null || true; } | awk -v min="$((now - BB_BUDGET_WINDOW))" -v c="$limit" -v window="$BB_BUDGET_WINDOW" '
+    /^[0-9]+$/ && length($0) <= 12 && $0 + 0 > min { v[++n] = $0 + 0 }
+    END {
+      for (i = 2; i <= n; i++) {
+        x = v[i]; j = i - 1
+        while (j >= 1 && v[j] > x) { v[j + 1] = v[j]; j-- }
+        v[j + 1] = x
+      }
+      free = 0
+      if (n >= c) free = v[n - c + 1] + window
+      print n + 0, free
+    }'
+}
+
+# Deletes the request files of every account that are older than the previous
+# UTC hour ($2, YYYYMMDDHH). Best effort: a file that stays does no harm.
+bb_budget_prune() {
+  local dir="$1" keep_from="$2" file stamp
+  for file in "$dir"/requests-*-*.log; do
+    [[ -f "$file" ]] || continue
+    stamp="${file%.log}"
+    stamp="${stamp##*-}"
+    if [[ "$stamp" =~ ^[0-9]{10}$ && "$stamp" < "$keep_from" ]]; then
+      rm -f "$file" 2>/dev/null || true
+    fi
+  done
+  return 0
+}
+
+# Runs before every request bb sends; $1 is the account's email. Returns 0 to
+# send, after it has recorded the request, or prints the refusal and returns
+# 75. An invalid BB_HOURLY_LIMIT exits 1. State that cannot be kept gives one
+# warning and returns 0.
+bb_request_guard() {
+  local email="${1:-}"
+  local limit dir now stamp prev_stamp cur_file prev_file
+  limit="$(bb_hourly_limit)" || exit 1
+  dir="$(bb_state_dir)" || { bb_state_warn; return 0; }
+  if [[ -z "${BB_ACCOUNT_KEY:-}" ]]; then
+    BB_ACCOUNT_KEY="$(bb_account_key "$email")" || { bb_state_warn; return 0; }
+  fi
+  now="$(bb_now)"
+  stamp="$(bb_date_utc "$now" %Y%m%d%H)" || { bb_state_warn; return 0; }
+  prev_stamp="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)" || { bb_state_warn; return 0; }
+  cur_file="${dir}/requests-${BB_ACCOUNT_KEY}-${stamp}.log"
+  prev_file="${dir}/requests-${BB_ACCOUNT_KEY}-${prev_stamp}.log"
+
+  if [[ "$limit" -gt 0 ]]; then
+    local counted n free wait_s
+    counted="$(bb_budget_count "$now" "$limit" "$prev_file" "$cur_file")" || counted=""
+    n="${counted%% *}"
+    free="${counted##* }"
+    [[ "$n" =~ ^[0-9]+$ && "$free" =~ ^[0-9]+$ ]] || { n=0; free=0; }
+    if [[ "$n" -ge "$limit" ]]; then
+      wait_s=$((free - now))
+      [[ "$wait_s" -lt 1 ]] && wait_s=1
+      wait_s="$(bb_shown_wait "$wait_s")"
+      echo >&2 "error: rate limited — ${limit} requests in the last hour from this machine; next request at $(bb_utc_hms "$((now + wait_s))") (in ${wait_s} s)"
+      return 75
+    fi
+  fi
+
+  { printf '%s\n' "$now" >> "$cur_file"; } 2>/dev/null || { bb_state_warn; return 0; }
+  bb_budget_prune "$dir" "$prev_stamp"
+  return 0
+}
+
 bb_api_call() {
   local method="$1" path="$2"; shift 2
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
+  bb_request_guard "$email" || return $?
   local response http_code err_file
   err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X "$method" \
@@ -257,8 +444,9 @@ bb_paginate() {
   [[ -n "${BB_PAGINATE_NEXT_FILE:-}" ]] && : > "$BB_PAGINATE_NEXT_FILE"
 
   while [[ -n "$url" ]]; do
-    local response http_code body attempt=0
+    local response http_code body attempt=0 guard_rc
     while :; do
+      bb_request_guard "$email" || { guard_rc=$?; rm -f "$hdr_file" "$acc_file" "$err_file"; return "$guard_rc"; }
       response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
         -u "${email}:${token}" \
         -H "Accept: application/json" \
@@ -345,6 +533,7 @@ bb_api_raw() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
+  bb_request_guard "$email" || return $?
   local response http_code err_file
   err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X GET \
@@ -393,6 +582,7 @@ bb_download_upload() {
   local token email
   token="$(bb_token)" || exit 1
   email="$(bb_email)" || exit 1
+  bb_request_guard "$email" || return $?
   local response http_code body err_file rc=0
   err_file="$(mktemp)"
   response="$(curl -sSL -w "\n%{http_code}" -X POST \
@@ -830,6 +1020,7 @@ HELP
   [[ -z "$email" ]] && { echo >&2 "error: no email provided"; exit 1; }
 
   # Validate token (inline curl — can't use bb_api_call since credentials aren't stored yet)
+  bb_request_guard "$email" || exit $?
   local result http_code body err_file
   err_file="$(mktemp)"
   result="$(curl -sS -w '\n%{http_code}' \

@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { makeStateDir, removeStateDir } from '../../state.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BB_PATH = path.resolve(__dirname, '../../../../../cli/bb')
@@ -29,12 +30,18 @@ export async function bb(args: string | string[], opts: {
     argList.unshift('-R', repo)
   }
 
+  // Every call gets its own request log, so no test counts against another's
+  // hourly budget or writes into the developer's real state directory. A test
+  // that sets BB_STATE_DIR itself, the empty string included, keeps its value.
+  const ownStateDir = opts.env !== undefined && 'BB_STATE_DIR' in opts.env ? null : makeStateDir()
+
   const env: Record<string, string> = {
     PATH: process.env.PATH ?? '',
     HOME: process.env.HOME ?? '',
     BB_API_URL: `http://localhost:${opts.port}/mockbb`,
     BB_TOKEN: 'fake-test-token',
     BB_EMAIL: 'test@example.com',
+    ...(ownStateDir === null ? {} : { BB_STATE_DIR: ownStateDir }),
     ...opts.env,
   }
 
@@ -45,6 +52,7 @@ export async function bb(args: string | string[], opts: {
       timeout: 5_000,
       maxBuffer: 1024 * 1024,
     }, (error, stdout, stderr) => {
+      if (ownStateDir !== null) removeStateDir(ownStateDir)
       resolve({
         stdout: stdout ?? '',
         stderr: stderr ?? '',
