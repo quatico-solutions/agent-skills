@@ -224,12 +224,20 @@ bb_check_status() {
 
 BB_BUDGET_DEFAULT=800
 BB_BUDGET_WINDOW=3600
-# Per process, never from the environment: the account key once it is read,
-# whether the state warning was printed, and whether bb_budget_init found the
-# state directory unusable.
+# Per process, never from the environment: the account key once it is read and
+# the email it was made from, whether the state warning was printed, and whether
+# bb_budget_init found the state directory unusable.
 BB_ACCOUNT_KEY=""
+BB_ACCOUNT_EMAIL=""
 BB_STATE_WARNED=""
 BB_STATE_OFF=""
+# How this system's date reads an epoch, found once per process from $OSTYPE
+# without running a command: BSD date (macOS, the BSDs) takes -r <epoch>, GNU
+# date takes -d @<epoch>. On GNU date, -r names a file.
+case "${OSTYPE:-}" in
+  darwin*|*bsd*) BB_DATE_FLAVOUR=bsd ;;
+  *)             BB_DATE_FLAVOUR=gnu ;;
+esac
 
 # Epoch seconds. BB_NOW replaces the clock for the test suite, and only while
 # BB_API_URL is set: that variable already limits bb to a loopback host.
@@ -241,10 +249,32 @@ bb_now() {
   fi
 }
 
-# $1 is an epoch second, $2 a date format. BSD date reads the epoch with -r,
-# GNU date with -d @.
+# $1 is an epoch second, $2 a date format. A BSD system also falls back to -d @,
+# for GNU date ahead of the system one in PATH; a GNU system never tries -r, which
+# would read the file of that name.
 bb_date_utc() {
-  date -u -r "$1" "+$2" 2>/dev/null || date -u -d "@$1" "+$2"
+  if [[ "$BB_DATE_FLAVOUR" == bsd ]]; then
+    date -u -r "$1" "+$2" 2>/dev/null || date -u -d "@$1" "+$2"
+  else
+    date -u -d "@$1" "+$2"
+  fi
+}
+
+# Prints "<stamp> <previous>": the UTC hour stamps (YYYYMMDDHH) of the second $1
+# and of the second 3600 s before it, which name the request files that the guard
+# reads. One date call; the previous hour is stamp - 1 except in the first hour of
+# a day, where it takes a second call.
+bb_hour_stamps() {
+  local now="$1" stamp prev
+  stamp="$(bb_date_utc "$now" %Y%m%d%H)" || return 1
+  [[ "$stamp" =~ ^[0-9]{10}$ ]] || return 1
+  if [[ "${stamp:8:2}" == 00 ]]; then
+    prev="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)" || return 1
+    [[ "$prev" =~ ^[0-9]{10}$ ]] || return 1
+  else
+    prev=$((10#$stamp - 1))
+  fi
+  printf '%s %s\n' "$stamp" "$prev"
 }
 
 # HH:MM:SSZ in UTC.
@@ -272,12 +302,19 @@ bb_state_path() {
   fi
 }
 
-# The state directory, created with mode 700. Returns 1 when there is no path
-# or the directory cannot be made. Calls that start together may all create it.
+# The state directory. A missing one is created with mode 700. One that exists is
+# used as it is: bb only checks that it can write there and never changes its
+# mode, because the person may name any directory. Returns 1 when there is no path
+# or the directory cannot be used. Calls that start together may all create it:
+# mkdir -p succeeds on a directory that exists.
 bb_state_dir() {
   local dir
   dir="$(bb_state_path)" || return 1
-  mkdir -p "$dir" 2>/dev/null && chmod 700 "$dir" 2>/dev/null || return 1
+  if [[ -d "$dir" ]]; then
+    [[ -w "$dir" && -x "$dir" ]] || return 1
+  else
+    mkdir -p -m 700 "$dir" 2>/dev/null || return 1
+  fi
   printf '%s\n' "$dir"
 }
 
@@ -300,10 +337,11 @@ bb_account_key() {
   else
     email="$(bb_email)" || return 1
   fi
-  if command -v shasum >/dev/null 2>&1; then
-    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
-  elif command -v sha256sum >/dev/null 2>&1; then
+  # sha256sum first: shasum is a perl script on macOS and starts slowly.
+  if command -v sha256sum >/dev/null 2>&1; then
     sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
+  elif command -v shasum >/dev/null 2>&1; then
+    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
   else
     return 1
   fi
@@ -514,11 +552,13 @@ bb_budget_init() {
 bb_request_guard() {
   [[ -n "${BB_STATE_OFF:-}" ]] && return 0
   local email="${1:-}"
-  local limit dir now stamp prev_stamp cur_file prev_file left
+  local limit dir now stamps stamp prev_stamp cur_file prev_file left
   limit="$(bb_hourly_limit)" || exit 1
   dir="$(bb_state_dir)" || { bb_state_warn; return 0; }
-  if [[ -z "${BB_ACCOUNT_KEY:-}" ]]; then
+  # The key is made once per email: a call for another email makes its own.
+  if [[ -z "${BB_ACCOUNT_KEY:-}" || "${BB_ACCOUNT_EMAIL:-}" != "$email" ]]; then
     BB_ACCOUNT_KEY="$(bb_account_key "$email")" || { bb_state_warn; return 0; }
+    BB_ACCOUNT_EMAIL="$email"
   fi
   now="$(bb_now)"
 
@@ -529,8 +569,9 @@ bb_request_guard() {
     return 75
   fi
 
-  stamp="$(bb_date_utc "$now" %Y%m%d%H)" || { bb_state_warn; return 0; }
-  prev_stamp="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)" || { bb_state_warn; return 0; }
+  stamps="$(bb_hour_stamps "$now")" || { bb_state_warn; return 0; }
+  stamp="${stamps% *}"
+  prev_stamp="${stamps#* }"
   cur_file="${dir}/requests-${BB_ACCOUNT_KEY}-${stamp}.log"
   prev_file="${dir}/requests-${BB_ACCOUNT_KEY}-${prev_stamp}.log"
 
@@ -3170,7 +3211,7 @@ HELP
     esac
   done
 
-  local email limit now dir key stamp prev_stamp counted
+  local email limit now dir key stamps stamp prev_stamp counted
   local n="" free=0 left=""
   email="$(bb_email)" || exit 1
   limit="$(bb_hourly_limit)" || exit 1
@@ -3180,8 +3221,9 @@ HELP
   if [[ -z "${BB_STATE_OFF:-}" ]]; then
     if dir="$(bb_state_dir)" \
       && key="$(bb_account_key "$email")" \
-      && stamp="$(bb_date_utc "$now" %Y%m%d%H)" \
-      && prev_stamp="$(bb_date_utc "$((now - BB_BUDGET_WINDOW))" %Y%m%d%H)"; then
+      && stamps="$(bb_hour_stamps "$now")"; then
+      stamp="${stamps% *}"
+      prev_stamp="${stamps#* }"
       counted="$(bb_budget_count "$now" "$limit" "${dir}/requests-${key}-${prev_stamp}.log" "${dir}/requests-${key}-${stamp}.log")" || counted=""
       n="${counted%% *}"
       free="${counted##* }"

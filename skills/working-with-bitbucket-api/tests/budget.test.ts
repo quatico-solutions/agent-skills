@@ -1,6 +1,6 @@
 import { describe, it, before, after, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -98,6 +98,26 @@ describe('bb hourly request budget', () => {
     // Then all three count, and the oldest sets the wait
     assert.equal(result.exitCode, 75)
     assert.ok(result.stderr.includes(`next request at ${utcHms(NOW + 600)} (in 600 s)`), result.stderr)
+  })
+
+  it('Counts a request of the last hour of the previous day in the first hour of a day', async () => {
+    // Given the time is 00:30 UTC and one request was made at 23:50 UTC the day before
+    const midnight = 1794961800
+    const dir = stateDir()
+    assert.equal(utcHms(midnight), '00:30:00Z')
+    seedRequests(dir, EMAIL, [midnight - 2400])
+    assert.notEqual(requestFile(dir, EMAIL, midnight - 2400), requestFile(dir, EMAIL, midnight))
+
+    // When I make a call with a ceiling of 1
+    const result = await bb('api /user', {
+      port: server.port,
+      env: { BB_STATE_DIR: dir, BB_NOW: String(midnight), BB_HOURLY_LIMIT: '1' },
+    })
+
+    // Then that request counts, and the wait ends an hour after it
+    assert.equal(result.exitCode, 75)
+    assert.ok(result.stderr.includes(`next request at ${utcHms(midnight + 1200)} (in 1200 s)`), result.stderr)
+    assert.equal(server.getCalls().length, 0)
   })
 
   it('Names the (n - c + 1)-th oldest request when the ceiling was lowered', async () => {
@@ -293,9 +313,11 @@ describe('bb hourly request budget', () => {
   })
 
   it('Takes none of its per-process state from the environment', async () => {
-    // Given an environment that carries a key, a set warning flag and a set off flag
+    // Given an environment that carries a key and its email, a set warning flag and a set off flag
     const dir = stateDir()
-    const env = budgetEnv(dir, { BB_ACCOUNT_KEY: 'deadbeef0000', BB_STATE_WARNED: '1', BB_STATE_OFF: '1' })
+    const env = budgetEnv(dir, {
+      BB_ACCOUNT_KEY: 'deadbeef0000', BB_ACCOUNT_EMAIL: EMAIL, BB_STATE_WARNED: '1', BB_STATE_OFF: '1',
+    })
 
     // When I make a call
     await bb('api /user', { port: server.port, env })
@@ -549,6 +571,119 @@ describe('bb hourly request budget', () => {
       assert.doesNotMatch(result.stderr, /BB_HOURLY_LIMIT|warning:/, args.join(' '))
     }
     assert.equal(server.getCalls().length, 0)
+  })
+
+  it('Stops a listing at a refusal on page 2 and prints no rows', async () => {
+    // Given a listing of two pages, one request already made, and a ceiling of 2
+    const PRS = '/repositories/testws/testrepo/pullrequests'
+    const page = (n: number) => ({
+      values: [{
+        id: n, title: `PR ${n}`, state: 'OPEN', author: { display_name: 'A', nickname: 'a' },
+        source: { branch: { name: 'src' } }, destination: { branch: { name: 'main' } },
+      }],
+      ...(n < 2 ? { next: `${server.baseUrl}${PRS}?state=OPEN&pagelen=50&page=${n + 1}` } : {}),
+    })
+    server.stub('GET', PRS, page(1))
+    server.stubWithQuery('GET', PRS, { page: '2' }, page(2))
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, [NOW - 10])
+
+    // When I list every page: page 1 goes out and takes the second request, page 2 is refused
+    const result = await bb('pr list --all', { port: server.port, env: budgetEnv(dir, { BB_HOURLY_LIMIT: '2' }) })
+
+    // Then bb prints no rows, exits 75 with the ceiling line, and sent one request
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stdout, '')
+    assert.match(result.stderr, REFUSAL)
+    assert.match(result.stderr, /^error: rate limited — 2 requests /)
+    assert.equal(server.getCalls().length, 1)
+    assert.deepEqual(readRequests(dir, EMAIL), [NOW - 10, NOW])
+  })
+
+  it('Creates a missing state directory with mode 700 and leaves the mode of an existing one', async () => {
+    // Given a state directory that does not exist yet, and one that exists with mode 755
+    const fresh = stateDir()
+    const existing = stateDir()
+    mkdirSync(existing, { recursive: true })
+    chmodSync(existing, 0o755)
+
+    // When I make a call with each
+    const first = await bb('api /user', { port: server.port, env: budgetEnv(fresh) })
+    const second = await bb('api /user', { port: server.port, env: budgetEnv(existing) })
+
+    // Then the new directory has mode 700, the existing one keeps 755, and both hold the request
+    assert.equal(first.exitCode, 0)
+    assert.equal(second.exitCode, 0)
+    assert.equal(statSync(fresh).mode & 0o777, 0o700)
+    assert.equal(statSync(existing).mode & 0o777, 0o755)
+    assert.deepEqual(readRequests(fresh, EMAIL), [NOW])
+    assert.deepEqual(readRequests(existing, EMAIL), [NOW])
+  })
+
+  it('Warns once and sends when an existing state directory is not writable', { skip: process.getuid?.() === 0 }, async () => {
+    // Given a state directory that exists and takes no files
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o500)
+
+    try {
+      // When I make a call
+      const result = await bb('api /user', { port: server.port, env: budgetEnv(dir) })
+
+      // Then it goes out with one warning, and bb did not change the mode
+      assert.equal(result.exitCode, 0)
+      assert.equal(server.getCalls().length, 1)
+      assert.equal(
+        result.stderr,
+        `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
+      )
+      assert.equal(statSync(dir).mode & 0o777, 0o500)
+    } finally {
+      chmodSync(dir, 0o700)
+    }
+  })
+
+  it('Reads the epoch with date -d on a system whose date -r names a file', async () => {
+    // Given a GNU system, simulated by OSTYPE and a date that fails on -r like GNU date does
+    // for a file that does not exist, and that reads the epoch with -d @<epoch>
+    const root = mkdtempSync(path.join(tmpdir(), 'bb-budget-date-'))
+    const bin = path.join(root, 'bin')
+    const log = path.join(root, 'date.log')
+    mkdirSync(bin)
+    writeFileSync(
+      path.join(bin, 'date'),
+      [
+        '#!/bin/sh',
+        `echo "$*" >> '${log}'`,
+        'case " $* " in *" -r "*) exit 1 ;; esac',
+        'if [ "$1" = "-u" ] && [ "$2" = "-d" ]; then',
+        '  epoch="${3#@}"; shift 3',
+        '  /bin/date -u -d "@$epoch" "$@" 2>/dev/null || exec /bin/date -u -r "$epoch" "$@"',
+        '  exit $?',
+        'fi',
+        'exec /bin/date "$@"',
+        '',
+      ].join('\n'),
+      { mode: 0o755 },
+    )
+    try {
+      // When I make a call
+      const dir = stateDir()
+      const result = await bb('api /user', {
+        port: server.port,
+        env: budgetEnv(dir, { OSTYPE: 'linux-gnu', PATH: `${bin}:${process.env.PATH ?? ''}` }),
+      })
+
+      // Then the call goes out and is recorded, and no date call used -r
+      assert.equal(result.exitCode, 0, result.stderr)
+      assert.equal(result.stderr, '')
+      assert.deepEqual(readRequests(dir, EMAIL), [NOW])
+      const calls = readFileSync(log, 'utf8').split('\n').filter(Boolean)
+      assert.ok(calls.some((line) => line.includes('-d @')), calls.join('\n'))
+      assert.deepEqual(calls.filter((line) => /(^| )-r /.test(line)), [])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   it('Keeps the ceiling under parallel calls', async () => {
