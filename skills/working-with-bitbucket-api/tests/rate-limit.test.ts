@@ -624,6 +624,14 @@ describe('bb rate-limit', () => {
     assert.equal(server.getCalls().length, 0)
   })
 
+  it('Words exit status 75 in the rate-limit help for a count that has reached the ceiling', async () => {
+    // When I run bb rate-limit --help
+    const result = await bb('rate-limit --help', { port: server.port, env: env(stateDir()) })
+
+    // Then the line for 75 says "at least as many", because the count can exceed a lowered ceiling
+    assert.match(result.stdout, /75 {3}bb is paused, or the last hour holds at least as many requests as the ceiling\n/)
+  })
+
   it('Lists rate-limit in the help', async () => {
     // When I run bb --help
     const result = await bb('--help', { port: server.port, repo: null })

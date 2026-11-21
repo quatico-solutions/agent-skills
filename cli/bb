@@ -3287,7 +3287,7 @@ OUTPUT
 
 EXIT STATUS
   0    a request can go out now
-  75   bb is paused, or the last hour holds as many requests as the ceiling
+  75   bb is paused, or the last hour holds at least as many requests as the ceiling
 
 EXAMPLES
   bb rate-limit
@@ -3445,7 +3445,7 @@ Environment:
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
   BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)
-  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb)
+  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb); an existing directory must be yours and not world-writable
 
 Examples:
   bb pr list
