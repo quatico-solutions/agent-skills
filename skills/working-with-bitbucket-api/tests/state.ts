@@ -66,11 +66,18 @@ export function seedPause(dir: string, email: string, until: number, length: num
   writeFileSync(path.join(dir, `pause-${accountKey(email)}`), `${until} ${length}\n`)
 }
 
-/** The account's pause, or null when there is no pause file. */
+/**
+ * The account's pause, or null when there is no pause file or the file does
+ * not hold exactly two whitespace-separated integers: a half-written file never
+ * reads as a pause with a NaN end.
+ */
 export function readPause(dir: string, email: string): { until: number, length: number } | null {
   const file = path.join(dir, `pause-${accountKey(email)}`)
   if (!existsSync(file)) return null
-  const [until, length] = readFileSync(file, 'utf8').trim().split(/\s+/).map(Number)
+  const fields = readFileSync(file, 'utf8').trim().split(/\s+/)
+  if (fields.length !== 2) return null
+  const [until, length] = fields.map(Number)
+  if (!Number.isInteger(until) || !Number.isInteger(length)) return null
   return { until, length }
 }
 
