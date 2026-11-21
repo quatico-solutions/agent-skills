@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.22.1
+
+### Patch Changes
+
+- [#136](https://github.com/quatico-solutions/agent-skills/pull/136) [`f450b6a`](https://github.com/quatico-solutions/agent-skills/commit/f450b6ab1d810fc3a94905502fb4744a536ed3ef) Thanks [@eins78](https://github.com/eins78)! - bb: an existing state directory must belong to the user and must not be world-writable, a Retry-After above a day counts as a day, and the exit-75 guidance in SKILL.md opens with the time to wait
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.22.0
 
 ### Minor Changes
