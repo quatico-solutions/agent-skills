@@ -1,6 +1,6 @@
 import { describe, it, before, after, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
@@ -11,8 +11,9 @@ import user from './fixtures/user.json' with { type: 'json' }
 // After a 429, `bb` writes a pause file and every `bb` process of the same
 // account on the same machine refuses to send until the pause has ended. The
 // first pause is 300 s; a 429 soon after a pause doubles it, up to 3600 s; a
-// numeric Retry-After sets a pause of at least that many seconds. Every call
-// has its own state directory, with a space in its name, and a fixed clock.
+// numeric Retry-After sets a pause of at least that many seconds, up to 86400 s.
+// Every call has its own state directory, with a space in its name, and a fixed
+// clock.
 const NOW = 1795000000
 const EMAIL = 'test@example.com'
 const SLOW = { error: { message: 'slow down' } }
@@ -522,16 +523,55 @@ describe('bb pause after HTTP 429', () => {
     assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
   })
 
-  it('Pauses for 999999999 s at most for a Retry-After of more than 9 digits', async () => {
+  it('Pauses for 86400 s at most for a Retry-After above a day', async () => {
+    // Given a Retry-After of 23 digits, far beyond what shell arithmetic holds
     const huge = '99999999999999999999999'
     server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': huge } }])
     const dir = stateDir()
 
+    // When the call gets its 429
     const result = await run('api /user', { port: server.port, env: env(dir) })
 
+    // Then the pause is a day, and the message still prints the value as sent
     assert.equal(result.exitCode, 75)
-    assert.equal(readPause(dir, EMAIL)?.length, 999999999)
-    assert.match(result.stderr, new RegExp(`^error: rate limited — Bitbucket asked to wait ${huge} s; bb paused until \\d\\d:\\d\\d:\\d\\dZ \\(in 999999999 s\\)\\n$`))
+    assert.equal(readPause(dir, EMAIL)?.length, 86400)
+    assert.match(result.stderr, new RegExp(`^error: rate limited — Bitbucket asked to wait ${huge} s; bb paused until \\d\\d:\\d\\d:\\d\\dZ \\(in 86400 s\\)\\n$`))
+  })
+
+  for (const [raw, label] of [
+    ['86400', 'exactly 86400'],
+    ['86401', '86401'],
+    ['000000000000086401', '86401 padded with zeros to 18 digits'],
+    ['999999999', '999999999'],
+  ] as const) {
+    it(`Pauses for 86400 s for a Retry-After of ${label}`, async () => {
+      // Given a Retry-After at the cap, one second above it, one padded with zeros past 9 digits that is one second above it, or the largest of 9 digits
+      server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': raw } }])
+      const dir = stateDir()
+
+      // When the call gets its 429
+      const result = await hit429(dir)
+
+      // Then the pause is 86400 s, and the message prints the value as sent
+      assert.equal(
+        result.stderr,
+        `error: rate limited — Bitbucket asked to wait ${raw} s; bb paused until ${utcHms(NOW + 86400)} (in 86400 s)\n`,
+      )
+      assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 86400, length: 86400 })
+    })
+  }
+
+  it('Pauses for 86399 s for a Retry-After of 86399', async () => {
+    // Given a Retry-After one second below the cap
+    server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': '86399' } }])
+    const dir = stateDir()
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the cap does not touch it
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 86399, length: 86399 })
+    assert.match(result.stderr, /\(in 86399 s\)\n$/)
   })
 
   it('Ignores a Retry-After that is not a number', async () => {
@@ -732,6 +772,45 @@ describe('bb pause after HTTP 429', () => {
     assert.equal(
       result.stderr,
       `warning: bb cannot keep its request count in ${blocked}; the hourly budget is off for this call\n${paused(300)}`,
+    )
+  })
+
+  it('Warns once, exits 75 and stores no pause when the state directory is world-writable', async () => {
+    // Given a state directory that every user can write to, and a 429; chmod sets the mode whatever the umask is
+    server.stub('GET', '/user', SLOW, 429)
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then bb warns once, prints the line of the pause it could not store, exits 75, and wrote nothing there
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stdout, '')
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n${paused(300)}`,
+    )
+    assert.deepEqual(readdirSync(dir), [])
+  })
+
+  it('Ignores a pause file in a world-writable state directory', async () => {
+    // Given a pause that any user could have put there, in a state directory that every user can write to
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 300, 300)
+    chmodSync(dir, 0o777)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then bb does not read the directory: the call goes out with one warning
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 1)
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
     )
   })
 

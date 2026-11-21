@@ -224,15 +224,19 @@ bb_check_status() {
 
 BB_BUDGET_DEFAULT=800
 BB_BUDGET_WINDOW=3600
+# The longest pause a Retry-After can ask for, in seconds: a day.
+BB_RETRY_AFTER_MAX=86400
 # Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
 BB_PAUSE_SKEW=5
 # Per process, never from the environment: the account key once it is read and
-# the email it was made from, whether the state warning was printed, and whether
-# bb_budget_init found the state directory unusable.
+# the email it was made from, whether the state warning was printed, whether
+# bb_budget_init found the state directory unusable, and whether it found an
+# existing state directory that every user can write to.
 BB_ACCOUNT_KEY=""
 BB_ACCOUNT_EMAIL=""
 BB_STATE_WARNED=""
 BB_STATE_OFF=""
+BB_STATE_WORLD_WRITABLE=""
 # How this system's date reads an epoch, found once per process from $OSTYPE
 # without running a command: BSD date (macOS, the BSDs) takes -r <epoch>, GNU
 # date takes -d @<epoch>. On GNU date, -r names a file.
@@ -304,16 +308,33 @@ bb_state_path() {
   fi
 }
 
+# Succeeds when any user can write to the directory $1. find -H follows a symlink
+# named on the command line, so it reads the mode of the target and not the one of
+# the link (Linux gives every symlink mode 777). A directory that find cannot read
+# counts as writable. It starts a process, so it runs once, in bb_budget_init.
+bb_state_world_writable() {
+  local dir="$1" found
+  case "$dir" in /*) ;; *) dir="./${dir}" ;; esac
+  found="$(find -H "$dir" -maxdepth 0 -perm -0002 2>/dev/null)" || return 0
+  [[ -n "$found" ]]
+}
+
 # The state directory. A missing one is created with mode 700. One that exists is
-# used as it is: bb only checks that it can write there and never changes its
-# mode, because the person may name any directory. Returns 1 when there is no path
-# or the directory cannot be used. Calls that start together may all create it:
-# mkdir -p succeeds on a directory that exists.
+# used when the effective user owns it, it takes files, and bb_budget_init did not
+# find it writable by every user (BB_STATE_WORLD_WRITABLE): in a directory that
+# another user owns or that every user can write to, that user can plant a pause
+# file or a request log, and a root bb that keeps HOME would create files that
+# belong to root in the user's directory. A directory that only the group can
+# write stays accepted, because a user-private group and umask 002 make those on
+# Linux. bb never changes the mode of a directory that exists, because the person
+# may name any directory. Returns 1 when there is no path or the directory cannot
+# be used. Calls that start together may all create it: mkdir -p succeeds on a
+# directory that exists.
 bb_state_dir() {
   local dir
   dir="$(bb_state_path)" || return 1
   if [[ -d "$dir" ]]; then
-    [[ -w "$dir" && -x "$dir" ]] || return 1
+    [[ -O "$dir" && -w "$dir" && -x "$dir" && -z "${BB_STATE_WORLD_WRITABLE:-}" ]] || return 1
   else
     mkdir -p -m 700 "$dir" 2>/dev/null || return 1
   fi
@@ -515,8 +536,8 @@ bb_pause_write() {
 #   none, or ended 3600 s ago or longer:  length 300 s
 #   ended less than 3600 s ago:  length twice the stored one, at most 3600 s
 #   in both cases the length is at least Retry-After, and the end is now + length;
-#   the only cap on a Retry-After is the clamp of one with more than 9 digits,
-#   leading zeros not counted, to 999999999 s
+#   a Retry-After above BB_RETRY_AFTER_MAX (a day), or with more than 9 digits,
+#   leading zeros not counted, counts as BB_RETRY_AFTER_MAX
 #   still active:  the end is the later of the stored end and now + Retry-After
 #                  (300 s without one); the length is the larger of the stored
 #                  length and the new end - now
@@ -531,10 +552,13 @@ bb_pause_after_429() {
   local key="${1:-}" raw="${2:-}"
   local ra="" now stored="" stored_end=0 stored_len=0 new_end new_len shown message
   if [[ "$raw" =~ ^[0-9]+$ ]]; then
-    # Leading zeros do not count towards the 9 digits; raw stays as sent.
+    # Leading zeros do not count towards the 9 digits; raw stays as sent. The
+    # length is tested first, so a longer value never reaches the arithmetic.
     ra="${raw#"${raw%%[!0]*}"}"
     [[ -z "$ra" ]] && ra=0
-    [[ "${#ra}" -gt 9 ]] && ra=999999999
+    if [[ "${#ra}" -gt 9 || "$ra" -gt "$BB_RETRY_AFTER_MAX" ]]; then
+      ra="$BB_RETRY_AFTER_MAX"
+    fi
   fi
   now="$(bb_now)"
   stored="$(bb_pause_read "$key")"
@@ -579,18 +603,39 @@ bb_pause_after_429() {
 
 # Runs once in the main shell, with the command line as $@, before the command
 # is dispatched. It validates BB_HOURLY_LIMIT, which exits 1 on an invalid value
-# before any temporary file or request, and it makes the state directory. A
-# state directory that cannot be made gives the warning here, once, and sets
-# BB_STATE_OFF, which the request subshells inherit and bb_request_guard reads.
-# Help and a bare `bb` skip it: they send no request, and they must work
-# whatever the settings are.
+# before any temporary file or request, and it makes the state directory. An
+# existing state directory is checked here, once, for a mode that every user can
+# write (BB_STATE_WORLD_WRITABLE), which bb_state_dir reads: the check starts a
+# process, and bb_state_dir runs for every request. A state directory that cannot
+# be used gives the warning here, once, and sets BB_STATE_OFF, which the request
+# subshells inherit and bb_request_guard reads.
+# Help and a bare `bb` skip the limit, the directory and the warning: they send no
+# request, and they must work whatever the settings are. They still run the
+# world-writable check, on a directory that exists, because an argument that reads
+# --help can be the value of a flag, as in `pr comment 1 --body --help`, and the
+# command then sends requests that bb_state_dir must refuse for such a directory.
 bb_budget_init() {
-  [[ "${1:-help}" == "help" ]] && return 0
-  local arg
+  local arg help=""
+  if [[ "${1:-help}" == "help" ]]; then
+    help=1
+  fi
   for arg in "$@"; do
-    [[ "$arg" == "--help" || "$arg" == "-h" ]] && return 0
+    if [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
+      help=1
+    fi
   done
-  bb_hourly_limit > /dev/null
+  if [[ -z "$help" ]]; then
+    bb_hourly_limit > /dev/null
+  fi
+  local dir
+  if dir="$(bb_state_path)" && [[ -d "$dir" ]]; then
+    if bb_state_world_writable "$dir"; then
+      BB_STATE_WORLD_WRITABLE=1
+    fi
+  fi
+  if [[ -n "$help" ]]; then
+    return 0
+  fi
   if ! bb_state_dir > /dev/null; then
     BB_STATE_OFF=1
     bb_state_warn
@@ -3254,7 +3299,7 @@ OUTPUT
 
 EXIT STATUS
   0    a request can go out now
-  75   bb is paused, or the last hour holds as many requests as the ceiling
+  75   bb is paused, or the last hour holds at least as many requests as the ceiling
 
 EXAMPLES
   bb rate-limit
@@ -3412,7 +3457,7 @@ Environment:
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
   BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)
-  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb)
+  BB_STATE_DIR        Where bb keeps its request count (default $XDG_STATE_HOME/bb, else ~/.local/state/bb); an existing directory must be yours and not world-writable
 
 Examples:
   bb pr list
