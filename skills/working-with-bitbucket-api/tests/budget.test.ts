@@ -708,6 +708,40 @@ describe('bb hourly request budget', () => {
     assert.deepEqual(readdirSync(dir), [])
   })
 
+  it('Warns once and sends when the state directory is world-writable and an argument reads --help', async () => {
+    // Given a world-writable state directory, and a comment whose text is the literal --help, which is no request for help
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+    server.stub('POST', '/repositories/testws/testrepo/pullrequests/1/comments', { id: 102, content: { raw: '--help' } })
+
+    // When I make the call
+    const result = await bb(['pr', 'comment', '1', '--body', '--help'], { port: server.port, env: budgetEnv(dir) })
+
+    // Then the request goes out with one warning, and bb wrote nothing in the directory
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 1)
+    assert.equal(result.stderr, NO_BUDGET_WARNING(dir))
+    assert.deepEqual(readdirSync(dir), [])
+  })
+
+  it('Prints help without a warning and sends nothing when the state directory is world-writable', async () => {
+    // Given a world-writable state directory
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+
+    // When I ask for help
+    const result = await bb(['pr', 'list', '--help'], { port: server.port, repo: null, env: budgetEnv(dir) })
+
+    // Then bb prints the usage, says nothing about the directory, sends nothing and writes nothing
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.match(result.stdout, /bb pr list/)
+    assert.equal(result.stderr, '')
+    assert.equal(server.getCalls().length, 0)
+    assert.deepEqual(readdirSync(dir), [])
+  })
+
   it('Keeps the budget for a state directory that other users cannot write but their group can', async () => {
     // Given a state directory with mode 775: user-private groups with umask 002 make these on Linux
     const dir = stateDir()
