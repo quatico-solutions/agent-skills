@@ -522,16 +522,55 @@ describe('bb pause after HTTP 429', () => {
     assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 300, length: 300 })
   })
 
-  it('Pauses for 999999999 s at most for a Retry-After of more than 9 digits', async () => {
+  it('Pauses for 86400 s at most for a Retry-After above a day', async () => {
+    // Given a Retry-After of 23 digits, far beyond what shell arithmetic holds
     const huge = '99999999999999999999999'
     server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': huge } }])
     const dir = stateDir()
 
+    // When the call gets its 429
     const result = await run('api /user', { port: server.port, env: env(dir) })
 
+    // Then the pause is a day, and the message still prints the value as sent
     assert.equal(result.exitCode, 75)
-    assert.equal(readPause(dir, EMAIL)?.length, 999999999)
-    assert.match(result.stderr, new RegExp(`^error: rate limited — Bitbucket asked to wait ${huge} s; bb paused until \\d\\d:\\d\\d:\\d\\dZ \\(in 999999999 s\\)\\n$`))
+    assert.equal(readPause(dir, EMAIL)?.length, 86400)
+    assert.match(result.stderr, new RegExp(`^error: rate limited — Bitbucket asked to wait ${huge} s; bb paused until \\d\\d:\\d\\d:\\d\\dZ \\(in 86400 s\\)\\n$`))
+  })
+
+  for (const [raw, label] of [
+    ['86400', 'exactly 86400'],
+    ['86401', '86401'],
+    ['000000000000086401', '86401 padded with zeros to 18 digits'],
+    ['999999999', '999999999'],
+  ] as const) {
+    it(`Pauses for 86400 s for a Retry-After of ${label}`, async () => {
+      // Given a Retry-After at the cap, one second above it, one padded with zeros past 9 digits that is one second above it, or the largest of 9 digits
+      server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': raw } }])
+      const dir = stateDir()
+
+      // When the call gets its 429
+      const result = await hit429(dir)
+
+      // Then the pause is 86400 s, and the message prints the value as sent
+      assert.equal(
+        result.stderr,
+        `error: rate limited — Bitbucket asked to wait ${raw} s; bb paused until ${utcHms(NOW + 86400)} (in 86400 s)\n`,
+      )
+      assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 86400, length: 86400 })
+    })
+  }
+
+  it('Pauses for 86399 s for a Retry-After of 86399', async () => {
+    // Given a Retry-After one second below the cap
+    server.stubSequence('GET', '/user', {}, [{ status: 429, body: SLOW, headers: { 'Retry-After': '86399' } }])
+    const dir = stateDir()
+
+    // When the call gets its 429
+    const result = await hit429(dir)
+
+    // Then the cap does not touch it
+    assert.deepEqual(readPause(dir, EMAIL), { until: NOW + 86399, length: 86399 })
+    assert.match(result.stderr, /\(in 86399 s\)\n$/)
   })
 
   it('Ignores a Retry-After that is not a number', async () => {

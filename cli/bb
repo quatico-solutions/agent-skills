@@ -224,6 +224,8 @@ bb_check_status() {
 
 BB_BUDGET_DEFAULT=800
 BB_BUDGET_WINDOW=3600
+# The longest pause a Retry-After can ask for, in seconds: a day.
+BB_RETRY_AFTER_MAX=86400
 # Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
 BB_PAUSE_SKEW=5
 # Per process, never from the environment: the account key once it is read and
@@ -534,8 +536,8 @@ bb_pause_write() {
 #   none, or ended 3600 s ago or longer:  length 300 s
 #   ended less than 3600 s ago:  length twice the stored one, at most 3600 s
 #   in both cases the length is at least Retry-After, and the end is now + length;
-#   the only cap on a Retry-After is the clamp of one with more than 9 digits,
-#   leading zeros not counted, to 999999999 s
+#   a Retry-After above BB_RETRY_AFTER_MAX (a day), or with more than 9 digits,
+#   leading zeros not counted, counts as BB_RETRY_AFTER_MAX
 #   still active:  the end is the later of the stored end and now + Retry-After
 #                  (300 s without one); the length is the larger of the stored
 #                  length and the new end - now
@@ -550,10 +552,13 @@ bb_pause_after_429() {
   local key="${1:-}" raw="${2:-}"
   local ra="" now stored="" stored_end=0 stored_len=0 new_end new_len shown message
   if [[ "$raw" =~ ^[0-9]+$ ]]; then
-    # Leading zeros do not count towards the 9 digits; raw stays as sent.
+    # Leading zeros do not count towards the 9 digits; raw stays as sent. The
+    # length is tested first, so a longer value never reaches the arithmetic.
     ra="${raw#"${raw%%[!0]*}"}"
     [[ -z "$ra" ]] && ra=0
-    [[ "${#ra}" -gt 9 ]] && ra=999999999
+    if [[ "${#ra}" -gt 9 || "$ra" -gt "$BB_RETRY_AFTER_MAX" ]]; then
+      ra="$BB_RETRY_AFTER_MAX"
+    fi
   fi
   now="$(bb_now)"
   stored="$(bb_pause_read "$key")"
