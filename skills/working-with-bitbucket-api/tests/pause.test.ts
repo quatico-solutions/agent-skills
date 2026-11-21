@@ -11,8 +11,9 @@ import user from './fixtures/user.json' with { type: 'json' }
 // After a 429, `bb` writes a pause file and every `bb` process of the same
 // account on the same machine refuses to send until the pause has ended. The
 // first pause is 300 s; a 429 soon after a pause doubles it, up to 3600 s; a
-// numeric Retry-After sets a pause of at least that many seconds. Every call
-// has its own state directory, with a space in its name, and a fixed clock.
+// numeric Retry-After sets a pause of at least that many seconds, up to 86400 s.
+// Every call has its own state directory, with a space in its name, and a fixed
+// clock.
 const NOW = 1795000000
 const EMAIL = 'test@example.com'
 const SLOW = { error: { message: 'slow down' } }

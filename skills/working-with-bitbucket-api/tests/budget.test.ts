@@ -339,6 +339,21 @@ describe('bb hourly request budget', () => {
     assert.match(result.stderr, /^warning: bb cannot keep its request count in /)
   })
 
+  it('Takes the world-writable flag from the state directory, not from the environment', async () => {
+    // Given a private state directory that exists, and an environment that says it is world-writable
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o700)
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir, { BB_STATE_WORLD_WRITABLE: '1' }) })
+
+    // Then bb reads the mode itself: the request is counted and there is no warning
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(readRequests(dir, EMAIL), [NOW])
+  })
+
   it('Records one line per request at every request site', async () => {
     const calls = () => server.getCalls().length
 
