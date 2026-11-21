@@ -516,6 +516,25 @@ describe('bb rate-limit', () => {
     }
   })
 
+  it('Reports an unknown count for a world-writable state directory', async () => {
+    // Given three requests in a state directory that every user can write to; chmod sets the mode whatever the umask is
+    const dir = stateDir()
+    seedRequests(dir, EMAIL, recent(3))
+    chmodSync(dir, 0o777)
+
+    // When I run bb rate-limit
+    const result = await bb('rate-limit', { port: server.port, env: env(dir) })
+
+    // Then it does not read the directory: the count is unknown instead of 3, with one warning, exit 0 and no request sent
+    assert.equal(result.stdout, 'requests in the last hour: unknown (no request count on this machine)\n')
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
+    )
+    assert.equal(result.exitCode, 0)
+    assert.equal(server.getCalls().length, 0)
+  })
+
   it('Gives null for the count in JSON when the request file cannot be read', { skip: process.getuid?.() === 0 }, async () => {
     // Given three requests in a file that takes writes but no reads, and a pause that bb can read
     const dir = stateDir()

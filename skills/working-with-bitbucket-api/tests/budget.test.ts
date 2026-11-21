@@ -1,6 +1,7 @@
 import { describe, it, before, after, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import * as nodeFs from 'node:fs'
+import { chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -644,6 +645,104 @@ describe('bb hourly request budget', () => {
     } finally {
       chmodSync(dir, 0o700)
     }
+  })
+
+  const NO_BUDGET_WARNING = (dir: string) =>
+    `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`
+
+  it('Warns once and sends when the state directory is world-writable', async () => {
+    // Given a state directory that exists and that every user can write to; chmod sets the mode whatever the umask is
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir) })
+
+    // Then it goes out with one warning, bb wrote nothing there and did not change the mode
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 1)
+    assert.equal(result.stderr, NO_BUDGET_WARNING(dir))
+    assert.deepEqual(readdirSync(dir), [])
+    assert.equal(statSync(dir).mode & 0o777, 0o777)
+  })
+
+  it('Warns once for a whole listing when the state directory is world-writable', async () => {
+    // Given a world-writable state directory and a listing of two pages
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+    const PRS = '/repositories/testws/testrepo/pullrequests'
+    const page = (n: number) => ({
+      values: [{
+        id: n, title: `PR ${n}`, state: 'OPEN', author: { display_name: 'A', nickname: 'a' },
+        source: { branch: { name: 'src' } }, destination: { branch: { name: 'main' } },
+      }],
+      ...(n < 2 ? { next: `${server.baseUrl}${PRS}?state=OPEN&pagelen=50&page=${n + 1}` } : {}),
+    })
+    server.stub('GET', PRS, page(1))
+    server.stubWithQuery('GET', PRS, { page: '2' }, page(2))
+
+    // When I list every page
+    const result = await bb('pr list --all', { port: server.port, env: budgetEnv(dir) })
+
+    // Then both pages go out, and the warning comes once, not once per page
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 2)
+    assert.equal(result.stderr, NO_BUDGET_WARNING(dir))
+    assert.deepEqual(readdirSync(dir), [])
+  })
+
+  it('Keeps the budget for a state directory that other users cannot write but their group can', async () => {
+    // Given a state directory with mode 775: user-private groups with umask 002 make these on Linux
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o775)
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir) })
+
+    // Then bb counts the request
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(readRequests(dir, EMAIL), [NOW])
+  })
+
+  it('Keeps the budget for a state directory reached through a symlink', async () => {
+    // Given a state directory with mode 700 and a symlink to it, which is what BB_STATE_DIR names
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o700)
+    const link = path.join(path.dirname(dir), 'bb link')
+    symlinkSync(dir, link)
+    // Linux gives every symlink mode 777, and macOS takes it from lchmod: a check that reads the link's mode fails here
+    ;(nodeFs as { lchmodSync?: (target: string, mode: number) => void }).lchmodSync?.(link, 0o777)
+
+    // When I make a call
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(link) })
+
+    // Then the check reads the target's mode and bb counts the request in the target
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(readRequests(dir, EMAIL), [NOW])
+  })
+
+  // Only root can give a directory to another user, so this test runs as root and skips otherwise (CI runners and developers are not root).
+  it('Warns once and sends when the state directory belongs to another user (runs as root only)', { skip: process.getuid?.() !== 0 }, async () => {
+    // Given a private state directory that belongs to the user with uid 1
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o700)
+    chownSync(dir, 1, 1)
+
+    // When I make a call as root
+    const result = await bb('api /user', { port: server.port, env: budgetEnv(dir) })
+
+    // Then it goes out with one warning, and bb wrote nothing in the other user's directory
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 1)
+    assert.equal(result.stderr, NO_BUDGET_WARNING(dir))
+    assert.deepEqual(readdirSync(dir), [])
   })
 
   for (const [label, offset] of [['the current hour', 10], ['the previous hour', 3000]] as const) {

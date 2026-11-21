@@ -227,12 +227,14 @@ BB_BUDGET_WINDOW=3600
 # Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
 BB_PAUSE_SKEW=5
 # Per process, never from the environment: the account key once it is read and
-# the email it was made from, whether the state warning was printed, and whether
-# bb_budget_init found the state directory unusable.
+# the email it was made from, whether the state warning was printed, whether
+# bb_budget_init found the state directory unusable, and whether it found an
+# existing state directory that every user can write to.
 BB_ACCOUNT_KEY=""
 BB_ACCOUNT_EMAIL=""
 BB_STATE_WARNED=""
 BB_STATE_OFF=""
+BB_STATE_WORLD_WRITABLE=""
 # How this system's date reads an epoch, found once per process from $OSTYPE
 # without running a command: BSD date (macOS, the BSDs) takes -r <epoch>, GNU
 # date takes -d @<epoch>. On GNU date, -r names a file.
@@ -304,16 +306,33 @@ bb_state_path() {
   fi
 }
 
+# Succeeds when any user can write to the directory $1. find -H follows a symlink
+# named on the command line, so it reads the mode of the target and not the one of
+# the link (Linux gives every symlink mode 777). A directory that find cannot read
+# counts as writable. It starts a process, so it runs once, in bb_budget_init.
+bb_state_world_writable() {
+  local dir="$1" found
+  case "$dir" in /*) ;; *) dir="./${dir}" ;; esac
+  found="$(find -H "$dir" -maxdepth 0 -perm -0002 2>/dev/null)" || return 0
+  [[ -n "$found" ]]
+}
+
 # The state directory. A missing one is created with mode 700. One that exists is
-# used as it is: bb only checks that it can write there and never changes its
-# mode, because the person may name any directory. Returns 1 when there is no path
-# or the directory cannot be used. Calls that start together may all create it:
-# mkdir -p succeeds on a directory that exists.
+# used when the effective user owns it, it takes files, and bb_budget_init did not
+# find it writable by every user (BB_STATE_WORLD_WRITABLE): in a directory that
+# another user owns or that every user can write to, that user can plant a pause
+# file or a request log, and a root bb that keeps HOME would create files that
+# belong to root in the user's directory. A directory that only the group can
+# write stays accepted, because a user-private group and umask 002 make those on
+# Linux. bb never changes the mode of a directory that exists, because the person
+# may name any directory. Returns 1 when there is no path or the directory cannot
+# be used. Calls that start together may all create it: mkdir -p succeeds on a
+# directory that exists.
 bb_state_dir() {
   local dir
   dir="$(bb_state_path)" || return 1
   if [[ -d "$dir" ]]; then
-    [[ -w "$dir" && -x "$dir" ]] || return 1
+    [[ -O "$dir" && -w "$dir" && -x "$dir" && -z "${BB_STATE_WORLD_WRITABLE:-}" ]] || return 1
   else
     mkdir -p -m 700 "$dir" 2>/dev/null || return 1
   fi
@@ -579,9 +598,12 @@ bb_pause_after_429() {
 
 # Runs once in the main shell, with the command line as $@, before the command
 # is dispatched. It validates BB_HOURLY_LIMIT, which exits 1 on an invalid value
-# before any temporary file or request, and it makes the state directory. A
-# state directory that cannot be made gives the warning here, once, and sets
-# BB_STATE_OFF, which the request subshells inherit and bb_request_guard reads.
+# before any temporary file or request, and it makes the state directory. An
+# existing state directory is checked here, once, for a mode that every user can
+# write (BB_STATE_WORLD_WRITABLE), which bb_state_dir reads: the check starts a
+# process, and bb_state_dir runs for every request. A state directory that cannot
+# be used gives the warning here, once, and sets BB_STATE_OFF, which the request
+# subshells inherit and bb_request_guard reads.
 # Help and a bare `bb` skip it: they send no request, and they must work
 # whatever the settings are.
 bb_budget_init() {
@@ -591,6 +613,12 @@ bb_budget_init() {
     [[ "$arg" == "--help" || "$arg" == "-h" ]] && return 0
   done
   bb_hourly_limit > /dev/null
+  local dir
+  if dir="$(bb_state_path)" && [[ -d "$dir" ]]; then
+    if bb_state_world_writable "$dir"; then
+      BB_STATE_WORLD_WRITABLE=1
+    fi
+  fi
   if ! bb_state_dir > /dev/null; then
     BB_STATE_OFF=1
     bb_state_warn

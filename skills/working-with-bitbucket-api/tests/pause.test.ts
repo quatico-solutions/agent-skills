@@ -1,6 +1,6 @@
 import { describe, it, before, after, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
@@ -732,6 +732,45 @@ describe('bb pause after HTTP 429', () => {
     assert.equal(
       result.stderr,
       `warning: bb cannot keep its request count in ${blocked}; the hourly budget is off for this call\n${paused(300)}`,
+    )
+  })
+
+  it('Warns once, exits 75 and stores no pause when the state directory is world-writable', async () => {
+    // Given a state directory that every user can write to, and a 429; chmod sets the mode whatever the umask is
+    server.stub('GET', '/user', SLOW, 429)
+    const dir = stateDir()
+    mkdirSync(dir, { recursive: true })
+    chmodSync(dir, 0o777)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then bb warns once, prints the line of the pause it could not store, exits 75, and wrote nothing there
+    assert.equal(result.exitCode, 75)
+    assert.equal(result.stdout, '')
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n${paused(300)}`,
+    )
+    assert.deepEqual(readdirSync(dir), [])
+  })
+
+  it('Ignores a pause file in a world-writable state directory', async () => {
+    // Given a pause that any user could have put there, in a state directory that every user can write to
+    server.stub('GET', '/user', user)
+    const dir = stateDir()
+    seedPause(dir, EMAIL, NOW + 300, 300)
+    chmodSync(dir, 0o777)
+
+    // When I make a call
+    const result = await run('api /user', { port: server.port, env: env(dir) })
+
+    // Then bb does not read the directory: the call goes out with one warning
+    assert.equal(result.exitCode, 0, result.stderr)
+    assert.equal(server.getCalls().length, 1)
+    assert.equal(
+      result.stderr,
+      `warning: bb cannot keep its request count in ${dir}; the hourly budget is off for this call\n`,
     )
   })
 
