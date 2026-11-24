@@ -78,16 +78,32 @@ bb_email() {
 #
 # Prints "access-token" or "email-pair". Reads no secret and starts no process.
 bb_credential_kind() {
-  if [[ -n "${BB_ACCESS_TOKEN:-}" ]]; then
+  if [[ -n "${BB_ACCESS_TOKEN:+set}" ]]; then
     echo "access-token"
   else
     echo "email-pair"
   fi
 }
 
+# The access token's header, in a file only the user can read: curl reads it
+# with -H @file. A header given as an argument would show the token in ps,
+# where curl blanks the password of -u. The file is made once per shell and
+# removed when that shell exits; xtrace is off while it is written.
+BB_BEARER_FILE=""
+bb_bearer_header_file() {
+  [[ -n "$BB_BEARER_FILE" && -f "$BB_BEARER_FILE" ]] && return 0
+  { local xtrace="$-"; set +x; } 2>/dev/null
+  BB_BEARER_FILE="$(mktemp)" || { echo >&2 "error: bb cannot make a temporary file for BB_ACCESS_TOKEN"; exit 1; }
+  trap 'rm -f "$BB_BEARER_FILE"' EXIT
+  chmod 600 "$BB_BEARER_FILE"
+  printf 'Authorization: Bearer %s\n' "$BB_ACCESS_TOKEN" >"$BB_BEARER_FILE"
+  [[ "$xtrace" == *x* ]] && set -x
+  return 0
+}
+
 # The one place that builds the credential of a request. It sets, in the calling
 # shell: BB_CRED_KIND ("access-token" or "email-pair"), BB_CRED_ID (the value the
-# request guard keys the ledger by: the access token, or the email) and
+# request guard keys the ledger by: the access token's ledger key, or the email) and
 # BB_CRED_ARGS (the curl arguments that carry the credential). With two
 # arguments, an email and a token, it uses that email pair whatever the
 # environment holds; `bb auth login` validates the pair it stores that way. With
@@ -105,8 +121,12 @@ bb_credential() {
   fi
   if [[ "$(bb_credential_kind)" == "access-token" ]]; then
     BB_CRED_KIND="access-token"
-    BB_CRED_ID="$BB_ACCESS_TOKEN"
-    BB_CRED_ARGS=(-H "Authorization: Bearer ${BB_ACCESS_TOKEN}")
+    # The token's ledger key, not the token: the request guard's command line
+    # is traced under bash -x. Empty when no SHA-256 tool exists; the guard
+    # then warns and keeps no count, as it does for an email.
+    BB_CRED_ID="$(bb_ledger_key access-token)" || BB_CRED_ID=""
+    bb_bearer_header_file
+    BB_CRED_ARGS=(-H "@${BB_BEARER_FILE}")
     return 0
   fi
   local token email
@@ -442,9 +462,17 @@ bb_account_key() {
 # The prefix keeps a token's key apart from every email key, and the hash keeps
 # the token out of the file names. Plot derives the same key from the same bytes;
 # changing them splits the ledger that Plot and bb share.
+#
+# The access-token arm takes no $2: it reads BB_ACCESS_TOKEN itself, with xtrace
+# off, so that the token appears in no traced command line (bash -x).
 bb_ledger_key() {
   if [[ "$1" == "access-token" ]]; then
-    printf 'access-token:%s' "$2" | bb_sha256_12
+    { local xtrace="$-"; set +x; } 2>/dev/null
+    local key rc=0
+    key="$(printf 'access-token:%s' "$BB_ACCESS_TOKEN" | bb_sha256_12)" || rc=1
+    [[ "$xtrace" == *x* ]] && set -x
+    [[ "$rc" -eq 0 ]] || return 1
+    printf '%s\n' "$key"
   else
     bb_account_key "$2"
   fi
@@ -723,8 +751,8 @@ bb_budget_init() {
 }
 
 # Runs before every request bb sends; $1 is the credential's kind and $2 its
-# email or access token (bb_credential sets both), which key the ledger
-# (bb_ledger_key). Returns 0 to
+# email or, for an access token, its ledger key (bb_credential sets both), which
+# key the ledger (bb_ledger_key). Returns 0 to
 # send, after it has recorded the request, or prints the refusal and returns
 # 75: first the pause that a 429 started, then the ceiling. A refused request is
 # not recorded. An invalid BB_HOURLY_LIMIT exits 1. State that cannot be kept
@@ -740,7 +768,13 @@ bb_request_guard() {
   # either kind, makes its own.
   if [[ -z "${BB_ACCOUNT_KEY:-}" || "${BB_ACCOUNT_CRED:-}" != "${kind}:${id}" ]]; then
     BB_ACCOUNT_KEY=""
-    BB_ACCOUNT_KEY="$(bb_ledger_key "$kind" "$id")" || { BB_ACCOUNT_KEY=""; bb_state_warn; return 0; }
+    if [[ "$kind" == "access-token" ]]; then
+      # bb_credential has made the key already; it is empty when it could not.
+      [[ -n "$id" ]] || { bb_state_warn; return 0; }
+      BB_ACCOUNT_KEY="$id"
+    else
+      BB_ACCOUNT_KEY="$(bb_ledger_key "$kind" "$id")" || { BB_ACCOUNT_KEY=""; bb_state_warn; return 0; }
+    fi
     BB_ACCOUNT_CRED="${kind}:${id}"
   fi
   now="$(bb_now)"
@@ -3417,18 +3451,15 @@ HELP
   local kind id limit now dir key stamps stamp prev_stamp counted
   local n="" free=0 left=""
   kind="$(bb_credential_kind)"
-  if [[ "$kind" == "access-token" ]]; then
-    id="$BB_ACCESS_TOKEN"
-  else
-    id="$(bb_email)" || exit 1
-  fi
+  # bb_ledger_key reads the access token itself; only an email is passed.
+  [[ "$kind" == "access-token" ]] || id="$(bb_email)" || exit 1
   limit="$(bb_hourly_limit)" || exit 1
   now="$(bb_now)"
 
   # The files of bb_request_guard: the previous and the current UTC hour.
   if [[ -z "${BB_STATE_OFF:-}" ]]; then
     if dir="$(bb_state_dir)" \
-      && key="$(bb_ledger_key "$kind" "$id")" \
+      && key="$(bb_ledger_key "$kind" "${id:-}")" \
       && stamps="$(bb_hour_stamps "$now")"; then
       stamp="${stamps% *}"
       prev_stamp="${stamps#* }"

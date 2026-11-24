@@ -1,4 +1,5 @@
 import { describe, it, before, after, beforeEach, afterEach } from 'node:test'
+import { execFile, execFileSync } from 'node:child_process'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -260,6 +261,51 @@ describe('bb with an access token', () => {
       assert.equal(refused.exitCode, 75)
       const sent = await bb('api /user', { port: server.port, env: tokenOnly(dir, { BB_HOURLY_LIMIT: '1000' }) })
       assert.equal(sent.exitCode, 0, sent.stderr)
+    })
+  })
+
+  describe('the token outside the request', () => {
+    /** A curl on PATH that records each argument on its own line, then runs the real curl. */
+    const curlShim = (log: string): string => {
+      const realCurl = execFileSync('/bin/sh', ['-c', 'command -v curl'], { encoding: 'utf8' }).trim()
+      const shimDir = mkdtempSync(path.join(tmp, 'curl-shim-'))
+      writeFileSync(path.join(shimDir, 'curl'), `#!/bin/bash\nprintf '%s\\n' "$@" >>'${log}'\nexec '${realCurl}' "$@"\n`)
+      chmodSync(path.join(shimDir, 'curl'), 0o755)
+      return shimDir
+    }
+
+    it('Passes no curl argument that holds the token, and leaves no file behind', async () => {
+      server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+      const log = path.join(tmp, 'curl-args.log')
+      const shimDir = curlShim(log)
+      const ownTmp = mkdtempSync(path.join(tmp, 'tmpdir-'))
+      const env = tokenOnly(stateDir(), { PATH: `${shimDir}:${bin}:${process.env.PATH ?? ''}`, TMPDIR: ownTmp })
+      const result = await bb('pr list', { port: server.port, env })
+      assert.equal(result.exitCode, 0, result.stderr)
+      for (const call of server.getCalls()) assertBearerOnly(call)
+      const args = readFileSync(log, 'utf8')
+      assert.match(args, /^-H\n@/m)
+      assert.ok(!args.includes(TOKEN.slice(0, 8)), args)
+      assert.deepEqual(readdirSync(ownTmp), [])
+    })
+
+    it('Writes no part of the token to bash -x output', async () => {
+      server.stub('GET', '/repositories/testws/testrepo/pullrequests', prListOpen)
+      const bbPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../cli/bb')
+      const env = {
+        HOME: process.env.HOME ?? '',
+        BB_API_URL: `http://localhost:${server.port}/mockbb`,
+        ...tokenOnly(stateDir()),
+      }
+      const stderr = await new Promise<string>((resolve) => {
+        const child = execFile('bash', ['-x', bbPath, '-R', 'testws/testrepo', 'pr', 'list'], { env, timeout: 10_000, maxBuffer: 16 * 1024 * 1024 },
+          (error, _stdout, err) => resolve(`${error ? `exit ${String(error.code)}\n` : ''}${err}`))
+        child.stdin?.end('')
+      })
+      assert.ok(server.getCalls().length > 0, stderr.slice(-2000))
+      for (const call of server.getCalls()) assertBearerOnly(call)
+      assert.ok(!stderr.includes(TOKEN.slice(0, 8)), 'bash -x printed the token')
+      assert.ok(stderr.includes(tokenKey(TOKEN)), 'the trace should name the ledger key instead')
     })
   })
 
