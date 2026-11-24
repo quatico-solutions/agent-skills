@@ -25,9 +25,13 @@ export function removeStateDir(dir: string): void {
   if (path.basename(parent).startsWith(PREFIX)) rmSync(parent, { recursive: true, force: true })
 }
 
-/** The first 12 hex characters of the SHA-256 of the lowercased email. */
+/**
+ * The first 12 hex characters of the SHA-256 of the email with A-Z lowercased.
+ * ASCII only, like bb's `LC_ALL=C tr` and Plot's fleetd.
+ */
 export function accountKey(email: string): string {
-  return createHash('sha256').update(email.toLowerCase()).digest('hex').slice(0, 12)
+  const lower = email.replace(/[A-Z]/g, (c) => c.toLowerCase())
+  return createHash('sha256').update(lower).digest('hex').slice(0, 12)
 }
 
 /** `YYYYMMDDHH` of the UTC hour that holds `epoch`. */

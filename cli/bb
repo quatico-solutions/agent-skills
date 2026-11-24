@@ -360,11 +360,13 @@ bb_account_key() {
   else
     email="$(bb_email)" || return 1
   fi
+  # LC_ALL=C: tr lowercases ASCII only, in every locale, so one account has one
+  # key. Plot's fleetd shares the ledger and lowercases ASCII only too.
   # sha256sum first: shasum is a perl script on macOS and starts slowly.
   if command -v sha256sum >/dev/null 2>&1; then
-    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
+    sum="$(printf '%s' "$email" | LC_ALL=C tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
   elif command -v shasum >/dev/null 2>&1; then
-    sum="$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
+    sum="$(printf '%s' "$email" | LC_ALL=C tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
   else
     return 1
   fi
