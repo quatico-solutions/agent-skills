@@ -38,7 +38,9 @@ fi
 # `--method $'get\n'`, where dropping the newline is the repair — ${1^^} would have
 # passed it through into a malformed request.
 bb_upper() {
-  printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
+  # LC_ALL=C: under tr_TR.UTF-8, GNU tr maps i to i, and `declined` became
+  # `DECLiNED`. The C locale uppercases ASCII only, in every locale.
+  printf '%s' "$1" | LC_ALL=C tr '[:lower:]' '[:upper:]'
 }
 
 # --- Auth -------------------------------------------------------------------
