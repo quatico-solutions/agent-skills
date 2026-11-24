@@ -38,7 +38,9 @@ fi
 # `--method $'get\n'`, where dropping the newline is the repair — ${1^^} would have
 # passed it through into a malformed request.
 bb_upper() {
-  printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
+  # LC_ALL=C: under tr_TR.UTF-8, GNU tr leaves i unchanged, and `declined`
+  # became `DECLiNED`. The C locale uppercases ASCII only, in every locale.
+  printf '%s' "$1" | LC_ALL=C tr '[:lower:]' '[:upper:]'
 }
 
 # --- Auth -------------------------------------------------------------------
@@ -2363,7 +2365,7 @@ HELP
 
   local pin_l=""
   if [[ -n "$match_head" ]]; then
-    pin_l="$(printf '%s' "$match_head" | tr '[:upper:]' '[:lower:]')"
+    pin_l="$(printf '%s' "$match_head" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
     if [[ ! "$pin_l" =~ ^[0-9a-f]{7,}$ ]]; then
       echo >&2 "usage: --match-head-commit needs 7 or more hex digits, got '${match_head}'"
       exit 1
@@ -2378,7 +2380,7 @@ HELP
     local pr_json head head_l
     pr_json="$(bb_api_call GET "/repositories/${ws}/${repo}/pullrequests/${pr_id}")" || exit $?
     head="$(printf '%s' "$pr_json" | jq -r '.source.commit.hash // empty')"
-    head_l="$(printf '%s' "$head" | tr '[:upper:]' '[:lower:]')"
+    head_l="$(printf '%s' "$head" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
     if [[ ! "$head_l" =~ ^[0-9a-f]{7,}$ ]]; then
       echo >&2 "error: could not read the head commit of PR #${pr_id}; nothing was merged"
       exit 1

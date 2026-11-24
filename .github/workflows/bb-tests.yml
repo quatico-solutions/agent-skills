@@ -104,6 +104,12 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         run: curl --version && jq --version
 
+      # upper-locale.test.ts runs bb under tr_TR.UTF-8, where GNU tr leaves i unchanged.
+      # The runner does not ship that locale, and on CI a missing one fails the test.
+      - name: Generate the tr_TR.UTF-8 locale
+        if: steps.scope.outputs.run == 'true'
+        run: sudo locale-gen tr_TR.UTF-8 && locale -a | grep -i '^tr_TR'
+
       - name: Install test deps
         if: steps.scope.outputs.run == 'true'
         run: pnpm install --frozen-lockfile
