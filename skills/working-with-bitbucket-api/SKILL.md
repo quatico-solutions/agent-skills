@@ -183,7 +183,7 @@ bb pr list --head feature/login --state merged  # the PR of one branch, in one r
 
 ### Targeting another repository (`-R`)
 
-By default `bb` auto-detects the workspace/repo from the current directory's `origin` remote. To operate on a **different** repo — or from a directory that is not a Bitbucket checkout at all — pass the global `-R workspace/repo` flag **before** the subcommand:
+By default `bb` auto-detects the workspace/repo from the current directory's `origin` remote. To operate on a **different** repo — or from a directory that is not a Bitbucket checkout at all — pass `-R workspace/repo`:
 
 ```bash
 bb -R quatico/other-repo source ls
@@ -191,7 +191,7 @@ bb -R quatico/other-repo source cat README.md --ref develop
 bb -R quatico/other-repo pr list
 ```
 
-`-R` is global, so it works for every command (`source`, `pr`, `api`, …). It must come **before** the subcommand — `bb source cat -R …` will not work. Without `-R`, source browsing and all other operations act on the current repo only.
+`-R` is global, so it works for every command (`source`, `pr`, `api`, …). It can stand at any position: `bb pr list -R quatico/other-repo` works like `bb -R quatico/other-repo pr list`. Only the exact word `-R` counts, so a quoted value such as `--body "-R x"` stays the body. A bare `-R` as the value of another flag, as in `--title -R`, is read as the repository flag. Two `-R` with different values exit 1. Without `-R`, source browsing and all other operations act on the current repo only.
 
 ### Merging with a head check (`bb pr merge --match-head-commit`)
 
