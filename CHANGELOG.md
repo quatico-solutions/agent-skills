@@ -1,5 +1,17 @@
 # @quatico-solutions/agent-skills
 
+## 3.22.3
+
+### Patch Changes
+
+- [#143](https://github.com/quatico-solutions/agent-skills/pull/143) [`40121a3`](https://github.com/quatico-solutions/agent-skills/commit/40121a393992b36b8931484fe722cb937104704a) Thanks [@jwloka](https://github.com/jwloka)! - `bb pr list --state declined` works under a Turkish locale on Linux: `bb` uppercases flag values under `LC_ALL=C`.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.22.2
 
 ### Patch Changes
