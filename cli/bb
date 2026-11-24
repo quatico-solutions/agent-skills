@@ -3426,7 +3426,7 @@ Rate limit:
   rate-limit          Show the requests of the last hour and any pause (sends no request)
 
 Global flags:
-  -R workspace/repo   Specify repository, at any position before -- (default: auto-detect from git remote)
+  -R workspace/repo   Specify repository, at any position (default: auto-detect from git remote)
   --json              Output raw JSON
 
 Untrusted content:

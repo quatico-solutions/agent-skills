@@ -191,7 +191,7 @@ bb -R quatico/other-repo source cat README.md --ref develop
 bb -R quatico/other-repo pr list
 ```
 
-`-R` is global, so it works for every command (`source`, `pr`, `api`, …). It can stand at any position before `--`: `bb pr list -R quatico/other-repo` works like `bb -R quatico/other-repo pr list`. Only the exact word `-R` counts, so a quoted value such as `--body "-R x"` stays the body. A bare `-R` as the value of another flag, as in `--title -R`, is read as the repository flag. Two `-R` with different values exit 1. Without `-R`, source browsing and all other operations act on the current repo only.
+`-R` is global, so it works for every command (`source`, `pr`, `api`, …). It can stand at any position: `bb pr list -R quatico/other-repo` works like `bb -R quatico/other-repo pr list`. Only the exact word `-R` counts, so a quoted value such as `--body "-R x"` stays the body. A bare `-R` as the value of another flag, as in `--title -R`, is read as the repository flag. Two `-R` with different values exit 1. Without `-R`, source browsing and all other operations act on the current repo only.
 
 ### Merging with a head check (`bb pr merge --match-head-commit`)
 

@@ -83,8 +83,10 @@ describe('bb -R at any position', () => {
       { port: server.port, repo: null },
     )
 
-    // Then bb does not read it as the repository
+    // Then bb does not read it as the repository; the subcommand gets `--`
     assert.notEqual(result.exitCode, 0)
+    assert.match(result.stderr, /unknown flag: --/)
+    assert.doesNotMatch(result.stderr, /given twice/)
     assert.equal(server.getCallsTo('GET', '/repositories/otherws').length, 0)
   })
 
