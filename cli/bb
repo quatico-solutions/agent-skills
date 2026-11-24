@@ -3426,7 +3426,7 @@ Rate limit:
   rate-limit          Show the requests of the last hour and any pause (sends no request)
 
 Global flags:
-  -R workspace/repo   Specify repository (default: auto-detect from git remote)
+  -R workspace/repo   Specify repository, at any position before -- (default: auto-detect from git remote)
   --json              Output raw JSON
 
 Untrusted content:
@@ -3497,18 +3497,42 @@ Examples:
 EOF
 }
 
+# Read -R workspace/repo at any position before `--`, so `bb pr list -R ws/repo`
+# works like `bb -R ws/repo pr list`. Only the exact word -R counts; a quoted
+# value such as --body "-R x" is one word and stays. Everything from `--` on
+# passes through unchanged.
+_bb_args=()
+_bb_repo_flag=""
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "--" ]]; then
+    _bb_args+=("$@")
+    break
+  fi
+  if [[ "$1" == "-R" ]]; then
+    if [[ "${2:-}" != */* ]]; then
+      echo >&2 "error: -R requires workspace/repo format (e.g., -R quatico/my-repo)"
+      exit 1
+    fi
+    if [[ -n "$_bb_repo_flag" && "$_bb_repo_flag" != "$2" ]]; then
+      echo >&2 "error: -R given twice with different values: $_bb_repo_flag and $2"
+      exit 1
+    fi
+    _bb_repo_flag="$2"
+    shift 2
+    continue
+  fi
+  _bb_args+=("$1")
+  shift
+done
+set -- ${_bb_args[@]+"${_bb_args[@]}"}
+if [[ -n "$_bb_repo_flag" ]]; then
+  _BB_WORKSPACE="${_bb_repo_flag%%/*}"
+  _BB_REPO="${_bb_repo_flag##*/}"
+fi
+
 # Parse global flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -R)
-      if [[ "$2" != */* ]]; then
-        echo >&2 "error: -R requires workspace/repo format (e.g., -R quatico/my-repo)"
-        exit 1
-      fi
-      _BB_WORKSPACE="${2%%/*}"
-      _BB_REPO="${2##*/}"
-      shift 2
-      ;;
     --version|-v)
       echo "bb ${BB_VERSION} (${BB_INSTALL_SOURCE})"
       exit 0
