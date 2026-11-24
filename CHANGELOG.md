@@ -1,5 +1,25 @@
 # @quatico-solutions/agent-skills
 
+## 3.22.2
+
+### Patch Changes
+
+- [#139](https://github.com/quatico-solutions/agent-skills/pull/139) [`d956b63`](https://github.com/quatico-solutions/agent-skills/commit/d956b631224314a67c38aec7e2a758ba88b83b82) Thanks [@jwloka](https://github.com/jwloka)! - `bb` gives an account with a non-ASCII email the same ledger key in every locale: it lowercases A-Z only, under `LC_ALL=C`. An email with A-Z that a Turkish or Azerbaijani locale lowercased differently also gets a new key, the one Plot's fleetd uses.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
+- [#138](https://github.com/quatico-solutions/agent-skills/pull/138) [`4728115`](https://github.com/quatico-solutions/agent-skills/commit/472811552b0168327282126300248705dae6c92b) Thanks [@jwloka](https://github.com/jwloka)! - `bb` reads `-R workspace/repo` at any position, so `bb pr list -R ws/repo` works like `bb -R ws/repo pr list`. Two `-R` with different values exit 1.
+
+  <!--
+  bumps:
+    skills:
+      working-with-bitbucket-api: patch
+  -->
+
 ## 3.22.1
 
 ### Patch Changes
