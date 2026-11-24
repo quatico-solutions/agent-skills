@@ -5,7 +5,7 @@ import { createMockServer, type MockServer } from './.build/dev/mock-server.ts'
 import { bb } from './.build/dev/run-bb.ts'
 
 // bb_upper uppercases ASCII only, in every locale. Under a Turkish locale
-// GNU tr maps `i` to `i`, so `declined` became `DECLiNED` and
+// GNU tr leaves `i` unchanged, so `declined` became `DECLiNED` and
 // `--state declined` failed (quatico-solutions/agent-skills#142).
 // BSD tr (macOS) uppercases `i` to `I` there, so only the Linux job can fail
 // on this test. CI generates the locale; elsewhere a missing one skips.
@@ -35,7 +35,7 @@ describe('bb_upper in every locale', () => {
 
   for (const locale of LOCALES) {
     const missing = !has(installed, locale)
-    if (missing && process.env.CI) {
+    if (missing && process.env.CI === 'true') {
       it(`Has the ${locale} locale on CI`, () => {
         assert.fail(`${locale} is not installed; bb-tests.yml must generate it`)
       })
