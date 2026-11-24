@@ -11,7 +11,7 @@ metadata:
 
 Bitbucket Cloud operations via the `bb` CLI wrapper (REST API v2, `gh`-style UX).
 
-> **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars.
+> **macOS tested, POSIX portable.** `bb auth login` uses macOS Keychain (`security`) and `open` — these won't work on Linux. All other commands work on any POSIX system with `curl` and `jq` if you set `BB_TOKEN` and `BB_EMAIL` env vars, or `BB_ACCESS_TOKEN`.
 
 > **Homebrew is an official dependency.** `bb` installs from Quatico's tap by the short name `quatico-bb`. Trust the tap once, then `brew install quatico-bb` (or run `install-dependencies.sh`, which does it for you and migrates any older copied install):
 >
@@ -130,6 +130,8 @@ echo "$TOKEN" | bb auth login --email user@example.com
 ```
 
 Verify with `bb whoami` (shows the account and whether the token came from `BB_TOKEN` or the keychain). Override with env vars: `BB_TOKEN`, `BB_EMAIL`.
+
+For automation, use a workspace, project or repository access token in `BB_ACCESS_TOKEN`. `bb` sends it as `Authorization: Bearer`, and it has a rate limit of its own: a user API token allows 1,000 requests an hour for the whole account, and bitbucket.org fails for that user while the limit is spent. Where `BB_ACCESS_TOKEN` is set and not empty, it wins over `BB_TOKEN`, `BB_EMAIL` and the keychain, and `bb` never falls back to them, also not after a 401. `bb whoami` then shows `credentials: BB_ACCESS_TOKEN env` and names an email pair that is set and ignored. The hourly budget counts the token under its own key: the first 12 hex characters of the SHA-256 of `access-token:` followed by the token, not case-folded. The default ceiling stays 800; `BB_HOURLY_LIMIT` raises it.
 
 ### Required API Token Scopes
 
