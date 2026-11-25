@@ -6,7 +6,7 @@ BB_VERSION="1.15.3"
 BB_INSTALL_SOURCE="quatico-bb — brew install quatico-solutions/tap/quatico-bb"
 # BB_API_URL lets the test suite redirect API calls to a local mock server.
 # It is restricted to loopback so it can never be used to exfiltrate the
-# auth token (sent as HTTP Basic on every call) to a remote host — there is
+# auth token (sent on every call, as HTTP Basic or as a Bearer token) to a remote host — there is
 # no legitimate reason to point the Bitbucket Cloud CLI at a non-local host.
 # Unset in production, where BB_API is the real Bitbucket API.
 if [[ -n "${BB_API_URL:-}" ]]; then
@@ -67,6 +67,74 @@ bb_email() {
     echo >&2 "error: no email found — run: bb auth login"
     exit 1
   }
+}
+
+# bb sends one of two credentials. BB_ACCESS_TOKEN holds a workspace, project or
+# repository access token, which bb sends as "Authorization: Bearer <token>".
+# Where BB_ACCESS_TOKEN is set and not empty, it wins over BB_EMAIL, BB_TOKEN and
+# the keychain, and bb never falls back to them, not even after a 401: a
+# fallback would spend the user account's rate limit. Otherwise bb sends the
+# email pair (BB_EMAIL and BB_TOKEN, else the keychain) as HTTP Basic.
+#
+# Prints "access-token" or "email-pair". Reads no secret and starts no process.
+bb_credential_kind() {
+  if [[ -n "${BB_ACCESS_TOKEN:+set}" ]]; then
+    echo "access-token"
+  else
+    echo "email-pair"
+  fi
+}
+
+# The access token's header, in a file only the user can read: curl reads it
+# with -H @file. A header given as an argument would show the token in ps,
+# where curl blanks the password of -u. The file is made once per shell and
+# removed when that shell exits; xtrace is off while it is written.
+BB_BEARER_FILE=""
+bb_bearer_header_file() {
+  [[ -n "$BB_BEARER_FILE" && -f "$BB_BEARER_FILE" ]] && return 0
+  { local xtrace="$-"; set +x; } 2>/dev/null
+  BB_BEARER_FILE="$(mktemp)" || { echo >&2 "error: bb cannot make a temporary file for BB_ACCESS_TOKEN"; exit 1; }
+  trap 'rm -f "$BB_BEARER_FILE"' EXIT
+  chmod 600 "$BB_BEARER_FILE"
+  printf 'Authorization: Bearer %s\n' "$BB_ACCESS_TOKEN" >"$BB_BEARER_FILE"
+  [[ "$xtrace" == *x* ]] && set -x
+  return 0
+}
+
+# The one place that builds the credential of a request. It sets, in the calling
+# shell: BB_CRED_KIND ("access-token" or "email-pair"), BB_CRED_ID (the value the
+# request guard keys the ledger by: the access token's ledger key, or the email) and
+# BB_CRED_ARGS (the curl arguments that carry the credential). With two
+# arguments, an email and a token, it uses that email pair whatever the
+# environment holds; `bb auth login` validates the pair it stores that way. With
+# no argument it resolves the credential as described above, and exits 1 with
+# the fix on stderr when the email pair is needed and cannot be found.
+BB_CRED_KIND=""
+BB_CRED_ID=""
+BB_CRED_ARGS=()
+bb_credential() {
+  if [[ $# -ge 2 ]]; then
+    BB_CRED_KIND="email-pair"
+    BB_CRED_ID="$1"
+    BB_CRED_ARGS=(-u "${1}:${2}")
+    return 0
+  fi
+  if [[ "$(bb_credential_kind)" == "access-token" ]]; then
+    BB_CRED_KIND="access-token"
+    # The token's ledger key, not the token: the request guard's command line
+    # is traced under bash -x. Empty when no SHA-256 tool exists; the guard
+    # then warns and keeps no count, as it does for an email.
+    BB_CRED_ID="$(bb_ledger_key access-token)" || BB_CRED_ID=""
+    bb_bearer_header_file
+    BB_CRED_ARGS=(-H "@${BB_BEARER_FILE}")
+    return 0
+  fi
+  local token email
+  token="$(bb_token)" || exit 1
+  email="$(bb_email)" || exit 1
+  BB_CRED_KIND="email-pair"
+  BB_CRED_ID="$email"
+  BB_CRED_ARGS=(-u "${email}:${token}")
 }
 
 # --- Repo detection ----------------------------------------------------------
@@ -203,6 +271,10 @@ bb_check_status() {
   fi
   local msg
   msg="$(echo "$body" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null)" || msg="$body"
+  if [[ "$http_code" == "401" && "${BB_CRED_KIND:-}" == "access-token" ]]; then
+    echo >&2 "error: HTTP $http_code — $msg (Bitbucket refused BB_ACCESS_TOKEN; bb does not fall back to BB_EMAIL/BB_TOKEN)"
+    return 1
+  fi
   echo >&2 "error: HTTP $http_code — $msg"
   return 1
 }
@@ -231,11 +303,11 @@ BB_RETRY_AFTER_MAX=86400
 # Seconds by which a pause may end later than its length before it counts as stale; it absorbs clock readings a few seconds apart between parallel processes.
 BB_PAUSE_SKEW=5
 # Per process, never from the environment: the account key once it is read and
-# the email it was made from, whether the state warning was printed, whether
+# the credential it was made from (its kind and its email or token), whether the state warning was printed, whether
 # bb_budget_init found the state directory unusable, and whether it found an
 # existing state directory that every user can write to.
 BB_ACCOUNT_KEY=""
-BB_ACCOUNT_EMAIL=""
+BB_ACCOUNT_CRED=""
 BB_STATE_WARNED=""
 BB_STATE_OFF=""
 BB_STATE_WORLD_WRITABLE=""
@@ -353,10 +425,24 @@ bb_state_warn() {
   echo >&2 "warning: bb cannot keep its request count in ${where}; the hourly budget is off for this call"
 }
 
+# The first 12 hex characters of the SHA-256 of stdin.
+bb_sha256_12() {
+  local sum
+  # sha256sum first: shasum is a perl script on macOS and starts slowly.
+  if command -v sha256sum >/dev/null 2>&1; then
+    sum="$(sha256sum)" || return 1
+  elif command -v shasum >/dev/null 2>&1; then
+    sum="$(shasum -a 256)" || return 1
+  else
+    return 1
+  fi
+  printf '%s\n' "${sum:0:12}"
+}
+
 # The first 12 hex characters of the SHA-256 of the lowercased email; the
 # default email is the account bb uses. It names the account in file names.
 bb_account_key() {
-  local email sum
+  local email
   if [[ $# -gt 0 ]]; then
     email="$1"
   else
@@ -364,15 +450,32 @@ bb_account_key() {
   fi
   # LC_ALL=C: tr lowercases ASCII only, in every locale, so one account has one
   # key. Plot's fleetd shares the ledger and lowercases ASCII only too.
-  # sha256sum first: shasum is a perl script on macOS and starts slowly.
-  if command -v sha256sum >/dev/null 2>&1; then
-    sum="$(printf '%s' "$email" | LC_ALL=C tr '[:upper:]' '[:lower:]' | sha256sum)" || return 1
-  elif command -v shasum >/dev/null 2>&1; then
-    sum="$(printf '%s' "$email" | LC_ALL=C tr '[:upper:]' '[:lower:]' | shasum -a 256)" || return 1
+  printf '%s' "$email" | LC_ALL=C tr '[:upper:]' '[:lower:]' | bb_sha256_12
+}
+
+# The ledger key of a credential, which names its request and pause files. $1 is
+# the kind (bb_credential_kind), $2 the email (email-pair only). The key is the
+# first 12 hex characters of the SHA-256 of these bytes, with no trailing newline:
+#   email-pair     the email, ASCII letters lowercased (bb_account_key)
+#   access-token   "access-token:" followed by the token, unchanged (a token is
+#                  case-sensitive, so it is not case-folded)
+# The prefix keeps a token's key apart from every email key, and the hash keeps
+# the token out of the file names. Plot derives the same key from the same bytes;
+# changing them splits the ledger that Plot and bb share.
+#
+# The access-token arm takes no $2: it reads BB_ACCESS_TOKEN itself, with xtrace
+# off, so that the token appears in no traced command line (bash -x).
+bb_ledger_key() {
+  if [[ "$1" == "access-token" ]]; then
+    { local xtrace="$-"; set +x; } 2>/dev/null
+    local key rc=0
+    key="$(printf 'access-token:%s' "$BB_ACCESS_TOKEN" | bb_sha256_12)" || rc=1
+    [[ "$xtrace" == *x* ]] && set -x
+    [[ "$rc" -eq 0 ]] || return 1
+    printf '%s\n' "$key"
   else
-    return 1
+    bb_account_key "$2"
   fi
-  printf '%s\n' "${sum:0:12}"
 }
 
 # The ceiling: BB_HOURLY_LIMIT, else 800. A whole number; 0 turns it off. A
@@ -647,7 +750,9 @@ bb_budget_init() {
   return 0
 }
 
-# Runs before every request bb sends; $1 is the account's email. Returns 0 to
+# Runs before every request bb sends; $1 is the credential's kind and $2 its
+# email or, for an access token, its ledger key (bb_credential sets both), which
+# key the ledger (bb_ledger_key). Returns 0 to
 # send, after it has recorded the request, or prints the refusal and returns
 # 75: first the pause that a 429 started, then the ceiling. A refused request is
 # not recorded. An invalid BB_HOURLY_LIMIT exits 1. State that cannot be kept
@@ -655,14 +760,22 @@ bb_budget_init() {
 # unusable, it returns 0 at once and says nothing.
 bb_request_guard() {
   [[ -n "${BB_STATE_OFF:-}" ]] && return 0
-  local email="${1:-}"
+  local kind="${1:-}" id="${2:-}"
   local limit dir now stamps stamp prev_stamp cur_file prev_file left
   limit="$(bb_hourly_limit)" || exit 1
   dir="$(bb_state_dir)" || { bb_state_warn; return 0; }
-  # The key is made once per email: a call for another email makes its own.
-  if [[ -z "${BB_ACCOUNT_KEY:-}" || "${BB_ACCOUNT_EMAIL:-}" != "$email" ]]; then
-    BB_ACCOUNT_KEY="$(bb_account_key "$email")" || { bb_state_warn; return 0; }
-    BB_ACCOUNT_EMAIL="$email"
+  # The key is made once per credential: a call with another credential, of
+  # either kind, makes its own.
+  if [[ -z "${BB_ACCOUNT_KEY:-}" || "${BB_ACCOUNT_CRED:-}" != "${kind}:${id}" ]]; then
+    BB_ACCOUNT_KEY=""
+    if [[ "$kind" == "access-token" ]]; then
+      # bb_credential has made the key already; it is empty when it could not.
+      [[ -n "$id" ]] || { bb_state_warn; return 0; }
+      BB_ACCOUNT_KEY="$id"
+    else
+      BB_ACCOUNT_KEY="$(bb_ledger_key "$kind" "$id")" || { BB_ACCOUNT_KEY=""; bb_state_warn; return 0; }
+    fi
+    BB_ACCOUNT_CRED="${kind}:${id}"
   fi
   now="$(bb_now)"
 
@@ -702,15 +815,13 @@ bb_request_guard() {
 
 bb_api_call() {
   local method="$1" path="$2"; shift 2
-  local token email
-  token="$(bb_token)" || exit 1
-  email="$(bb_email)" || exit 1
-  bb_request_guard "$email" || return $?
+  bb_credential
+  bb_request_guard "$BB_CRED_KIND" "$BB_CRED_ID" || return $?
   local response http_code err_file hdr_file
   err_file="$(mktemp)"
   hdr_file="$(mktemp)"
   response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X "$method" \
-    -u "${email}:${token}" \
+    "${BB_CRED_ARGS[@]}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     "$@" \
@@ -745,9 +856,7 @@ bb_paginate() {
   # through `jq --argjson` overflows the argument-size limit at a few thousand rows.
   local rows=0 acc_file
   local url="${BB_API}${path}"
-  local token email
-  token="$(bb_token)" || exit 1
-  email="$(bb_email)" || exit 1
+  bb_credential
   local hdr_file err_file
   hdr_file="$(mktemp)"
   acc_file="$(mktemp)"
@@ -756,9 +865,9 @@ bb_paginate() {
 
   while [[ -n "$url" ]]; do
     local response http_code body guard_rc
-    bb_request_guard "$email" || { guard_rc=$?; rm -f "$hdr_file" "$acc_file" "$err_file"; return "$guard_rc"; }
+    bb_request_guard "$BB_CRED_KIND" "$BB_CRED_ID" || { guard_rc=$?; rm -f "$hdr_file" "$acc_file" "$err_file"; return "$guard_rc"; }
     response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
-      -u "${email}:${token}" \
+      "${BB_CRED_ARGS[@]}" \
       -H "Accept: application/json" \
       "$url" 2>"$err_file")" || true
     http_code="$(echo "$response" | tail -1)"
@@ -820,15 +929,13 @@ bb_check_limit() {
 
 bb_api_raw() {
   local path="$1"; shift
-  local token email
-  token="$(bb_token)" || exit 1
-  email="$(bb_email)" || exit 1
-  bb_request_guard "$email" || return $?
+  bb_credential
+  bb_request_guard "$BB_CRED_KIND" "$BB_CRED_ID" || return $?
   local response http_code err_file hdr_file
   err_file="$(mktemp)"
   hdr_file="$(mktemp)"
   response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X GET \
-    -u "${email}:${token}" \
+    "${BB_CRED_ARGS[@]}" \
     "$@" \
     "${BB_API}${path}" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
@@ -870,15 +977,13 @@ bb_download_upload() {
   # Files collide by name in Downloads — a re-upload with the same name
   # overwrites the previous one.
   local ws="$1" repo="$2" file="$3" name="$4"
-  local token email
-  token="$(bb_token)" || exit 1
-  email="$(bb_email)" || exit 1
-  bb_request_guard "$email" || return $?
+  bb_credential
+  bb_request_guard "$BB_CRED_KIND" "$BB_CRED_ID" || return $?
   local response http_code body err_file hdr_file rc=0
   err_file="$(mktemp)"
   hdr_file="$(mktemp)"
   response="$(curl -sSL -D "$hdr_file" -w "\n%{http_code}" -X POST \
-    -u "${email}:${token}" \
+    "${BB_CRED_ARGS[@]}" \
     -F "files=@${file};filename=${name}" \
     "${BB_API}/repositories/${ws}/${repo}/downloads" 2>"$err_file")" || true
   http_code="$(echo "$response" | tail -1)"
@@ -1212,18 +1317,23 @@ cmd_auth_status() {
       --help|-h)
         cat <<'HELP'
 Show the authenticated Bitbucket account and where its credentials come from.
-Alias: bb whoami. Never prints the token or the email.
+Alias: bb whoami. Never prints a token or the email.
 
 USAGE
   bb whoami [--json]
   bb auth status [--json]
 
 FLAGS
-  --json   Output {nickname, display_name, account_id, uuid, credentials}
+  --json   Output {nickname, display_name, account_id, uuid, credentials},
+           and with an access token also {ignored}
 
 OUTPUT
-  credentials is "BB_TOKEN env" when BB_TOKEN is set, otherwise
-  "keychain (com.quatico.bitbucket-cli)".
+  credentials names the credential bb sends: "BB_ACCESS_TOKEN env" (an access
+  token, sent as Bearer) when BB_ACCESS_TOKEN is set; otherwise the email pair,
+  "BB_TOKEN env" when BB_TOKEN is set, else "keychain (com.quatico.bitbucket-cli)".
+  With an access token, the line "ignored: email pair from <source>" names an
+  email pair that is also set and that bb does not send; in JSON, ignored is
+  that source, or null when no email pair is set.
 
 EXAMPLES
   bb whoami
@@ -1238,27 +1348,38 @@ HELP
     esac
   done
 
-  local result source
+  local result source kind ignored=""
   result="$(bb_api_call GET /user)" || exit $?
+  kind="$(bb_credential_kind)"
   if [[ -n "${BB_TOKEN:-}" ]]; then
     source="BB_TOKEN env"
   else
     source="keychain (com.quatico.bitbucket-cli)"
   fi
+  if [[ "$kind" == "access-token" ]]; then
+    # The email pair that bb would send without the access token, if one is set.
+    if [[ -n "${BB_TOKEN:-}" || -n "${BB_EMAIL:-}" ]]; then
+      ignored="BB_EMAIL/BB_TOKEN env"
+    elif security find-generic-password -s "com.quatico.bitbucket-cli" -a "token" >/dev/null 2>&1; then
+      ignored="keychain (com.quatico.bitbucket-cli)"
+    fi
+    source="BB_ACCESS_TOKEN env"
+  fi
   if [[ "${JSON_OUTPUT:-}" == "1" ]]; then
-    echo "$result" | jq --arg credentials "$source" '{
+    echo "$result" | jq --arg credentials "$source" --arg kind "$kind" --arg ignored "$ignored" '{
       nickname: (.nickname // .username),
       display_name: .display_name,
       account_id: .account_id,
       uuid: .uuid,
       credentials: $credentials
-    }'
+    } + (if $kind == "access-token" then {ignored: (if $ignored == "" then null else $ignored end)} else {} end)'
   else
-    echo "$result" | jq -r --arg credentials "$source" '
+    echo "$result" | jq -r --arg credentials "$source" --arg ignored "$ignored" '
       "nickname: " + (.nickname // .username // "?"),
       "display_name: " + (.display_name // "?"),
       "account_id: " + (.account_id // "?"),
-      "credentials: " + $credentials'
+      "credentials: " + $credentials,
+      (if $ignored == "" then empty else "ignored: email pair from " + $ignored end)'
   fi
 }
 
@@ -1279,7 +1400,9 @@ FLAGS
 Interactive mode prompts for email and opens the token creation page.
 Non-interactive mode reads the token from stdin (requires --email).
 
-Override stored credentials with BB_TOKEN and BB_EMAIL env vars.
+Override stored credentials with BB_TOKEN and BB_EMAIL env vars. An access
+token in BB_ACCESS_TOKEN wins over both and over the stored pair; login still
+validates and stores the email pair it is given.
 
 EXAMPLES
   bb auth login
@@ -1325,12 +1448,13 @@ HELP
   [[ -z "$email" ]] && { echo >&2 "error: no email provided"; exit 1; }
 
   # Validate token (inline curl — can't use bb_api_call since credentials aren't stored yet)
-  bb_request_guard "$email" || exit $?
+  bb_credential "$email" "$token"
+  bb_request_guard "$BB_CRED_KIND" "$BB_CRED_ID" || exit $?
   local result http_code body err_file hdr_file
   err_file="$(mktemp)"
   hdr_file="$(mktemp)"
   result="$(curl -sS -D "$hdr_file" -w '\n%{http_code}' \
-    -u "${email}:${token}" \
+    "${BB_CRED_ARGS[@]}" \
     -H "Accept: application/json" \
     "${BB_API}/user" 2>"$err_file")" || true  # curl exits non-zero when no response arrives; http_code is then 000
   http_code="$(echo "$result" | tail -1)"
@@ -1372,6 +1496,9 @@ HELP
 
   echo "Logged in as ${display_name} (${username})"
   echo "Token stored in keychain."
+  if [[ "$(bb_credential_kind)" == "access-token" ]]; then
+    echo >&2 "note: BB_ACCESS_TOKEN is set, so bb sends it and not the stored email pair"
+  fi
 }
 
 # --- Subcommands: pr ---------------------------------------------------------
@@ -3286,13 +3413,17 @@ USAGE
   bb rate-limit [--json]
 
 FLAGS
-  --json   Output {requests, ceiling, paused_until, wait_seconds}
+  --json   Output {requests, ceiling, paused_until, wait_seconds}, and with
+           an access token also {credential: "access-token"}
 
 OUTPUT
   requests in the last hour: <n> of <ceiling> (this machine)
   paused until HH:MM:SSZ (in <n> s)        (only during a pause)
   next request at HH:MM:SSZ (in <n> s)     (only at the ceiling)
 
+  With an access token (BB_ACCESS_TOKEN) the count is the token's own and a
+  last line reads "credential: access token (BB_ACCESS_TOKEN)"; without one it
+  is the count of the email pair's account.
   With BB_HOURLY_LIMIT=0 the first line reads
   "requests in the last hour: <n> (no ceiling)", and there is no next-request
   line. Times are UTC.
@@ -3317,16 +3448,18 @@ HELP
     esac
   done
 
-  local email limit now dir key stamps stamp prev_stamp counted
+  local kind id limit now dir key stamps stamp prev_stamp counted
   local n="" free=0 left=""
-  email="$(bb_email)" || exit 1
+  kind="$(bb_credential_kind)"
+  # bb_ledger_key reads the access token itself; only an email is passed.
+  [[ "$kind" == "access-token" ]] || id="$(bb_email)" || exit 1
   limit="$(bb_hourly_limit)" || exit 1
   now="$(bb_now)"
 
   # The files of bb_request_guard: the previous and the current UTC hour.
   if [[ -z "${BB_STATE_OFF:-}" ]]; then
     if dir="$(bb_state_dir)" \
-      && key="$(bb_account_key "$email")" \
+      && key="$(bb_ledger_key "$kind" "${id:-}")" \
       && stamps="$(bb_hour_stamps "$now")"; then
       stamp="${stamps% *}"
       prev_stamp="${stamps#* }"
@@ -3365,8 +3498,9 @@ HELP
     [[ "$limit" -gt 0 ]] && ceiling_json="$limit"
     [[ -n "$left" ]] && pause_json=$((now + pause_wait))
     jq -n --argjson requests "${n:-null}" --argjson ceiling "$ceiling_json" \
-      --argjson paused_until "$pause_json" --argjson wait_seconds "$wait_s" \
-      '{requests: $requests, ceiling: $ceiling, paused_until: $paused_until, wait_seconds: $wait_seconds}'
+      --argjson paused_until "$pause_json" --argjson wait_seconds "$wait_s" --arg kind "$kind" \
+      '{requests: $requests, ceiling: $ceiling, paused_until: $paused_until, wait_seconds: $wait_seconds}
+       + (if $kind == "access-token" then {credential: $kind} else {} end)'
   else
     if [[ -z "$n" ]]; then
       echo "requests in the last hour: unknown (no request count on this machine)"
@@ -3377,6 +3511,7 @@ HELP
     fi
     [[ -n "$left" ]] && echo "paused until $(bb_utc_hms "$((now + pause_wait))") (in ${pause_wait} s)"
     [[ "$ceiling_wait" -gt 0 ]] && echo "next request at $(bb_utc_hms "$((now + ceiling_wait))") (in ${ceiling_wait} s)"
+    [[ "$kind" == "access-token" ]] && echo "credential: access token (BB_ACCESS_TOKEN)"
   fi
   exit "$rc"
 }
@@ -3458,6 +3593,11 @@ Exit status:
   With --jq, a jq failure exits with jq's own code (2, 3 or 5).
 
 Environment:
+  BB_ACCESS_TOKEN     Workspace, project or repository access token, sent as
+                      "Authorization: Bearer"; wins over BB_TOKEN, BB_EMAIL and
+                      the keychain, with no fallback to them. Its request count
+                      is kept under the key: the first 12 hex characters of the
+                      SHA-256 of "access-token:" followed by the token
   BB_TOKEN            API token (overrides keychain)
   BB_EMAIL            Account email (overrides keychain)
   BB_HOURLY_LIMIT     Requests per hour on this machine (default 800, 0 = no ceiling)

@@ -55,6 +55,7 @@ Tests also bypass other external dependencies:
 | API base URL | `https://api.bitbucket.org/2.0` | `BB_API_URL=http://localhost:<port>/mockbb` |
 | Auth token | macOS Keychain | `BB_TOKEN=fake-test-token` |
 | Email | macOS Keychain | `BB_EMAIL=test@example.com` |
+| Access token | `BB_ACCESS_TOKEN`, sent as Bearer | unset; `access-token.test.ts` sets it per test |
 | Repository | `git remote get-url origin` | `-R testws/testrepo` flag |
 | Keychain write (`auth login`) | `security add-generic-password` | `fixtures/bin/security` shim on `PATH` |
 
