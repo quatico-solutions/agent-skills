@@ -454,7 +454,7 @@ bb_account_key() {
 }
 
 # The ledger key of a credential, which names its request and pause files. $1 is
-# the kind (bb_credential_kind), $2 the email or the access token. The key is the
+# the kind (bb_credential_kind), $2 the email (email-pair only). The key is the
 # first 12 hex characters of the SHA-256 of these bytes, with no trailing newline:
 #   email-pair     the email, ASCII letters lowercased (bb_account_key)
 #   access-token   "access-token:" followed by the token, unchanged (a token is
